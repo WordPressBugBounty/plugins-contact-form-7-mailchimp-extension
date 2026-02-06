@@ -1,0 +1,469 @@
+/**
+ * Deactivation survey modal styles.
+ *
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
+ */
+
+:root {
+	--cmatic-modal-overlay-bg: rgba(0, 0, 0, 0.6);
+	--cmatic-modal-bg: #fff;
+	--cmatic-modal-max-width: 600px;
+	--cmatic-modal-border-radius: 8px;
+	--cmatic-modal-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	--cmatic-primary-color: #0073aa;
+	--cmatic-primary-hover: #005a87;
+	--cmatic-secondary-color: #f0f0f1;
+	--cmatic-secondary-hover: #dcdcde;
+	--cmatic-text-color: #1e1e1e;
+	--cmatic-text-light: #646970;
+	--cmatic-border-color: #dcdcde;
+	--cmatic-error-color: #d63638;
+	--cmatic-success-color: #00a32a;
+	--cmatic-transition: all 0.3s ease;
+}
+
+.cmatic-modal {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 100000;
+	overflow-y: auto;
+}
+
+.cmatic-modal--active {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.cmatic-modal--active .cmatic-modal__overlay {
+	animation: modalOverlayFadeIn 0.3s ease;
+}
+
+.cmatic-modal--active .cmatic-modal__dialog {
+	animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalOverlayFadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+	from { opacity: 0; transform: translateY(100px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.cmatic-modal--closing .cmatic-modal__overlay {
+	animation: modalOverlayFadeOut 0.3s ease;
+}
+
+.cmatic-modal--closing .cmatic-modal__dialog {
+	animation: modalSlideDown 0.3s ease;
+}
+
+@keyframes modalOverlayFadeOut {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+
+@keyframes modalSlideDown {
+	from { opacity: 1; transform: translateY(0); }
+	to { opacity: 0; transform: translateY(50px); }
+}
+
+.cmatic-modal-open {
+	overflow: hidden;
+}
+
+.cmatic-modal__overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--cmatic-modal-overlay-bg);
+	z-index: -1;
+	backdrop-filter: blur(5px);
+}
+
+.cmatic-modal__dialog {
+	position: relative;
+	max-width: var(--cmatic-modal-max-width);
+	width: 90%;
+	background: var(--cmatic-modal-bg);
+	border-radius: var(--cmatic-modal-border-radius);
+	box-shadow: var(--cmatic-modal-shadow);
+	margin: 20px auto;
+}
+
+.cmatic-modal__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 24px;
+	border-bottom: 1px solid var(--cmatic-border-color);
+}
+
+.cmatic-modal__header h2 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--cmatic-text-color);
+}
+
+.cmatic-modal__header .button {
+	margin-left: auto;
+	margin-right: 12px;
+}
+
+.cmatic-modal__close {
+	background: none;
+	border: none;
+	font-size: 28px;
+	line-height: 1;
+	color: var(--cmatic-text-light);
+	cursor: pointer;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: var(--cmatic-transition);
+}
+
+.cmatic-modal__close:hover,
+.cmatic-modal__close:focus {
+	background: var(--cmatic-secondary-color);
+	color: var(--cmatic-text-color);
+}
+
+.cmatic-modal__body {
+	padding: 24px;
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
+}
+
+.cmatic-modal__body > h3 {
+	margin: 0 0 20px;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--cmatic-text-color);
+}
+
+.cmatic-reasons {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.cmatic-reason-btn {
+	background: linear-gradient(135deg, #f5f7fa 0%, #f8f9fa 100%);
+	border: 2px solid transparent;
+	padding: 16px 20px;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	font-size: 14px;
+	color: var(--cmatic-text-color);
+	text-align: left;
+	font-family: inherit;
+	width: 100%;
+	line-height: 1.5;
+	position: relative;
+	overflow: hidden;
+}
+
+.cmatic-reason-btn:hover {
+	background: linear-gradient(135deg, #e8f0fe 0%, #f1f8ff 100%);
+	border-color: #f0f6fc;
+}
+
+.cmatic-reason-btn.selected {
+	background: linear-gradient(135deg, #f0f6fc 0%, #f0f6fc 100%);
+	border-color: #d8dde3;
+	color: var(--cmatic-text-color);
+	font-weight: 500;
+	box-shadow: 0 6px 16px rgba(26, 115, 232, 0.3);
+}
+
+.cmatic-reason-btn:focus-visible {
+	outline: 2px solid var(--cmatic-primary-color);
+	outline-offset: 2px;
+}
+
+.cmatic-input-wrapper {
+	margin-top: 12px;
+	animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+	from { opacity: 0; transform: translateY(-10px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.cmatic-input-field {
+	width: 100%;
+	padding: 10px 14px;
+	border-radius: 6px;
+	font-size: 14px;
+	font-family: inherit;
+}
+
+.cmatic-input-field:focus {
+	outline: none;
+}
+
+.cmatic-input-field[type="text"] {
+	display: block;
+}
+
+select.cmatic-input-field {
+	cursor: pointer;
+	appearance: none;
+	background-color: #fff;
+	background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23646970' d='M6 9L1 4h10z'/%3E%3C/svg%3E);
+	background-repeat: no-repeat;
+	background-position: right 14px center;
+	background-size: 12px;
+	padding-right: 40px;
+}
+
+.cmatic-char-counter {
+	margin-top: 4px;
+	font-size: 12px;
+	color: var(--cmatic-text-light);
+	text-align: right;
+}
+
+.cmatic-error-message {
+	display: none;
+	margin-top: 16px;
+	padding: 12px;
+	background: #fcf0f1;
+	border: 1px solid var(--cmatic-error-color);
+	border-radius: 4px;
+	color: var(--cmatic-error-color);
+	font-size: 14px;
+}
+
+.cmatic-error-message--visible {
+	display: block;
+}
+
+.cmatic-modal__footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-direction: row;
+	padding: 20px 24px;
+	border-top: 1px solid var(--cmatic-border-color);
+	gap: 16px;
+}
+
+.cmatic-modal__footer .button {
+	margin-left: auto;
+}
+
+.cmatic-skip-link {
+	color: var(--cmatic-text-light);
+	font-size: 13px;
+	text-decoration: none;
+	cursor: pointer;
+	transition: color 0.2s ease;
+	padding: 4px 8px;
+}
+
+.cmatic-skip-link:hover {
+	color: var(--cmatic-text-color);
+	text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+	.cmatic-modal__dialog {
+	width: 95%;
+	margin: 10px auto;
+	}
+
+	.cmatic-modal__header,
+	.cmatic-modal__body,
+	.cmatic-modal__footer {
+	padding: 16px;
+	}
+
+	.cmatic-modal__footer {
+	flex-direction: column;
+	gap: 12px;
+	}
+
+	.cmatic-modal__footer .button {
+	width: 100%;
+	order: 1;
+	}
+
+	.cmatic-skip-link {
+	order: 2;
+	margin-top: 8px;
+	}
+
+	.cmatic-reason-btn {
+	padding: 14px 16px;
+	}
+
+	.cmatic-reasons {
+	gap: 10px;
+	}
+}
+
+.cmatic-modal__footer .button:focus-visible {
+	outline: 2px solid var(--cmatic-primary-color);
+	outline-offset: 2px;
+}
+
+@media (prefers-contrast: high) {
+	.cmatic-modal__dialog {
+	border: 2px solid currentcolor;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+	transition: none !important;
+	}
+}
+
+/* ==========================================================================
+   Submission Feedback
+   ========================================================================== */
+
+.cmatic-modal__feedback {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 16px;
+	margin-bottom: 16px;
+	border-radius: 8px;
+	background: #f0f6fc;
+	border: 1px solid #c3c4c7;
+}
+
+.cmatic-modal__feedback-icon {
+	flex-shrink: 0;
+	width: 24px;
+	height: 24px;
+}
+
+.cmatic-modal__feedback-icon .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+}
+
+.cmatic-modal__feedback-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.cmatic-modal__feedback-title {
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--cmatic-text-color);
+	margin-bottom: 4px;
+}
+
+.cmatic-modal__feedback-details {
+	font-size: 13px;
+	color: var(--cmatic-text-light);
+}
+
+/* Sent vs Received comparison table */
+.cmatic-modal__feedback-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 10px;
+	font-size: 13px;
+}
+
+.cmatic-modal__feedback-table th,
+.cmatic-modal__feedback-table td {
+	padding: 6px 10px;
+	text-align: left;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.cmatic-modal__feedback-table th {
+	background: rgba(0, 0, 0, 0.03);
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--cmatic-text-light);
+}
+
+.cmatic-modal__feedback-table .field-key {
+	font-weight: 600;
+	color: var(--cmatic-text-color);
+}
+
+.cmatic-modal__feedback-table .field-empty {
+	color: #999;
+	font-style: italic;
+}
+
+.cmatic-modal__feedback-table .field-mismatch {
+	background: #fff8e5;
+}
+
+.cmatic-modal__feedback-table .field-mismatch td {
+	border-bottom-color: #f0c36d;
+}
+
+/* Success state */
+.cmatic-modal__feedback--success {
+	background: #edfaef;
+	border-color: var(--cmatic-success-color);
+}
+
+.cmatic-modal__feedback--success .cmatic-modal__feedback-icon .dashicons {
+	color: var(--cmatic-success-color);
+}
+
+.cmatic-modal__feedback--success .cmatic-modal__feedback-title {
+	color: #006d1b;
+}
+
+/* Error state */
+.cmatic-modal__feedback--error {
+	background: #fcf0f1;
+	border-color: var(--cmatic-error-color);
+}
+
+.cmatic-modal__feedback--error .cmatic-modal__feedback-icon .dashicons {
+	color: var(--cmatic-error-color);
+}
+
+.cmatic-modal__feedback--error .cmatic-modal__feedback-title {
+	color: #8a1f1f;
+}
+
+/* Skipped state */
+.cmatic-modal__feedback--skipped {
+	background: #fff8e5;
+	border-color: #dba617;
+}
+
+.cmatic-modal__feedback--skipped .cmatic-modal__feedback-icon .dashicons {
+	color: #996800;
+}
+
+.cmatic-modal__feedback--skipped .cmatic-modal__feedback-title {
+	color: #614200;
+}
