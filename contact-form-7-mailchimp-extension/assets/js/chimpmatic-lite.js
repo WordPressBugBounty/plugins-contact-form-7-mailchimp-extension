@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	const isProFieldPanelActive = !!document.getElementById('chm_panel_gencamposygrupos');
+	let cachedLists = chimpmaticLite.lists && chimpmaticLite.lists.length > 0 ? chimpmaticLite.lists : [];
 
 	function getFormId() {
 		const dataContainer = document.getElementById('cmatic_data');
@@ -254,8 +255,33 @@ document.addEventListener('DOMContentLoaded', function() {
 		applyFuzzyMatching(mergeFields);
 	}
 
+	function updateFieldsNotice(totalMergeFields, liteLimit, audienceName) {
+		const notice = document.getElementById('cmatic-fields-notice');
+		if (!notice) return;
+
+		const noticeText = notice.querySelector('.cmatic-notice');
+
+		if (totalMergeFields > liteLimit) {
+			if (noticeText) {
+				const docsLink = notice.querySelector('a');
+				const linkHtml = docsLink ? ' ' + docsLink.outerHTML : '';
+				const name = audienceName ? '<strong>' + audienceName + '</strong> ' : '';
+				noticeText.innerHTML = 'Your ' + name + 'audience has ' + totalMergeFields + ' merge fields. Chimpmatic Lite supports up to ' + liteLimit + ' field mappings.' + linkHtml;
+			}
+			notice.classList.remove('cmatic-hidden');
+			notice.classList.add('cmatic-visible');
+		} else {
+			notice.classList.remove('cmatic-visible');
+			notice.classList.add('cmatic-hidden');
+		}
+	}
+
 	function renderListsDropdown(listsData, currentSelection) {
 		const { api_valid, lists, total } = listsData;
+
+		if (lists && lists.length > 0) {
+			cachedLists = lists;
+		}
 
 		const dataContainer = document.getElementById('cmatic_data');
 		if (dataContainer) dataContainer.dataset.apiValid = api_valid ? '1' : '0';
@@ -266,9 +292,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 		let optionsHtml = '';
+		let selectedAudience = '';
 
 		if (api_valid && total > 0) {
-			let selectedAudience = currentSelection;
+			selectedAudience = currentSelection;
 			if (!selectedAudience && lists.length > 0) selectedAudience = lists[0].id;
 
 			lists.forEach((list, index) => {
@@ -276,6 +303,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				const optionText = `${index + 1}:${list.member_count} ${list.name}  ${list.field_count} fields #${list.id}`;
 				optionsHtml += `<option value="${list.id}"${selected}>${optionText}</option>`;
 			});
+
+			const selectedList = lists.find(l => l.id === selectedAudience) || lists[0];
+			updateFieldsNotice(selectedList.field_count, chimpmaticLite.liteFieldsLimit || 4, selectedList.name);
 		}
 
 		return optionsHtml;
@@ -1016,6 +1046,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (data.success && data.merge_fields) {
 				updateFieldLabels(data.merge_fields);
 				applyFuzzyMatching(data.merge_fields);
+				const listDropdownEl = document.getElementById('wpcf7-mailchimp-list');
+				const selectedId = listDropdownEl ? listDropdownEl.value : '';
+				const selectedList = cachedLists.find(l => l.id === selectedId);
+				const fieldCount = selectedList ? selectedList.field_count : 0;
+				const audienceName = selectedList ? selectedList.name : '';
+				updateFieldsNotice(fieldCount, chimpmaticLite.liteFieldsLimit || 4, audienceName);
 
 				if (fetchFieldsButton) {
 					if (fetchFieldsButton.tagName === 'INPUT') fetchFieldsButton.value = 'Synced ✓';

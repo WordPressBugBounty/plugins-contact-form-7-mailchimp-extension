@@ -25,7 +25,7 @@ class Cmatic_Advanced_Settings {
 					<span class="cmatic-toggle-slider"></span>
 				</label>
 				<span class="cmatic-toggle-label"><?php esc_html_e( 'Marks submitted contacts as unsubscribed.', 'chimpmatic-lite' ); ?></span>
-				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-opt-in-addunsubscr', 'unsubscribed_help' ) ); ?>" class="helping-field" target="_blank" title="<?php esc_attr_e( 'Get help with Custom Fields', 'chimpmatic-lite' ); ?>"> <?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?> </a>
+				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-opt-in-checkbox', 'unsubscribed_help' ) ); ?>" class="helping-field" target="_blank" title="<?php esc_attr_e( 'Get help with Custom Fields', 'chimpmatic-lite' ); ?>"> <?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?> </a>
 				</fieldset>
 			</td>
 			</tr>

@@ -364,6 +364,7 @@ class Cmatic_Admin_Bar_Menu {
 				text-align: center;
 				text-decoration: none;
 				color: #fff !important;
+        width: 100%;
 			}
 			#wpadminbar .quicklinks #wp-admin-bar-chimpmatic-menu #wp-admin-bar-chimpmatic-menu-default li#wp-admin-bar-chimpmatic-upgrade .ab-item:hover {
 				background-color: #00a522;

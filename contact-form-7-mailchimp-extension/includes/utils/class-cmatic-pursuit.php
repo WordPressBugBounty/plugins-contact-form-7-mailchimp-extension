@@ -14,7 +14,7 @@ final class Cmatic_Pursuit {
 
 	const PLUGIN_ID = 'chimpmatic_lite';
 	const BASE_URLS = array(
-		'docs'    => 'https://chimpmatic.com/help',
+		'docs'    => 'https://chimpmatic.com',
 		'pricing' => 'https://chimpmatic.com/pricing',
 		'support' => 'https://chimpmatic.com/contact',
 		'promo'   => 'https://chimpmatic.com/almost-there',

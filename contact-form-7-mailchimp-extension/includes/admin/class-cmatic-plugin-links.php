@@ -34,7 +34,7 @@ class Cmatic_Plugin_Links {
 		if ( $file === self::$plugin_basename ) {
 			$links[] = sprintf(
 				'<a href="%s" target="_blank" title="%s">%s</a>',
-				esc_url( Cmatic_Pursuit::docs( '', 'plugin_row_meta' ) ),
+				esc_url( Cmatic_Pursuit::docs( 'help', 'plugin_row_meta' ) ),
 				esc_attr__( 'Chimpmatic Lite Documentation', 'chimpmatic-lite' ),
 				esc_html__( 'Chimpmatic Documentation', 'chimpmatic-lite' )
 			);
@@ -80,7 +80,7 @@ class Cmatic_Plugin_Links {
 	public static function get_docs_link() {
 		return sprintf(
 			'<a href="%s" target="_blank" title="%s">%s</a>',
-			esc_url( Cmatic_Pursuit::docs( '', 'plugins_page' ) ),
+			esc_url( Cmatic_Pursuit::docs( 'help', 'plugins_page' ) ),
 			esc_attr__( 'Chimpmatic Documentation', 'chimpmatic-lite' ),
 			esc_html__( 'Docs', 'chimpmatic-lite' )
 		);

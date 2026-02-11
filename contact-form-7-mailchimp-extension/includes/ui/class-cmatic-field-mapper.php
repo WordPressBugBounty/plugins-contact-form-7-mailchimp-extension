@@ -13,6 +13,12 @@ defined( 'ABSPATH' ) || exit;
 final class Cmatic_Field_Mapper_UI {
 	public static function render( int $api_valid, ?array $list_data, array $cf7_mch, array $form_tags, int $form_id ): void {
 		$disclosure_class = ( 1 === $api_valid ) ? 'chmp-active' : 'chmp-inactive';
+
+		$total_merge   = isset( $cf7_mch['total_merge_fields'] ) ? (int) $cf7_mch['total_merge_fields'] : 0;
+		$show_notice   = $total_merge > CMATIC_LITE_FIELDS;
+		$notice_class  = $show_notice ? 'cmatic-visible' : 'cmatic-hidden';
+		$audience_name = self::resolve_audience_name( $cf7_mch );
+		$docs_url      = Cmatic_Pursuit::url( 'https://chimpmatic.com/mailchimp-default-audience-fields-explained', 'plugin', 'fields_notice', 'docs' );
 		?>
 		<div class="mce-custom-fields <?php echo esc_attr( $disclosure_class ); ?>" id="cmatic-fields">
 			<?php
@@ -20,6 +26,25 @@ final class Cmatic_Field_Mapper_UI {
 			self::render_optin_checkbox( $form_tags, $cf7_mch, $form_id );
 			self::render_double_optin( $cf7_mch );
 			?>
+			<div class="cmatic-defaults-fields-notice <?php echo esc_attr( $notice_class ); ?>" id="cmatic-fields-notice">
+				<p class="cmatic-notice">
+					<?php if ( $show_notice ) : ?>
+						<?php
+						$notice_text = sprintf(
+							/* translators: 1: audience name wrapped in <strong>, 2: total merge fields count, 3: lite fields limit */
+							__( 'Your %1$s audience has %2$d merge fields. Chimpmatic Lite supports up to %3$d field mappings.', 'chimpmatic-lite' ),
+							'<strong>' . esc_html( $audience_name ) . '</strong>',
+							$total_merge,
+							CMATIC_LITE_FIELDS
+						);
+						echo wp_kses( $notice_text, array( 'strong' => array() ) );
+						?>
+						<a href="<?php echo esc_url( $docs_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">
+							<?php esc_html_e( 'Read More', 'chimpmatic-lite' ); ?>
+						</a>
+					<?php endif; ?>
+				</p>
+			</div>
 		</div>
 		<?php
 		Cmatic_Tags_Preview::render( $form_tags, $cf7_mch, $api_valid );
@@ -215,6 +240,19 @@ final class Cmatic_Field_Mapper_UI {
 			</small>
 		</div>
 		<?php
+	}
+
+	private static function resolve_audience_name( array $cf7_mch ): string {
+		$list_id = $cf7_mch['list'] ?? '';
+		$lists   = $cf7_mch['lisdata']['lists'] ?? array();
+
+		foreach ( $lists as $list ) {
+			if ( isset( $list['id'], $list['name'] ) && $list['id'] === $list_id ) {
+				return $list['name'];
+			}
+		}
+
+		return '';
 	}
 
 	private function __construct() {}

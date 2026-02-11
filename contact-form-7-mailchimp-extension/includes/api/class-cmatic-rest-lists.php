@@ -176,6 +176,7 @@ final class Cmatic_Rest_Lists {
 
 			if ( isset( $merge_fields_data['merge_fields'] ) && is_array( $merge_fields_data['merge_fields'] ) ) {
 				$fields_to_process = $merge_fields_data['merge_fields'];
+
 				usort(
 					$fields_to_process,
 					function ( $a, $b ) {
@@ -282,8 +283,12 @@ final class Cmatic_Rest_Lists {
 				'type' => 'email',
 			);
 
+			$raw_field_count = 0;
+
 			if ( isset( $merge_fields_data['merge_fields'] ) && is_array( $merge_fields_data['merge_fields'] ) ) {
 				$fields_to_process = $merge_fields_data['merge_fields'];
+				$raw_field_count   = count( $fields_to_process ) + 1;
+
 				usort(
 					$fields_to_process,
 					function ( $a, $b ) {
@@ -317,8 +322,9 @@ final class Cmatic_Rest_Lists {
 				}
 			}
 
-			$cf7_mch['merge_fields'] = $merge_fields;
-			$cf7_mch['list']         = $list_id;
+			$cf7_mch['merge_fields']       = $merge_fields;
+			$cf7_mch['list']               = $list_id;
+			$cf7_mch['total_merge_fields'] = $raw_field_count;
 			update_option( $option_name, $cf7_mch );
 
 			if ( ! Cmatic_Options_Repository::get_option( 'api.audience_selected' ) ) {

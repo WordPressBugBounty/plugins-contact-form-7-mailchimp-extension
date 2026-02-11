@@ -71,11 +71,6 @@ final class Cmatic_Admin_Panel {
 			Cmatic_Audiences::render( (string) $api_valid, $list_data, $cf7_mch );
 		}
 
-		// New user help.
-		echo '<div id="chmp-new-user" class="new-user ' . ( 1 === $api_valid ? 'chmp-inactive' : 'chmp-active' ) . '">';
-		Cmatic_Banners::render_new_user_help();
-		echo '</div>';
-
 		// Field mapping.
 		Cmatic_Field_Mapper_UI::render( $api_valid, $list_data, $cf7_mch, $form_tags, $form_id );
 

@@ -67,6 +67,9 @@ class Cmatic_Api_Panel {
 				<span class="red-icon dashicons dashicons-arrow-right"></span>
 			</a>
 		</small>
+		<div id="chmp-new-user" class="new-user <?php echo esc_attr( '1' === $apivalid ? 'chmp-inactive' : 'chmp-active' ); ?>">
+			<?php Cmatic_Banners::render_new_user_help(); ?>
+		</div>
 		</div><!-- .cmatic-field-group -->
 		<?php
 	}

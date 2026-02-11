@@ -71,7 +71,7 @@ class Cmatic_Banners {
 	}
 
 	public static function render_new_user_help(): void {
-		$help_url = Cmatic_Pursuit::docs( 'how-to-find-your-mailchimp-api-key', 'new_user_help' );
+		$help_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'new_user_help' );
 		?>
 		<h2>
 			<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">

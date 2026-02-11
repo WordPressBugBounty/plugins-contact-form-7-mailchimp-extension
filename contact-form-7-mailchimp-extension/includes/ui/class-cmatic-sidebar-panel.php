@@ -40,6 +40,10 @@ final class Cmatic_Sidebar_Panel {
 	}
 
 	public static function render_footer_promo(): void {
+		if ( function_exists( 'cmatic_is_blessed' ) && cmatic_is_blessed() ) {
+			return;
+		}
+
 		$pricing  = self::get_pricing_data();
 		$text     = $pricing['formatted'] ?? '$39 → $29.25 • Save 40%';
 		$discount = (int) ( $pricing['discount_percent'] ?? 40 );
@@ -58,7 +62,7 @@ final class Cmatic_Sidebar_Panel {
 			Cmatic_Pursuit::promo( 'footer_banner', $discount )
 		);
 		?>
-		<div id="informationdiv_aux" class="postbox mce-move mc-lateral" style="display:none">
+		<div id="informationdiv_aux" class="postbox mce-move mc-lateral">
 			<div class="inside bg-f2">
 				<h3>Upgrade to PRO</h3>
 				<p>Get the best Contact Form 7 and Mailchimp integration tool available. Now with these new features:</p>
