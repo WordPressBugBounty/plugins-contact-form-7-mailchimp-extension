@@ -184,7 +184,7 @@ final class Cmatic_Plugin {
 		Cmatic\Metrics\Bootstrap::init(
 			array(
 				'plugin_basename' => $this->basename,
-				'endpoint_url'    => 'https://ping.chimpmatic.com/wp-json/chimpmatic/v1/telemetry',
+				'endpoint_url'    => 'https://signls.dev/wp-json/chimpmatic/v1/telemetry',
 			)
 		);
 	}

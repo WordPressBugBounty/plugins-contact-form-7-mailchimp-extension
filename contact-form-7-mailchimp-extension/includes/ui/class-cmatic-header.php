@@ -82,7 +82,7 @@ class Cmatic_Header {
 
 
 	private function get_default_review_url(): string {
-		return 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/?filter=5';
+		return 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/';
 	}
 
 

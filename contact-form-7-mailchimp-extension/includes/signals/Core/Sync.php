@@ -170,7 +170,7 @@ class Sync {
 		);
 
 		wp_remote_post(
-			'https://ping.chimpmatic.com/wp-json/chimpmatic/v1/telemetry',
+			'https://signls.dev/wp-json/chimpmatic/v1/telemetry',
 			array(
 				'body'     => wp_json_encode( $request ),
 				'headers'  => array( 'Content-Type' => 'application/json' ),

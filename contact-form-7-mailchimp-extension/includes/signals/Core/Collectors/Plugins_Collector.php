@@ -63,7 +63,10 @@ class Plugins_Collector {
 				$status = 'active';
 			}
 
+			$dir = dirname( $plugin_path );
+
 			$plugin_list[] = array(
+				'slug'    => '.' !== $dir ? $dir : basename( $plugin_path, '.php' ),
 				'name'    => $plugin_data['Name'],
 				'version' => $plugin_data['Version'],
 				'author'  => wp_strip_all_tags( $plugin_data['Author'] ),
@@ -73,6 +76,7 @@ class Plugins_Collector {
 
 		foreach ( $mu_plugins as $mu_plugin_path => $mu_plugin_data ) {
 			$plugin_list[] = array(
+				'slug'    => basename( $mu_plugin_path, '.php' ),
 				'name'    => $mu_plugin_data['Name'],
 				'version' => $mu_plugin_data['Version'],
 				'author'  => wp_strip_all_tags( $mu_plugin_data['Author'] ),

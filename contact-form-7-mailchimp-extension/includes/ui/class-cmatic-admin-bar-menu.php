@@ -169,7 +169,7 @@ class Cmatic_Admin_Bar_Menu {
 				'parent' => self::MENU_IDENTIFIER,
 				'id'     => 'chimpmatic-reviews',
 				'title'  => esc_html__( 'Reviews', 'chimpmatic-lite' ),
-				'href'   => 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/?filter=5',
+				'href'   => 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/',
 				'meta'   => array(
 					'target' => '_blank',
 					'rel'    => 'noopener noreferrer',

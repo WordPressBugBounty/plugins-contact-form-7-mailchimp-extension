@@ -4,7 +4,7 @@ Donate link: https://bit.ly/2HdTzmO
 Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
 Requires at least: 6.4
 Tested up to: 6.9
-Stable tag: 0.9.75
+Stable tag: 0.9.76
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -126,20 +126,100 @@ Yes. You can map any Contact Form 7 field to Mailchimp merge fields like FNAME, 
 
 == Changelog ==
 
+For the full changelog with details, see [Release History](https://renzojohnson.com/changelog).
+
 = 0.9.75 =
-* Fixed nullable type hint to prevent fatal TypeError.
+
+[Version 0.9.75 release notes](https://renzojohnson.com/changelog#0.9.75)
 
 = 0.9.73 =
-* New: Test your form submissions with the preview tool.
 
-= 0.9.69 =
-* Improved: Activation hook now runs automatic migration from legacy options.
+[Version 0.9.73 release notes](https://renzojohnson.com/changelog#0.9.73)
 
 = 0.9.22 =
-* Major performance improvements, security hardening.
+
+[Version 0.9.22 release notes](https://renzojohnson.com/changelog#0.9.22)
+
+= 0.8.01 =
+
+[Version 0.8.01 release notes](https://renzojohnson.com/changelog#0.8.01)
+
+= 0.7.50 =
+
+[Version 0.7.50 release notes](https://renzojohnson.com/changelog#0.7.50)
+
+= 0.7.01 =
+
+[Version 0.7.01 release notes](https://renzojohnson.com/changelog#0.7.01)
+
+= 0.6.10 =
+
+[Version 0.6.10 release notes](https://renzojohnson.com/changelog#0.6.10)
 
 = 0.5.64 =
-* Fixed debug log cleaner and removed other bugs.
+
+[Version 0.5.64 release notes](https://renzojohnson.com/changelog#0.5.64)
+
+= 0.5.01 =
+
+[Version 0.5.01 release notes](https://renzojohnson.com/changelog#0.5.01)
+
+= 0.4.60 =
+
+[Version 0.4.60 release notes](https://renzojohnson.com/changelog#0.4.60)
+
+= 0.4.43 =
+
+[Version 0.4.43 release notes](https://renzojohnson.com/changelog#0.4.43)
+
+= 0.4.01 =
+
+[Version 0.4.01 release notes](https://renzojohnson.com/changelog#0.4.01)
+
+= 0.3.50 =
+
+[Version 0.3.50 release notes](https://renzojohnson.com/changelog#0.3.50)
+
+= 0.3.40 =
+
+[Version 0.3.40 release notes](https://renzojohnson.com/changelog#0.3.40)
+
+= 0.3.20 =
+
+[Version 0.3.20 release notes](https://renzojohnson.com/changelog#0.3.20)
+
+= 0.3.10 =
+
+[Version 0.3.10 release notes](https://renzojohnson.com/changelog#0.3.10)
+
+= 0.3.01 =
+
+[Version 0.3.01 release notes](https://renzojohnson.com/changelog#0.3.01)
+
+= 0.2.30 =
+
+[Version 0.2.30 release notes](https://renzojohnson.com/changelog#0.2.30)
+
+= 0.2.20 =
+
+[Version 0.2.20 release notes](https://renzojohnson.com/changelog#0.2.20)
+
+= 0.2.15 =
+
+[Version 0.2.15 release notes](https://renzojohnson.com/changelog#0.2.15)
+
+= 0.2.10 =
+
+[Version 0.2.10 release notes](https://renzojohnson.com/changelog#0.2.10)
+
+= 0.2.5 =
+
+[Version 0.2.5 release notes](https://renzojohnson.com/changelog#0.2.5)
+
+= 0.1.5 =
+
+[Version 0.1.5 release notes](https://renzojohnson.com/changelog#0.1.5)
 
 = 0.1.2 =
-* Initial release.
+
+[Version 0.1.2 release notes](https://renzojohnson.com/changelog#0.1.2)
