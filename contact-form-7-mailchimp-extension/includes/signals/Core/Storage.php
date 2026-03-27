@@ -122,14 +122,22 @@ class Storage {
 	}
 
 	public static function get_install_id(): string {
-		$options      = new \Cmatic_Options_Repository();
-		$install_data = new \Cmatic_Install_Data( $options );
+		$install_id = \Cmatic_Options_Repository::get_option( 'install.id', '' );
+		if ( ! empty( $install_id ) ) {
+			return $install_id;
+		}
+
+		$install_data = new \Cmatic_Install_Data( \Cmatic_Options_Repository::instance() );
 		return $install_data->get_install_id();
 	}
 
 	public static function get_quest(): int {
-		$options      = new \Cmatic_Options_Repository();
-		$install_data = new \Cmatic_Install_Data( $options );
+		$quest = (int) \Cmatic_Options_Repository::get_option( 'install.quest', 0 );
+		if ( $quest >= \Cmatic_Install_Data::MIN_VALID_TIMESTAMP ) {
+			return $quest;
+		}
+
+		$install_data = new \Cmatic_Install_Data( \Cmatic_Options_Repository::instance() );
 		return $install_data->get_quest();
 	}
 

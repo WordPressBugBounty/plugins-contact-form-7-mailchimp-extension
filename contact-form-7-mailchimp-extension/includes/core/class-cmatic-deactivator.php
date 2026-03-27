@@ -17,7 +17,7 @@ class Cmatic_Deactivator {
 	private $lifecycle_signal;
 
 	public function __construct() {
-		$this->options          = new Cmatic_Options_Repository();
+		$this->options          = Cmatic_Options_Repository::instance();
 		$this->lifecycle_signal = new Cmatic_Lifecycle_Signal();
 	}
 

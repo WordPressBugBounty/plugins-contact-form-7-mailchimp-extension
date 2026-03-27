@@ -12,7 +12,13 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Install_Data {
 
-	private const MIN_VALID_TIMESTAMP = 1000000000;
+	public const MIN_VALID_TIMESTAMP = 1000000000;
+
+	/**
+	 * Dedicated wp_options row for install_id (independent of serialized blob).
+	 * Non-autoloaded — survives blob corruption, autoload failures, and cache races.
+	 */
+	private const INSTALL_ID_OPTION = 'cmatic_install_id';
 
 	private $options;
 
@@ -21,8 +27,9 @@ class Cmatic_Install_Data {
 	}
 
 	public function ensure() {
-		$data    = $this->options->get_all();
-		$changed = false;
+		$data        = $this->options->get_all();
+		$changed     = false;
+		$regenerated = false;
 
 		if ( ! isset( $data['install'] ) || ! is_array( $data['install'] ) ) {
 			$data['install'] = array();
@@ -30,8 +37,15 @@ class Cmatic_Install_Data {
 		}
 
 		if ( empty( $data['install']['id'] ) ) {
-			$data['install']['id'] = $this->generate_install_id();
-			$changed               = true;
+			list( $data['install']['id'], $regenerated ) = $this->recover_or_generate_id();
+			$changed = true;
+		}
+
+		// Record regeneration counters INTO $data so they're saved in the same write.
+		if ( $regenerated ) {
+			$regen_count                       = isset( $data['install']['id_regen_count'] ) ? (int) $data['install']['id_regen_count'] : 0;
+			$data['install']['id_regen_count'] = $regen_count + 1;
+			$data['install']['id_regen_at']    = time();
 		}
 
 		$quest = isset( $data['install']['quest'] ) ? (int) $data['install']['quest'] : 0;
@@ -40,17 +54,40 @@ class Cmatic_Install_Data {
 			$changed                  = true;
 		}
 
+		// Backfill: ensure dedicated option exists for existing installs.
+		if ( ! empty( $data['install']['id'] ) && get_option( self::INSTALL_ID_OPTION, '' ) === '' ) {
+			update_option( self::INSTALL_ID_OPTION, $data['install']['id'], 'no' );
+		}
+
 		if ( $changed ) {
 			$this->options->save( $data );
+			update_option( self::INSTALL_ID_OPTION, $data['install']['id'], 'no' );
 		}
 	}
 
 	public function get_install_id() {
+		// Tier 1: Repository cache (singleton — warm within this request).
 		$install_id = $this->options->get( 'install.id', '' );
+		if ( ! empty( $install_id ) ) {
+			// Backfill dedicated option on first call after upgrade (one-time).
+			if ( get_option( self::INSTALL_ID_OPTION, '' ) === '' ) {
+				update_option( self::INSTALL_ID_OPTION, $install_id, 'no' );
+			}
+			return $install_id;
+		}
 
-		if ( empty( $install_id ) ) {
-			$install_id = $this->generate_install_id();
-			$this->options->set( 'install.id', $install_id );
+		// Cache miss — recover from independent sources or generate.
+		list( $install_id, $regenerated ) = $this->recover_or_generate_id();
+
+		// Persist recovered/generated ID back to repository + dedicated option.
+		$this->options->set( 'install.id', $install_id );
+		update_option( self::INSTALL_ID_OPTION, $install_id, 'no' );
+
+		// Record regeneration AFTER the ID is persisted (set() merges into cache).
+		if ( $regenerated ) {
+			$regen_count = (int) $this->options->get( 'install.id_regen_count', 0 );
+			$this->options->set( 'install.id_regen_count', $regen_count + 1 );
+			$this->options->set( 'install.id_regen_at', time() );
 		}
 
 		return $install_id;
@@ -69,8 +106,38 @@ class Cmatic_Install_Data {
 		return $quest;
 	}
 
-	private function generate_install_id() {
-		return bin2hex( random_bytes( 6 ) );
+	/**
+	 * Three-tier install_id recovery with generation as last resort.
+	 *
+	 * @return array{0: string, 1: bool} The install_id and whether it was newly generated.
+	 */
+	private function recover_or_generate_id(): array {
+		// Tier 2: Dedicated option row (independent of serialized blob).
+		$standalone = get_option( self::INSTALL_ID_OPTION, '' );
+		if ( ! empty( $standalone ) ) {
+			return array( $standalone, false );
+		}
+
+		// Tier 3: Raw blob read (bypasses repository instance cache).
+		$raw = get_option( 'cmatic', array() );
+		if ( is_array( $raw ) && ! empty( $raw['install']['id'] ) ) {
+			// Found in blob — backfill dedicated option immediately.
+			update_option( self::INSTALL_ID_OPTION, $raw['install']['id'], 'no' );
+			return array( $raw['install']['id'], false );
+		}
+
+		// Last resort: generate new ID.
+		return array( $this->generate_install_id(), true );
+	}
+
+	private function generate_install_id(): string {
+		$new_id = bin2hex( random_bytes( 6 ) );
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[ChimpMatic] install_id generated: ' . $new_id ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
+
+		return $new_id;
 	}
 
 	private function determine_quest( $data ) {

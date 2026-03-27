@@ -48,11 +48,7 @@ final class Cmatic_Sidebar_Panel {
 		$text     = $pricing['formatted'] ?? '$39 → $29.25 • Save 40%';
 		$discount = (int) ( $pricing['discount_percent'] ?? 40 );
 
-		$install_id = Cmatic_Options_Repository::get_option( 'install.id' );
-		if ( ! $install_id ) {
-			$install_data = new Cmatic_Install_Data( new Cmatic_Options_Repository() );
-			$install_id   = $install_data->get_install_id();
-		}
+		$install_id = Cmatic_Options_Repository::get_option( 'install.id', '' );
 
 		$promo_url = add_query_arg(
 			array(

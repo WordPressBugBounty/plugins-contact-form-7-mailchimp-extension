@@ -137,7 +137,8 @@ class Sync {
 			return;
 		}
 
-		$install_id = $options['install']['id'] ?? '';
+		// Use resilient lookup: singleton cache -> dedicated option -> raw blob.
+		$install_id = Storage::get_install_id();
 		if ( empty( $install_id ) ) {
 			return;
 		}

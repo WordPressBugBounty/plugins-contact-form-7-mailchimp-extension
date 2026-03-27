@@ -84,7 +84,7 @@ class Cmatic_Options_Repository implements Cmatic_Options_Interface {
 
 	private static $instance = null;
 
-	private static function instance(): self {
+	public static function instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}

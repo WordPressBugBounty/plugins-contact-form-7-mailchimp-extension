@@ -4,7 +4,7 @@ Donate link: https://bit.ly/2HdTzmO
 Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
 Requires at least: 6.4
 Tested up to: 6.9
-Stable tag: 0.9.76
+Stable tag: 0.9.77
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,10 @@ Yes. You can map any Contact Form 7 field to Mailchimp merge fields like FNAME, 
 == Changelog ==
 
 For the full changelog with details, see [Release History](https://renzojohnson.com/changelog).
+
+= 0.9.77 =
+
+[Version 0.9.77 release notes](https://renzojohnson.com/changelog#0.9.77)
 
 = 0.9.75 =
 

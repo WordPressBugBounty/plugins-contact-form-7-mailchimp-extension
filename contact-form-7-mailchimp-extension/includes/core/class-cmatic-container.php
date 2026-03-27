@@ -54,7 +54,7 @@ class Cmatic_Lite_Container {
 		self::factory(
 			Cmatic_Options_Interface::class,
 			function () {
-				return new Cmatic_Options_Repository();
+				return Cmatic_Options_Repository::instance();
 			}
 		);
 

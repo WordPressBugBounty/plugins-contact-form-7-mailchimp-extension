@@ -30,7 +30,7 @@ class Cmatic_Activator {
 
 	public function __construct( $version ) {
 		$this->version          = $version;
-		$this->options          = new Cmatic_Options_Repository();
+		$this->options          = Cmatic_Options_Repository::instance();
 		$this->install_data     = new Cmatic_Install_Data( $this->options );
 		$this->migration        = new Cmatic_Migration( $this->options, $version );
 		$this->pro_status       = new Cmatic_Pro_Status( $this->options );
