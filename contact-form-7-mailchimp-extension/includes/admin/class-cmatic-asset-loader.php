@@ -20,7 +20,6 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 
 		public static function init(): void {
 			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_assets' ) );
-			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_notices_script' ) );
 			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_cf7_frontend_styles' ) );
 			add_filter( 'admin_body_class', array( __CLASS__, 'add_body_class' ) );
 		}
@@ -32,6 +31,7 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 
 			self::enqueue_styles();
 			self::enqueue_lite_js();
+			self::enqueue_oauth_js();
 
 			$is_pro_installed = defined( 'CMATIC_VERSION' );
 			$is_pro_blessed   = function_exists( 'cmatic_is_blessed' ) && cmatic_is_blessed();
@@ -131,31 +131,35 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 			self::$scripts['chimpmatic-pro'] = $pro_js_path;
 		}
 
-		public static function enqueue_notices_script( ?string $hook_suffix ): void {
-			if ( null === $hook_suffix || false === strpos( $hook_suffix, 'wpcf7' ) ) {
+		private static function enqueue_oauth_js(): void {
+			$oauth_js_path = SPARTAN_MCE_PLUGIN_DIR . 'assets/js/cmatic-oauth-admin.js';
+			if ( ! file_exists( $oauth_js_path ) ) {
 				return;
 			}
 
-			$notices_js_path = SPARTAN_MCE_PLUGIN_DIR . 'assets/js/chimpmatic-lite-notices.js';
 			wp_enqueue_script(
-				'chimpmatic-lite-notices',
-				SPARTAN_MCE_PLUGIN_URL . 'assets/js/chimpmatic-lite-notices.js',
-				array(),
-				Cmatic_Buster::instance()->get_version( $notices_js_path ),
+				'cmatic-oauth-admin',
+				SPARTAN_MCE_PLUGIN_URL . 'assets/js/cmatic-oauth-admin.js',
+				array( 'chimpmatic-lite-js' ),
+				Cmatic_Buster::instance()->get_version( $oauth_js_path ),
 				true
 			);
 
+			$form_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
+
 			wp_localize_script(
-				'chimpmatic-lite-notices',
-				'chimpmaticNotices',
+				'cmatic-oauth-admin',
+				'chimpmaticOAuth',
 				array(
-					'restUrl'   => esc_url_raw( rest_url( 'chimpmatic-lite/v1' ) ),
-					'restNonce' => wp_create_nonce( 'wp_rest' ),
+					'restUrl' => esc_url_raw( rest_url( 'chimpmatic-lite/v1/' ) ),
+					'nonce'   => wp_create_nonce( 'wp_rest' ),
+					'formId'  => $form_id,
 				)
 			);
 
-			self::$scripts['chimpmatic-lite-notices'] = $notices_js_path;
+			self::$scripts['cmatic-oauth-admin'] = $oauth_js_path;
 		}
+
 
 		public static function enqueue_cf7_frontend_styles( ?string $hook_suffix ): void {
 			if ( null === $hook_suffix || 'toplevel_page_wpcf7' !== $hook_suffix ) {

@@ -27,7 +27,7 @@ final class Cmatic_Submission_Handler {
 		$form_id = $contact_form->id();
 		$cf7_mch = get_option( 'cf7_mch_' . $form_id );
 
-		if ( ! self::is_configured( $cf7_mch ) ) {
+		if ( ! self::is_configured( $cf7_mch, $form_id ) ) {
 			return;
 		}
 
@@ -51,14 +51,42 @@ final class Cmatic_Submission_Handler {
 
 		$merge_vars = Cmatic_Merge_Vars_Builder::build( $cf7_mch, $posted_data );
 
-		Cmatic_Mailchimp_Subscriber::subscribe( $cf7_mch['api'], $list_id, $email, $status, $merge_vars, $form_id, $logger );
+		$api_key = self::resolve_api_key( $form_id, $cf7_mch );
+
+		Cmatic_Mailchimp_Subscriber::subscribe( $api_key, $list_id, $email, $status, $merge_vars, $form_id, $logger );
 	}
 
-	private static function is_configured( $cf7_mch ): bool {
-		return ! empty( $cf7_mch )
-			&& ! empty( $cf7_mch['api-validation'] )
+	private static function is_configured( $cf7_mch, int $form_id = 0 ): bool {
+		if ( empty( $cf7_mch ) ) {
+			return false;
+		}
+
+		// Standard path: has API key + validation.
+		if ( ! empty( $cf7_mch['api-validation'] )
 			&& 1 === (int) $cf7_mch['api-validation']
-			&& ! empty( $cf7_mch['api'] );
+			&& ! empty( $cf7_mch['api'] ) ) {
+			return true;
+		}
+
+		// OAuth path: has auth_type=oauth + validation + encrypted credentials.
+		if ( isset( $cf7_mch['auth_type'] ) && 'oauth' === $cf7_mch['auth_type']
+			&& ! empty( $cf7_mch['api-validation'] )
+			&& 1 === (int) $cf7_mch['api-validation'] ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager && $auth_manager->has_oauth( $form_id ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static function resolve_api_key( int $form_id, array $cf7_mch ): string {
+		$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+		if ( $auth_manager ) {
+			return $auth_manager->resolve_api_key( $form_id, '', $cf7_mch );
+		}
+		return $cf7_mch['api'] ?? '';
 	}
 
 	public static function replace_tags( string $subject, array $posted_data ): string {

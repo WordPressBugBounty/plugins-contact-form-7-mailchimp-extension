@@ -128,6 +128,13 @@ class Cmatic_Contact_Lookup {
 		$api_key     = $cf7_mch['api'] ?? '';
 
 		if ( empty( $api_key ) ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager ) {
+				$api_key = $auth_manager->resolve_api_key( $form_id, '', $cf7_mch );
+			}
+		}
+
+		if ( empty( $api_key ) ) {
 			return new WP_Error(
 				'no_api_key',
 				__( 'No API key configured. Please connect to Mailchimp first.', 'chimpmatic-lite' ),

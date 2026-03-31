@@ -57,10 +57,15 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/services/class-cmatic-cf7-dependency.php';
 		require_once $this->dir . 'includes/services/class-cmatic-pro-syncer.php';
 		require_once $this->dir . 'includes/services/class-cmatic-api-key-importer.php';
+
+		// OAuth auth layer.
+		require_once $this->dir . 'includes/auth/class-cmatic-lite-credentials.php';
+		require_once $this->dir . 'includes/auth/class-cmatic-lite-auth-manager.php';
 	}
 
 	private function register_lifecycle_hooks(): void {
 		Cmatic_Activator::register_hooks( $this->file, $this->version );
+		register_deactivation_hook( $this->file, array( 'Cmatic_Lite_Auth_Manager', 'restore_all_api_keys' ) );
 	}
 
 	private function load_module_dependencies(): void {
@@ -97,6 +102,7 @@ final class Cmatic_Plugin {
 			// API.
 			'api/class-cmatic-log-viewer.php',
 			'api/class-cmatic-contact-lookup.php',
+			'api/class-cmatic-rest-oauth.php',
 			'api/class-cmatic-submission-feedback.php',
 			// UI.
 			'ui/class-cmatic-header.php',
@@ -139,6 +145,7 @@ final class Cmatic_Plugin {
 
 		// API Services.
 		Cmatic_Contact_Lookup::init();
+		Cmatic_Rest_OAuth::init();
 		Cmatic_Submission_Feedback::init();
 
 		// Admin UI.

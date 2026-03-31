@@ -238,7 +238,9 @@ final class Cmatic_Rest_Form {
 				'tag'     => $tag,
 				'enabled' => $enabled,
 				'message' => $enabled
+					// translators: %s: tag name.
 					? sprintf( __( 'Tag [%s] enabled.', 'chimpmatic-lite' ), $tag )
+					// translators: %s: tag name.
 					: sprintf( __( 'Tag [%s] disabled.', 'chimpmatic-lite' ), $tag ),
 			)
 		);
@@ -263,6 +265,7 @@ final class Cmatic_Rest_Form {
 		if ( null === $matched_config ) {
 			return new WP_Error(
 				'invalid_field',
+				// translators: %s: field name.
 				sprintf( __( 'Field "%s" is not allowed.', 'chimpmatic-lite' ), $field ),
 				array( 'status' => 400 )
 			);

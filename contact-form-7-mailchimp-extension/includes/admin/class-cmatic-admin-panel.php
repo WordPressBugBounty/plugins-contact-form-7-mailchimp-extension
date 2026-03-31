@@ -50,7 +50,11 @@ final class Cmatic_Admin_Panel {
 
 		// Render container.
 		if ( class_exists( 'Cmatic_Data_Container' ) ) {
-			Cmatic_Data_Container::render_open( $form_id, (string) $api_valid );
+			$extra_data = array();
+			if ( isset( $cf7_mch['auth_type'] ) && 'oauth' === $cf7_mch['auth_type'] ) {
+				$extra_data['auth_type'] = 'oauth';
+			}
+			Cmatic_Data_Container::render_open( $form_id, (string) $api_valid, $extra_data );
 		} else {
 			echo '<div class="cmatic-inner">';
 		}
@@ -64,7 +68,7 @@ final class Cmatic_Admin_Panel {
 		echo '<div class="cmatic-content">';
 
 		// API Panel.
-		Cmatic_Api_Panel::render( $cf7_mch, (string) $api_valid );
+		Cmatic_Api_Panel::render( $cf7_mch, (string) $api_valid, $form_id );
 
 		// Audiences.
 		if ( class_exists( 'Cmatic_Audiences' ) ) {
@@ -132,10 +136,34 @@ final class Cmatic_Admin_Panel {
 
 		$option_name  = 'cf7_mch_' . $form_id;
 		$old_settings = get_option( $option_name, array() );
-		$posted_data  = $_POST['wpcf7-mailchimp']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in sanitize_settings().
+		$posted_data  = wp_unslash( $_POST['wpcf7-mailchimp'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in sanitize_settings().
 		$sanitized    = self::sanitize_settings( $posted_data, $old_settings );
 
+		// OAuth→manual transition: if user enters an API key while OAuth is connected,
+		// disconnect OAuth and use the new key. Matches Pro behavior (cmatic-functions.php L576-588).
+		if ( ! empty( $sanitized['api'] ) && isset( $old_settings['auth_type'] ) && 'oauth' === $old_settings['auth_type'] ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager ) {
+				$auth_manager->disconnect( $form_id );
+			}
+			unset( $sanitized['auth_type'] );
+			unset( $sanitized['api_key_backup'] );
+			$sanitized['lisdata'] = array();
+			$sanitized['list']    = '';
+			$sanitized['api-validation'] = 0;
+			// Re-read old_settings after disconnect modified it.
+			$old_settings = get_option( $option_name, array() );
+		}
+
 		if ( empty( $sanitized['api'] ) ) {
+			// Don't delete option if OAuth is connected — api is legitimately empty.
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager && $auth_manager->has_oauth( $form_id ) ) {
+				// Preserve OAuth state — merge sanitized fields (checkboxes, etc.) into existing settings.
+				$updated_settings = array_merge( $old_settings, $sanitized );
+				update_option( $option_name, $updated_settings );
+				return;
+			}
 			delete_option( $option_name );
 			return;
 		}

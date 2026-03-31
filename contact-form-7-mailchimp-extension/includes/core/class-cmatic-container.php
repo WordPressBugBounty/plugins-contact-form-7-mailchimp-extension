@@ -65,5 +65,13 @@ class Cmatic_Lite_Container {
 				return self::get( Cmatic_Options_Interface::class );
 			}
 		);
+
+		// OAuth credential manager.
+		self::factory(
+			'auth.manager',
+			function () {
+				return new Cmatic_Lite_Auth_Manager();
+			}
+		);
 	}
 }

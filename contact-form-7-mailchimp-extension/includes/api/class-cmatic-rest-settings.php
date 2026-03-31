@@ -147,7 +147,9 @@ final class Cmatic_Rest_Settings {
 				'field'   => $field,
 				'enabled' => $enabled,
 				'message' => $enabled
+					// translators: %s: setting label.
 					? sprintf( __( '%s enabled.', 'chimpmatic-lite' ), $label )
+					// translators: %s: setting label.
 					: sprintf( __( '%s disabled.', 'chimpmatic-lite' ), $label ),
 			)
 		);

@@ -312,7 +312,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	function updateApiStatus(isValid) {
-		// Update sidebar status
 		const versionInfo = document.getElementById('chimpmatic-version-info');
 		if (versionInfo) {
 			const statusText = versionInfo.querySelector('.chmm');
@@ -329,7 +328,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		}
 
-		// Update header status dot
 		const headerDot = document.querySelector('.cmatic-header__status-dot');
 		const headerText = document.querySelector('.cmatic-header__status-text');
 		if (headerDot) {
@@ -403,12 +401,16 @@ document.addEventListener('DOMContentLoaded', function() {
 			const apiKeyInput = document.getElementById('cmatic-api');
 			const selectElement = document.getElementById('wpcf7-mailchimp-list');
 
-			if (!apiKeyInput || !selectElement) return;
+			var dataContainer = document.getElementById('cmatic_data');
+			var authType = (dataContainer && dataContainer.dataset.authType) || '';
+
+			if (!selectElement) return;
+			if (!apiKeyInput && authType !== 'oauth') return;
 
 			const formId = getFormId();
-			const apiKey = await getSecureApiKey(apiKeyInput, formId);
+			const apiKey = apiKeyInput ? await getSecureApiKey(apiKeyInput, formId) : '';
 
-			if (!apiKey) {
+			if (!apiKey && authType !== 'oauth') {
 				if (typeof showInlineMessage === 'function') {
 					showInlineMessage(fetchListsButton, 'Enter API key first', 'warning');
 				}
@@ -594,7 +596,6 @@ document.addEventListener('DOMContentLoaded', function() {
 					const data = await response.json();
 					if (wrapper) wrapper.classList.remove('is-saving');
 					if (data.success) {
-						// Sync defaultChecked to prevent CF7 beforeunload warning
 						this.defaultChecked = this.checked;
 					} else {
 						this.checked = !enabled;
@@ -653,7 +654,6 @@ document.addEventListener('DOMContentLoaded', function() {
 					const data = await response.json();
 					if (wrapper) wrapper.classList.remove('is-saving');
 					if (data.success) {
-						// Sync defaultSelected to prevent CF7 beforeunload warning
 						Array.from(this.options).forEach(function(opt) {
 							opt.defaultSelected = opt.selected;
 						});
@@ -1052,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				const fieldCount = selectedList ? selectedList.field_count : 0;
 				const audienceName = selectedList ? selectedList.name : '';
 				updateFieldsNotice(fieldCount, chimpmaticLite.liteFieldsLimit || 4, audienceName);
+				document.querySelectorAll('.audience-name').forEach(el => { el.textContent = audienceName; });
 
 				if (fetchFieldsButton) {
 					if (fetchFieldsButton.tagName === 'INPUT') fetchFieldsButton.value = 'Synced ✓';
@@ -1515,6 +1516,29 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (!form) return;
 
 		form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+	});
+
+	document.addEventListener('click', function(event) {
+		if (!event.target.classList.contains('notice-dismiss')) return;
+		const noticeElement = event.target.closest('#mce-notice');
+		if (!noticeElement) return;
+
+		event.preventDefault();
+		fetch(chimpmaticLite.restUrl + 'notices/dismiss', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': chimpmaticLite.restNonce
+			}
+		}).then(function(response) {
+			return response.json();
+		}).then(function(data) {
+			if (data.success) {
+				noticeElement.style.transition = 'opacity 0.3s ease-out';
+				noticeElement.style.opacity = '0';
+				setTimeout(function() { noticeElement.style.display = 'none'; }, 300);
+			}
+		});
 	});
 });
 

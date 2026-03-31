@@ -44,10 +44,14 @@ final class Cmatic_Rest_Lists {
 						},
 					),
 					'api_key' => array(
-						'required'          => true,
+						'required'          => false,
 						'type'              => 'string',
+						'default'           => '',
 						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => function ( $param ) {
+							if ( empty( $param ) ) {
+								return true; // Allow empty for OAuth resolution.
+							}
 							return preg_match( '/^[a-f0-9]{32}-[a-z]{2,3}\d+$/', $param );
 						},
 					),
@@ -124,6 +128,34 @@ final class Cmatic_Rest_Lists {
 	public static function get_lists( $request ) {
 		$form_id = $request->get_param( 'form_id' );
 		$api_key = $request->get_param( 'api_key' );
+
+		// Track whether the key came from OAuth storage (not from the request
+		// or from the cf7_mch['api'] fallback in resolve_api_key).
+		// Use get_credentials() directly for precision — this only returns
+		// non-null when actual OAuth encrypted data exists.
+		$key_from_oauth = false;
+
+		if ( empty( $api_key ) ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager ) {
+				$credentials = $auth_manager->get_credentials( $form_id );
+				if ( $credentials ) {
+					$api_key        = $credentials->get_api_key();
+					$key_from_oauth = true;
+				} else {
+					// No OAuth credentials — try the composite resolver for fallback.
+					$api_key = $auth_manager->resolve_api_key( $form_id );
+				}
+			}
+		}
+
+		if ( empty( $api_key ) ) {
+			return new WP_Error(
+				'missing_api_key',
+				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'chimpmatic-lite' ),
+				array( 'status' => 400 )
+			);
+		}
 
 		if ( ! Cmatic_Options_Repository::get_option( 'api.sync_attempted' ) ) {
 			Cmatic_Options_Repository::set_option( 'api.sync_attempted', time() );
@@ -215,7 +247,7 @@ final class Cmatic_Rest_Lists {
 				$validation_result,
 				$lists_result,
 				array(
-					'api'          => $api_key,
+					'api'          => $key_from_oauth ? '' : $api_key,
 					'merge_fields' => $merge_fields,
 				)
 			);
@@ -261,6 +293,13 @@ final class Cmatic_Rest_Lists {
 		$cf7_mch         = get_option( $option_name, array() );
 		$api_key         = $cf7_mch['api'] ?? '';
 		$logfile_enabled = (bool) get_option( CMATIC_LOG_OPTION, false );
+
+		if ( empty( $api_key ) ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager ) {
+				$api_key = $auth_manager->resolve_api_key( $form_id, '', $cf7_mch );
+			}
+		}
 
 		if ( empty( $api_key ) ) {
 			return new WP_Error(
@@ -361,7 +400,21 @@ final class Cmatic_Rest_Lists {
 			$cf7_mch = array();
 		}
 
-		$api_key = isset( $cf7_mch['api'] ) ? $cf7_mch['api'] : '';
+		// OAuth-backed forms: never expose the decrypted key over this endpoint.
+		// The OAuth key is used internally by resolve_api_key() for Mailchimp API
+		// calls, but must not be returned to the client via REST.
+		$auth_type = isset( $cf7_mch['auth_type'] ) ? $cf7_mch['auth_type'] : '';
+		if ( 'oauth' === $auth_type ) {
+			return rest_ensure_response(
+				array(
+					'success'   => true,
+					'api_key'   => '',
+					'auth_type' => 'oauth',
+				)
+			);
+		}
+
+		$api_key = isset( $cf7_mch['api'] ) && ! empty( $cf7_mch['api'] ) ? $cf7_mch['api'] : '';
 
 		return rest_ensure_response(
 			array(

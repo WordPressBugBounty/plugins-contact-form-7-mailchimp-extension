@@ -981,6 +981,128 @@ a.helping-field:hover .red-icon::before {
 	min-width: 160px;
 }
 
+.cmatic-oauth-status-text {
+	display: inline-block;
+	width: 364px;
+	height: 30px;
+	line-height: 30px;
+	color: #16a34a;
+	font-weight: 600;
+	font-size: 13px;
+	box-sizing: border-box;
+	vertical-align: middle;
+}
+
+.cmatic-oauth-status-text .dashicons {
+	color: #16a34a;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+	margin-right: 4px;
+	position: relative;
+	top: -1px;
+}
+
+.cmatic-oauth-connect-wrap {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.cmatic-oauth-connect {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	height: 44px;
+	min-width: 280px;
+	justify-content: center;
+	padding: 0 28px;
+	background: #2271b1;
+	color: #fff;
+	border: none;
+	border-radius: 22px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(34, 113, 177, .3);
+	transition: all 0.15s;
+}
+
+.cmatic-oauth-connect:hover {
+	background: #135e96;
+	box-shadow: 0 4px 12px rgba(34, 113, 177, .4);
+	transform: translateY(-1px);
+}
+
+.cmatic-oauth-connect:disabled {
+	opacity: 0.7;
+	cursor: default;
+	transform: none;
+	box-shadow: 0 2px 8px rgba(34, 113, 177, .2);
+}
+
+.cmatic-oauth-connect svg {
+	flex-shrink: 0;
+}
+
+.cmatic-show-api-key {
+	display: inline-block;
+	margin-top: 10px;
+	font-size: 12px;
+	text-decoration: none;
+	color: #787c82;
+}
+
+.cmatic-show-api-key:hover {
+	color: #2271b1;
+	text-decoration: underline;
+}
+
+.cmatic-disconnect-confirm {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	height: 30px;
+	font-size: 13px;
+	vertical-align: middle;
+}
+
+.cmatic-disconnect-label {
+	color: #d63638;
+	font-weight: 600;
+}
+
+.cmatic-disconnect-yes {
+	background: #d63638;
+	color: #fff;
+	border: 1px solid #d63638;
+	border-radius: 3px;
+	padding: 0 14px;
+	height: 28px;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.cmatic-disconnect-yes:hover {
+	background: #b32d2e;
+	border-color: #b32d2e;
+}
+
+.cmatic-disconnect-cancel {
+	background: none;
+	border: none;
+	color: #2271b1;
+	cursor: pointer;
+	font-size: 13px;
+	padding: 0;
+	text-decoration: underline;
+}
+
+.cmatic-disconnect-cancel:hover {
+	color: #135e96;
+}
+
 @media only screen and (min-width: 768px) {
 	.mcee-container {
 	display: inline-block;
