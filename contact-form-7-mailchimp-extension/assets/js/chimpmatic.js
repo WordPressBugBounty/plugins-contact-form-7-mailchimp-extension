@@ -286,7 +286,9 @@ document.addEventListener('click', function(event) {
         }
 
         const apiKey = apiKeyElement?.value || '';
-        if (!apiKey || apiKey.trim() === '') {
+        const dataContainer = document.getElementById('cmatic_data');
+        const authType = dataContainer?.dataset?.authType || '';
+        if ((!apiKey || apiKey.trim() === '') && authType !== 'oauth') {
             showInlineMessage(button, 'Enter API key first', 'warning');
             return;
         }

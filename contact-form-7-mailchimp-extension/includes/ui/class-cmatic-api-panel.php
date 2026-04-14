@@ -29,6 +29,14 @@ class Cmatic_Api_Panel {
 		$auth_type   = isset( $cf7_mch['auth_type'] ) ? $cf7_mch['auth_type'] : '';
 		$is_oauth    = 'oauth' === $auth_type && $is_valid;
 
+		if ( ! $has_api_key && ! $is_oauth && $form_id ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager && $auth_manager->has_oauth( $form_id ) ) {
+				$is_oauth = true;
+				$is_valid = true;
+			}
+		}
+
 		$help_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'api_panel_help' );
 
 		if ( $is_oauth ) {

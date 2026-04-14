@@ -2,9 +2,9 @@
 Contributors: rnzo, chimpmatic
 Donate link: https://bit.ly/2HdTzmO
 Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
-Requires at least: 6.1
+Requires at least: 6.6
 Tested up to: 6.9
-Stable tag: 0.9.78
+Stable tag: 0.9.78.02
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -89,7 +89,7 @@ See the full [setup guide](https://chimpmatic.com/connect-contact-form-7-with-ma
 
 = How do I find my Mailchimp API key? =
 
-Log in to Mailchimp, click your profile icon, go to Account & billing > Extras > API Keys, and click Create A Key. Copy the key and paste it into the Chimpmatic settings in your CF7 form editor.
+The fastest way is our direct link: admin.mailchimp.com/account/api/ — log in and your keys are right there. For the full walkthrough with screenshots, format validation, and troubleshooting, see our [Mailchimp API key guide](https://chimpmatic.com/how-to-get-your-mailchimp-api-key).
 
 = Can I use different Mailchimp lists for different forms? =
 
@@ -113,7 +113,7 @@ GDPR consent checkbox support is available in [Chimpmatic PRO](https://chimpmati
 
 = Contact Form 7 not sending to Mailchimp? =
 
-Common fixes: (1) Check your API key is correct and not expired. (2) Verify the email field is mapped properly. (3) Check for trailing spaces in the API key. (4) Make sure your Mailchimp audience is not archived. See our [troubleshooting guide](https://chimpmatic.com/connect-contact-form-7-with-mailchimp).
+Common fixes: (1) Check your API key is correct and not expired. (2) Verify the email field is mapped properly. (3) Check for trailing spaces in the API key. (4) Make sure your Mailchimp audience is not archived. See our [troubleshooting guide](https://chimpmatic.com/contact-form-7-not-sending-to-mailchimp-7-common-fixes).
 
 = Does this work with Mailchimp merge fields? =
 
@@ -127,6 +127,10 @@ Yes. You can map any Contact Form 7 field to Mailchimp merge fields like FNAME, 
 == Changelog ==
 
 For the full changelog with details, see [Release History](https://renzojohnson.com/changelog).
+
+= 0.9.78.02 =
+
+[Version 0.9.78.02 release notes](https://renzojohnson.com/changelog#0.9.78.02)
 
 = 0.9.78 =
 

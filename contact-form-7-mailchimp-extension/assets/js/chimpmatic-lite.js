@@ -58,7 +58,7 @@
 	});
 })();
 
-document.addEventListener('DOMContentLoaded', function() {
+function chimpmaticLiteInit() {
 	if (typeof chimpmaticLite === 'undefined') {
 		return;
 	}
@@ -1540,12 +1540,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	});
-});
 
-document.addEventListener('DOMContentLoaded', function() {
 	const eye = document.querySelector('.cmatic-eye');
 	const input = document.getElementById('cmatic-api');
-	if (!eye || !input) return;
+	if (eye && input) {
 
 	let cachedRealKey = null;
 
@@ -1640,6 +1638,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				}
 			}
 		});
+	}
 	}
 
 	(function initContactLookup() {
@@ -2062,4 +2061,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	})();
-});
+}
+
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', chimpmaticLiteInit);
+} else {
+	chimpmaticLiteInit();
+}

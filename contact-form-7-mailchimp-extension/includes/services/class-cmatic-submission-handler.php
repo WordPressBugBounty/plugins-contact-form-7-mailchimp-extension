@@ -78,6 +78,13 @@ final class Cmatic_Submission_Handler {
 			}
 		}
 
+		if ( $form_id && empty( $cf7_mch['api'] ) ) {
+			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
+			if ( $auth_manager && $auth_manager->has_oauth( $form_id ) ) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
