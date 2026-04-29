@@ -55,7 +55,7 @@
             'width=' + width + ',height=' + height +
             ',top=' + top + ',left=' + left;
 
-        var popup = window.open(authUrl, 'ChimpMatic OAuth', features);
+        var popup = window.open(authUrl, 'ChimpMaticOAuth_' + Date.now(), features);
 
         if (!popup) {
             alert('Pop-up blocked. Please allow pop-ups for this site and try again.');
@@ -63,25 +63,23 @@
         }
 
         var pollCount = 0;
-        var maxPolls = 2400; // 10 minutes at 250ms intervals.
+        var maxPolls = 240;
         var pollInterval = window.setInterval(function() {
             if (++pollCount > maxPolls) {
                 window.clearInterval(pollInterval);
                 updateConnectButton('error', 'OAuth timed out — please try again');
                 return;
             }
-            if (!popup.closed) {
-                return;
-            }
-
-            window.clearInterval(pollInterval);
-            updateConnectButton('connecting');
 
             restPost('oauth/status', {
                 url: GATEWAY_DOMAIN + '/api/status/' + token
             }).then(function(statusData) {
                 if (statusData.status === 'accepted') {
-                    return restPost('oauth/finish', {
+                    window.clearInterval(pollInterval);
+                    try { popup.close(); } catch(e) {}
+                    updateConnectButton('connecting');
+
+                    restPost('oauth/finish', {
                         token: token,
                         form_id: formId
                     }).then(function(finishData) {
@@ -91,14 +89,12 @@
                         } else {
                             updateConnectButton('error', finishData.message || 'Connection failed');
                         }
+                    }).catch(function(err) {
+                        updateConnectButton('error', err.message || 'Connection failed');
                     });
-                } else {
-                    updateConnectButton('error', 'Authentication was not completed');
                 }
-            }).catch(function(err) {
-                updateConnectButton('error', err.message || 'Connection failed');
-            });
-        }, 250);
+            }).catch(function() {});
+        }, 2500);
     }
 
     function createConnectSvg() {

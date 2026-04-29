@@ -234,32 +234,9 @@ final class Cmatic_Rest_OAuth {
 			return $result;
 		}
 
-		// Fetch Mailchimp account name for display in the connected state.
-		$dc           = $creds->get_datacenter();
-		$account_name = '';
-		$mc_response  = wp_remote_get(
-			'https://' . $dc . '.api.mailchimp.com/3.0/',
-			array(
-				'headers' => array(
-					'Authorization' => 'Basic ' . base64_encode( 'chimpmatic:' . $api_key ),
-				),
-				'timeout' => 10,
-			)
-		);
-
-		if ( ! is_wp_error( $mc_response ) ) {
-			$mc_body = json_decode( wp_remote_retrieve_body( $mc_response ), true );
-			if ( ! empty( $mc_body['account_name'] ) ) {
-				$account_name = sanitize_text_field( $mc_body['account_name'] );
-			}
-		}
-
 		$option_name = 'cf7_mch_' . $form_id;
 		$config      = get_option( $option_name, array() );
 		if ( is_array( $config ) ) {
-			if ( $account_name ) {
-				$config['oauth_account_name'] = $account_name;
-			}
 			$current_user = wp_get_current_user();
 			$config['oauth_connected_by']   = sanitize_text_field( $current_user->display_name );
 			$config['oauth_connected_date'] = current_time( 'Y-m-d' );

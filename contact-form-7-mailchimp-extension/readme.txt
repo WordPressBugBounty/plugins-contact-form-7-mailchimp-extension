@@ -2,9 +2,9 @@
 Contributors: rnzo, chimpmatic
 Donate link: https://bit.ly/2HdTzmO
 Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
-Requires at least: 6.6
+Requires at least: 6.1
 Tested up to: 6.9
-Stable tag: 0.9.78.02
+Stable tag: 0.9.78.03
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 

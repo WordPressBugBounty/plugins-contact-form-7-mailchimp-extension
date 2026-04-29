@@ -242,15 +242,16 @@ final class Cmatic_Rest_Lists {
 				}
 			}
 
-			$settings_to_save = array_merge(
-				$cf7_mch,
-				$validation_result,
-				$lists_result,
-				array(
-					'api'          => $key_from_oauth ? '' : $api_key,
-					'merge_fields' => $merge_fields,
-				)
+			$extra = array(
+				'api'          => $key_from_oauth ? '' : $api_key,
+				'merge_fields' => $merge_fields,
 			);
+
+			if ( ! empty( $validation_result['account_name'] ) ) {
+				$extra['oauth_account_name'] = $validation_result['account_name'];
+			}
+
+			$settings_to_save = array_merge( $cf7_mch, $validation_result, $lists_result, $extra );
 			update_option( $option_name, $settings_to_save );
 
 			// Record first successful connection after form settings are saved.

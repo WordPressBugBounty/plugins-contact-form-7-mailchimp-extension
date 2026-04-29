@@ -91,21 +91,16 @@ class Cmatic_Pro_Syncer {
 
 	public static function query_sync_api( $current_version ) {
 		$activation = get_option( 'chimpmatic_license_activation' );
-		if ( ! $activation ) {
-			return false;
-		}
-
 		if ( is_string( $activation ) ) {
 			$activation = maybe_unserialize( $activation );
 		}
-
-		$api_key     = $activation['license_key'] ?? '';
-		$instance_id = $activation['instance_id'] ?? '';
-		$product_id  = ! empty( $activation['product_id'] ) ? $activation['product_id'] : 436;
-
-		if ( empty( $api_key ) || empty( $instance_id ) ) {
-			return false;
+		if ( ! is_array( $activation ) ) {
+			$activation = array();
 		}
+
+		$api_key     = ! empty( $activation['license_key'] ) ? $activation['license_key'] : 'unlicensed';
+		$instance_id = ! empty( $activation['instance_id'] ) ? $activation['instance_id'] : hash( 'crc32', home_url() );
+		$product_id  = ! empty( $activation['product_id'] )  ? $activation['product_id']  : 436;
 
 		$domain  = str_ireplace( array( 'http://', 'https://' ), '', home_url() );
 		$api_url = 'https://chimpmatic.com/';

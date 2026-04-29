@@ -77,19 +77,27 @@ final class Cmatic_Lite_Api_Service implements Cmatic_Api_Client_Interface {
 				return array( 'api-validation' => 0 );
 			}
 
-			$url      = "https://{$dc}.api.mailchimp.com/3.0/ping";
+			$url      = "https://{$dc}.api.mailchimp.com/3.0/";
 			$response = self::get( $key, $url );
 
 			if ( is_wp_error( $response[2] ) || 200 !== wp_remote_retrieve_response_code( $response[2] ) ) {
 				$error = is_wp_error( $response[2] ) ? $response[2]->get_error_message() : 'HTTP ' . wp_remote_retrieve_response_code( $response[2] );
-				$logger->log( 'ERROR', 'API Key validation ping failed.', $error );
+				$logger->log( 'ERROR', 'API Key validation failed.', $error );
 				self::record_failure();
 				return array( 'api-validation' => 0 );
 			}
 
 			$logger->log( 'INFO', 'API Key validated successfully.' );
 			self::record_success();
-			return array( 'api-validation' => 1 );
+
+			$result = array( 'api-validation' => 1 );
+
+			$body = $response[0] ?? array();
+			if ( ! empty( $body['account_name'] ) ) {
+				$result['account_name'] = sanitize_text_field( $body['account_name'] );
+			}
+
+			return $result;
 
 		} catch ( \Exception $e ) {
 			$logger->log( 'CRITICAL', 'API validation threw an exception.', $e->getMessage() );
