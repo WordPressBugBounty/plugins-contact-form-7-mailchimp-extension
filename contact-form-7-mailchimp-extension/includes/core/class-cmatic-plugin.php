@@ -113,6 +113,7 @@ final class Cmatic_Plugin {
 			'ui/class-cmatic-tags-preview.php',
 			'ui/class-cmatic-banners.php',
 			'ui/class-cmatic-form-classes.php',
+			'ui/class-cmatic-dom-classes.php',
 			'ui/class-cmatic-field-mapper.php',
 			'ui/class-cmatic-sidebar-panel.php',
 			'ui/class-cmatic-advanced-settings.php',
@@ -158,6 +159,7 @@ final class Cmatic_Plugin {
 		Cmatic_Submission_Handler::init();
 		Cmatic_Banners::init();
 		Cmatic_Form_Classes::init();
+		Cmatic_Dom_Classes::init();
 
 		// Background Tasks.
 		Cmatic_Cron::init( $this->file );
