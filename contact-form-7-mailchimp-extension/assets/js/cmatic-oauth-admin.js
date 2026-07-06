@@ -1,21 +1,23 @@
+/**
+ * OAuth admin connection handler.
+ *
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
+ */
+
 (function() {
     'use strict';
 
     var GATEWAY_DOMAIN = 'https://api.chimpmatic.com';
 
-    // Suppress CF7's beforeunload dirty-form warning before programmatic reloads.
-    // CF7's handler calls e.preventDefault() on the BeforeUnloadEvent, which Chrome
-    // uses to show the "Reload site?" dialog. We use two strategies:
-    // 1. Reset all form field baselines so CF7's dirty check finds nothing changed.
-    // 2. As a fallback, temporarily neuter preventDefault on BeforeUnloadEvent so
-    //    even if CF7's check still fires, it can't trigger the dialog.
     function safeReload() {
         resetCf7DirtyState();
         window.onbeforeunload = null;
         var origPD = BeforeUnloadEvent.prototype.preventDefault;
         BeforeUnloadEvent.prototype.preventDefault = function() {};
         location.reload();
-        // Restore after a tick (reload is async, this runs if reload is delayed).
         setTimeout(function() {
             BeforeUnloadEvent.prototype.preventDefault = origPD;
         }, 0);
@@ -45,28 +47,41 @@
         }).then(function(r) { return r.json(); });
     }
 
-    function openOAuthPopup(authUrl, token, formId) {
+    function oauthPopupFeatures() {
         var width = 740;
         var height = 740;
         var left = window.screenX + (window.outerWidth - width) / 2;
         var top = window.screenY + (window.outerHeight - height) / 2;
-        var features = 'toolbar=no,location=no,directories=no,' +
+        return 'toolbar=no,location=no,directories=no,' +
             'status=no,menubar=no,scrollbars=yes,resizable=yes,' +
             'width=' + width + ',height=' + height +
             ',top=' + top + ',left=' + left;
+    }
 
-        var popup = window.open(authUrl, 'ChimpMaticOAuth_' + Date.now(), features);
+    function beacon(event, extra) {
+        var payload = { event: event };
+        if (extra && extra.token) { payload.token = extra.token; }
+        if (extra && extra.reason) { payload.reason = extra.reason; }
+        restPost('oauth/event', payload).catch(function() {});
+    }
 
-        if (!popup) {
-            alert('Pop-up blocked. Please allow pop-ups for this site and try again.');
+    function openOAuthPopup(popup, authUrl, token, formId) {
+        if (!popup || popup.closed) {
+            beacon('popup_blocked', { token: token });
+            updateConnectButton('error', 'Pop-up blocked — allow pop-ups for this site, then click Connect again');
             return;
         }
 
+        popup.location = authUrl;
+        beacon('popup_opened', { token: token });
+
         var pollCount = 0;
         var maxPolls = 240;
+        var finishing = false;
         var pollInterval = window.setInterval(function() {
             if (++pollCount > maxPolls) {
                 window.clearInterval(pollInterval);
+                beacon('timeout', { token: token });
                 updateConnectButton('error', 'OAuth timed out — please try again');
                 return;
             }
@@ -74,7 +89,11 @@
             restPost('oauth/status', {
                 url: GATEWAY_DOMAIN + '/api/status/' + token
             }).then(function(statusData) {
+                if (finishing) {
+                    return;
+                }
                 if (statusData.status === 'accepted') {
+                    finishing = true;
                     window.clearInterval(pollInterval);
                     try { popup.close(); } catch(e) {}
                     updateConnectButton('connecting');
@@ -87,11 +106,19 @@
                             updateConnectButton('connected');
                             safeReload();
                         } else {
+                            beacon('finish_failed', { token: token, reason: finishData.message || '' });
                             updateConnectButton('error', finishData.message || 'Connection failed');
                         }
                     }).catch(function(err) {
+                        beacon('finish_failed', { token: token, reason: (err && err.message) || '' });
                         updateConnectButton('error', err.message || 'Connection failed');
                     });
+                } else if (statusData.status === 'error') {
+                    finishing = true;
+                    window.clearInterval(pollInterval);
+                    try { popup.close(); } catch(e) {}
+                    beacon('finish_failed', { token: token, reason: 'callback_error' });
+                    updateConnectButton('error', 'Mailchimp authorization failed — please try again');
                 }
             }).catch(function() {});
         }, 2500);
@@ -192,28 +219,30 @@
         }
     }
 
-    // Connect button click.
     document.addEventListener('click', function(e) {
         var connectBtn = e.target.closest('.cmatic-oauth-connect');
         if (connectBtn) {
             var formId = parseInt(connectBtn.getAttribute('data-form-id'), 10) || 0;
             updateConnectButton('starting');
 
+            var popup = window.open('', 'ChimpMaticOAuth_' + Date.now(), oauthPopupFeatures());
+
             restPost('oauth/start', { form_id: formId })
                 .then(function(data) {
                     if (data.token && data.auth_url) {
                         updateConnectButton('waiting');
-                        openOAuthPopup(data.auth_url, data.token, formId);
+                        openOAuthPopup(popup, data.auth_url, data.token, formId);
                     } else {
+                        if (popup) { try { popup.close(); } catch(e) {} }
                         updateConnectButton('error', data.message || 'Could not start OAuth');
                     }
                 })
                 .catch(function(err) {
+                    if (popup) { try { popup.close(); } catch(e) {} }
                     updateConnectButton('error', err.message || 'Could not start OAuth');
                 });
         }
 
-        // Disconnect button click — show inline confirmation.
         if (e.target.classList.contains('cmatic-oauth-disconnect')) {
             var btn = e.target;
             var formId = btn.getAttribute('data-form-id');
@@ -229,7 +258,6 @@
             btn.style.display = 'none';
         }
 
-        // Inline confirm — Yes, disconnect.
         if (e.target.classList.contains('cmatic-disconnect-yes')) {
             var wrapper = e.target.closest('.cmatic-disconnect-confirm');
             var formId = parseInt(wrapper.parentNode.querySelector('.cmatic-oauth-disconnect').getAttribute('data-form-id'), 10) || 0;
@@ -254,7 +282,6 @@
                 });
         }
 
-        // Inline confirm — Cancel.
         if (e.target.classList.contains('cmatic-disconnect-cancel')) {
             var wrapper = e.target.closest('.cmatic-disconnect-confirm');
             var btn = wrapper.parentNode.querySelector('.cmatic-oauth-disconnect');
@@ -264,20 +291,23 @@
             }
         }
 
-        // "Use your existing key" toggle in State 3.
         if (e.target.classList.contains('cmatic-show-api-key')) {
             e.preventDefault();
             var apiPanel = document.getElementById('cmatic-manual-api-panel');
             if (apiPanel) {
-                apiPanel.classList.toggle('cmatic-hidden');
+                var opened = apiPanel.classList.toggle('cmatic-hidden') === false;
+                e.target.setAttribute('aria-expanded', opened ? 'true' : 'false');
+                var showL = e.target.getAttribute('data-show-label');
+                var hideL = e.target.getAttribute('data-hide-label');
+                if (showL && hideL) e.target.textContent = opened ? hideL : showL;
+                if (opened) {
+                    var keyInput = document.getElementById('cmatic-api');
+                    if (keyInput) keyInput.focus();
+                }
             }
         }
     });
 
-    // Reset CF7's dirty-form baseline so dynamically populated fields
-    // (audience dropdown, merge fields) don't trigger "Reload site?" warnings.
-    // CF7 compares defaultValue/defaultSelected on beforeunload — we sync them
-    // after our pipeline finishes populating the DOM.
     function resetCf7DirtyState() {
         var form = document.getElementById('wpcf7-admin-form-element');
         if (!form) return;
@@ -295,10 +325,6 @@
         });
     }
 
-    // Auto-load audiences for OAuth connections on page load.
-    // Delegates to main JS pipeline via the Sync button click, which handles
-    // the full flow: fetchMailchimpLists() -> renderListsDropdown() ->
-    // attachFetchFieldsListeners() -> merge field loading.
     document.addEventListener('DOMContentLoaded', function() {
         if (getAuthType() !== 'oauth') {
             return;
@@ -309,34 +335,24 @@
             return;
         }
 
-        // If audiences already loaded, skip.
         var listDropdown = document.getElementById('wpcf7-mailchimp-list');
         if (listDropdown && listDropdown.options.length > 1) {
             return;
         }
 
-        // Click the hidden Sync Audiences button to trigger the main JS pipeline.
-        // The main JS's fetchListsButton handler is already patched (Task 3.7)
-        // to allow OAuth through when apiKey is empty and authType === 'oauth'.
-        // Programmatic .click() fires event listeners on hidden elements.
         var syncBtn = document.getElementById('chm_activalist');
         if (syncBtn) {
             syncBtn.click();
         }
 
-        // The pipeline runs async (fetch calls). Watch for the audience
-        // dropdown to get populated, then reset CF7's dirty-form baseline.
-        // Also set a fallback timer in case the observer misses it.
         if (listDropdown) {
             var observer = new MutationObserver(function(mutations, obs) {
                 if (listDropdown.options.length > 1) {
                     obs.disconnect();
-                    // Small delay to let merge field loading finish too.
                     setTimeout(resetCf7DirtyState, 500);
                 }
             });
             observer.observe(listDropdown, { childList: true });
-            // Fallback: disconnect observer and reset after 8s regardless.
             setTimeout(function() {
                 observer.disconnect();
                 resetCf7DirtyState();

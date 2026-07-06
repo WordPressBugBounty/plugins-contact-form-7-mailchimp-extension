@@ -51,7 +51,7 @@ class Cmatic_Api_Panel {
 			$btn_class = 'button';
 			?>
 			<div class="cmatic-field-group">
-			<label for="cmatic-api"><?php echo esc_html__( 'MailChimp API Key:', 'chimpmatic-lite' ); ?></label><br />
+			<label for="cmatic-api"><?php echo esc_html__( 'Mailchimp API Key:', 'chimpmatic-lite' ); ?></label><br />
 			<div class="cmatic-api-wrap">
 				<input
 					type="text"
@@ -77,7 +77,7 @@ class Cmatic_Api_Panel {
 			/>
 
 			<small class="description need-api">
-				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with MailChimp API Key', 'chimpmatic-lite' ); ?>">
+				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'chimpmatic-lite' ); ?>">
 					<?php echo esc_html__( 'Find your Mailchimp API here', 'chimpmatic-lite' ); ?>
 					<span class="red-icon dashicons dashicons-arrow-right"></span>
 					<span class="red-icon dashicons dashicons-arrow-right"></span>
@@ -117,7 +117,9 @@ class Cmatic_Api_Panel {
 			$authorized_text = sprintf( __( 'Authorized by %1$s on %2$s', 'chimpmatic-lite' ), $connected_by, $date_formatted );
 		}
 
-		$learn_more_url = Cmatic_Pursuit::docs( 'mailchimp-oauth-connection', 'oauth_learn_more' );
+		// The /mailchimp-oauth-connection page was never published (404); the API-key
+		// guide is the live doc that covers connecting.
+		$learn_more_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'oauth_learn_more' );
 		?>
 		<div class="cmatic-field-group cmatic-oauth-state">
 			<label><?php echo esc_html__( 'Mailchimp Connection:', 'chimpmatic-lite' ); ?></label><br />
@@ -153,18 +155,35 @@ class Cmatic_Api_Panel {
 	private static function render_fresh_form( int $form_id, string $help_url ): void {
 		?>
 		<div class="cmatic-field-group cmatic-oauth-state">
-			<div class="cmatic-oauth-connect-wrap">
-				<button type="button" class="cmatic-oauth-connect" data-form-id="<?php echo esc_attr( $form_id ); ?>">
-					<?php echo esc_html__( 'Connect with Mailchimp', 'chimpmatic-lite' ); ?>
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-				</button>
-				<a href="#" class="cmatic-show-api-key">
-					<?php echo esc_html__( 'or use your existing API key', 'chimpmatic-lite' ); ?>
-				</a>
+			<div class="cmatic-connect-options">
+				<div class="cmatic-connect-card cmatic-connect-card--primary cmatic-oauth-connect-wrap">
+					<span class="cmatic-recommended-badge"><?php echo esc_html__( 'Recommended', 'chimpmatic-lite' ); ?></span>
+					<button type="button" class="cmatic-oauth-connect" data-form-id="<?php echo esc_attr( $form_id ); ?>">
+						<?php echo esc_html__( 'Connect with Mailchimp', 'chimpmatic-lite' ); ?>
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+					</button>
+					<ul class="cmatic-connect-benefits">
+						<li><?php echo esc_html__( 'Sign in with your Mailchimp username and password', 'chimpmatic-lite' ); ?></li>
+						<li><?php echo esc_html__( 'About 10 seconds, nothing to copy or paste', 'chimpmatic-lite' ); ?></li>
+						<li><?php echo esc_html__( 'No API key to find, protect, or expire', 'chimpmatic-lite' ); ?></li>
+					</ul>
+				</div>
+				<div class="cmatic-connect-card">
+					<button type="button" class="button cmatic-show-api-key" aria-expanded="false" aria-controls="cmatic-manual-api-panel"
+						data-show-label="<?php echo esc_attr__( 'Use your existing API key', 'chimpmatic-lite' ); ?>"
+						data-hide-label="<?php echo esc_attr__( 'Hide the API key form', 'chimpmatic-lite' ); ?>">
+						<?php echo esc_html__( 'Use your existing API key', 'chimpmatic-lite' ); ?>
+					</button>
+					<ul class="cmatic-connect-benefits">
+						<li><?php echo esc_html__( 'The key you already use, no new key to create', 'chimpmatic-lite' ); ?></li>
+						<li><?php echo esc_html__( 'Handy when someone else manages the Mailchimp login', 'chimpmatic-lite' ); ?></li>
+						<li><?php echo esc_html__( 'Familiar for developers and agency setups', 'chimpmatic-lite' ); ?></li>
+					</ul>
+				</div>
 			</div>
 
 			<div id="cmatic-manual-api-panel" class="cmatic-hidden" style="margin-top: 12px;">
-				<label for="cmatic-api"><?php echo esc_html__( 'MailChimp API Key:', 'chimpmatic-lite' ); ?></label><br />
+				<label for="cmatic-api"><?php echo esc_html__( 'Mailchimp API Key:', 'chimpmatic-lite' ); ?></label><br />
 				<div class="cmatic-api-wrap">
 					<input
 						type="text"
@@ -189,7 +208,7 @@ class Cmatic_Api_Panel {
 					data-form-id="<?php echo esc_attr( $form_id ); ?>"
 				/>
 				<small class="description need-api">
-					<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with MailChimp API Key', 'chimpmatic-lite' ); ?>">
+					<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'chimpmatic-lite' ); ?>">
 						<?php echo esc_html__( 'Find your Mailchimp API here', 'chimpmatic-lite' ); ?>
 						<span class="red-icon dashicons dashicons-arrow-right"></span>
 						<span class="red-icon dashicons dashicons-arrow-right"></span>

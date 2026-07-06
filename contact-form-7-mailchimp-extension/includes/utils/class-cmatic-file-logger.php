@@ -16,7 +16,7 @@ class Cmatic_File_Logger implements Cmatic_Logger_Interface {
 
 	private $log_prefix;
 
-	public function __construct( $context = 'ChimpMatic', $enabled = false ) {
+	public function __construct( $context = 'Chimpmatic', $enabled = false ) {
 
 		$this->is_write_enabled = (bool) $enabled && ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG );
 		$this->log_prefix       = '[' . sanitize_key( $context ) . ']';
@@ -28,7 +28,7 @@ class Cmatic_File_Logger implements Cmatic_Logger_Interface {
 		}
 
 		$level_str  = strtoupper( $level );
-		$log_message = "[ChimpMatic Lite] {$this->log_prefix} [{$level_str}] " . trim( $message );
+		$log_message = "[Chimpmatic Lite] {$this->log_prefix} [{$level_str}] " . trim( $message );
 
 		if ( ! is_null( $context ) ) {
 			$context_string = $this->format_data( $context );

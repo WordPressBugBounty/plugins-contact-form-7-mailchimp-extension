@@ -147,14 +147,14 @@ async function getApiKey() {
         );
 
         if (!response.ok) {
-            console.error('ChimpMatic: Failed to fetch API key');
+            console.error('Chimpmatic: Failed to fetch API key');
             return '';
         }
 
         const data = await response.json();
         return data.api_key || '';
     } catch (err) {
-        console.error('ChimpMatic: Error fetching API key', err);
+        console.error('Chimpmatic: Error fetching API key', err);
         return '';
     }
 }

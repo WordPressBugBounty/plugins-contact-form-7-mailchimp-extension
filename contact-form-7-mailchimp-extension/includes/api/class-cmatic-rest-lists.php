@@ -280,7 +280,7 @@ final class Cmatic_Rest_Lists {
 
 			return new WP_Error(
 				'api_request_failed',
-				esc_html__( 'Failed to load Mailchimp lists. Check debug log for details.', 'chimpmatic-lite' ),
+				esc_html__( 'Failed to load Mailchimp audiences. Check debug log for details.', 'chimpmatic-lite' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -376,10 +376,25 @@ final class Cmatic_Rest_Lists {
 				\Cmatic\Metrics\Core\Sync::send_async( $payload );
 			}
 
+			// Resolve the audience name from the cached lists so the client can
+			// refresh the limit banner without a reload on live audience switches.
+			$audience_name = '';
+			if ( isset( $cf7_mch['lisdata']['lists'] ) && is_array( $cf7_mch['lisdata']['lists'] ) ) {
+				foreach ( $cf7_mch['lisdata']['lists'] as $cmatic_list ) {
+					if ( isset( $cmatic_list['id'], $cmatic_list['name'] ) && $cmatic_list['id'] === $list_id ) {
+						$audience_name = (string) $cmatic_list['name'];
+						break;
+					}
+				}
+			}
+
 			return rest_ensure_response(
 				array(
-					'success'      => true,
-					'merge_fields' => $merge_fields,
+					'success'            => true,
+					'merge_fields'       => $merge_fields,
+					'audience_name'      => $audience_name,
+					'total_merge_fields' => (int) $raw_field_count,
+					'lite_limit'         => CMATIC_LITE_FIELDS,
 				)
 			);
 

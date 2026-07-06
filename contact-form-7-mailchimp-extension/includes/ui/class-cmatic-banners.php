@@ -34,7 +34,7 @@ class Cmatic_Banners {
 	}
 
 	private const DEFAULT_WELCOME = '<p class="about-description">Hello. My name is Renzo, I <span alt="f487" class="dashicons dashicons-heart red-icon"> </span> WordPress and I develop this free plugin to help users like you. I drink copious amounts of coffee to keep me running longer <span alt="f487" class="dashicons dashicons-smiley red-icon"> </span>. If you\'ve found this plugin useful, please consider making a donation.</p><br>
-      <p class="about-description">Would you like to <a class="button-primary" href="https://bit.ly/cafe4renzo" target="_blank">buy me a coffee?</a> or <a class="button-primary" href="https://bit.ly/cafe4renzo" target="_blank">Donate with Paypal</a></p>';
+      <p class="about-description">Would you like to <a class="button-primary" href="https://www.paypal.me/renzojohnson/3.91" target="_blank">buy me a coffee?</a> or <a class="button-primary" href="https://www.paypal.me/renzojohnson/3.91" target="_blank">Donate with Paypal</a></p>';
 
 	public static function get_welcome(): string {
 		$banner = get_site_option( 'mce_conten_panel_welcome', self::DEFAULT_WELCOME );
@@ -85,7 +85,7 @@ class Cmatic_Banners {
 		$url = 'https://chimpmatic.com/?utm_source=client_site&utm_medium=backlink&utm_campaign=powered_by';
 
 		$html  = '<p style="display: none !important">';
-		$html .= '<a href="' . esc_url( $url ) . '" rel="noopener" target="_blank">ChimpMatic</a>';
+		$html .= '<a href="' . esc_url( $url ) . '" rel="noopener" target="_blank">Chimpmatic</a>';
 		$html .= ' – CF7 Mailchimp Integration';
 		$html .= '</p>' . "\n";
 

@@ -120,7 +120,7 @@ class Sync {
 		Storage::save_error( $error );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( "[ChimpMatic Metrics] Heartbeat failed: {$error}" ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( "[Chimpmatic Metrics] Heartbeat failed: {$error}" ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
 
 		if ( 'sparse' === Storage::get_schedule() ) {

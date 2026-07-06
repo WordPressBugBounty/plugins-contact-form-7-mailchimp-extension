@@ -61,7 +61,16 @@ final class Cmatic_Admin_Panel {
 
 		// Header.
 		if ( class_exists( 'Cmatic_Header' ) ) {
-			$api_status = ( 1 === $api_valid ) ? 'connected' : ( ( 0 === $api_valid ) ? 'disconnected' : null );
+			// A pristine form (no key, no OAuth) has not FAILED anything: show a
+			// neutral "Not Connected", never the red "API Inactive" error state.
+			$has_credentials = ! empty( $cf7_mch['api'] ) || ( isset( $cf7_mch['auth_type'] ) && 'oauth' === $cf7_mch['auth_type'] );
+			if ( 1 === $api_valid ) {
+				$api_status = 'connected';
+			} elseif ( ! $has_credentials ) {
+				$api_status = 'fresh';
+			} else {
+				$api_status = ( 0 === $api_valid ) ? 'disconnected' : null;
+			}
 			Cmatic_Header::output( array( 'api_status' => $api_status ) );
 		}
 
@@ -160,7 +169,7 @@ final class Cmatic_Admin_Panel {
 			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
 			if ( $auth_manager && $auth_manager->has_oauth( $form_id ) ) {
 				// Preserve OAuth state — merge sanitized fields (checkboxes, etc.) into existing settings.
-				$updated_settings = array_merge( $old_settings, $sanitized );
+				$updated_settings = self::mirror_legacy_mappings( array_merge( $old_settings, $sanitized ) );
 				update_option( $option_name, $updated_settings );
 				return;
 			}
@@ -179,7 +188,56 @@ final class Cmatic_Admin_Panel {
 			}
 		}
 
-		update_option( $option_name, $updated_settings );
+		update_option( $option_name, self::mirror_legacy_mappings( $updated_settings ) );
+	}
+
+
+	/**
+	 * Write-through mirror: keep the legacy CustomKey/CustomValue rows in
+	 * lockstep with the new-schema mapping (merge_fields + field3+). A save
+	 * otherwise leaves STALE legacy rows behind, and Pro builds up to
+	 * 1.7.8.04 read ONLY those rows at submission time - that mismatch
+	 * shipped "[_user_last_name]" literals into real Mailchimp records.
+	 * Purging is not an option while old Pro is in the field, so mirror.
+	 */
+	private static function mirror_legacy_mappings( array $settings ): array {
+		if ( empty( $settings['merge_fields'] ) || ! is_array( $settings['merge_fields'] ) ) {
+			return $settings;
+		}
+
+		$row         = 1;
+		$field_index = 3;
+		foreach ( $settings['merge_fields'] as $merge_field ) {
+			$tag       = isset( $merge_field['tag'] ) ? (string) $merge_field['tag'] : '';
+			$field_key = 'field' . $field_index;
+			$mapped    = isset( $settings[ $field_key ] ) ? (string) $settings[ $field_key ] : '';
+			++$field_index;
+			if ( '' === $tag || '' === $mapped ) {
+				continue;
+			}
+			// Legacy rows store the bare field name; take the first mail-tag.
+			$field_name = preg_match( '/\[\s*([a-zA-Z_][0-9a-zA-Z:._-]*)\s*\]/', $mapped, $m ) ? $m[1] : trim( $mapped );
+			if ( '' === $field_name ) {
+				continue;
+			}
+			$settings[ "CustomKey{$row}" ]     = $tag;
+			$settings[ "CustomValue{$row}" ]   = $field_name;
+			$settings[ "CustomKeyType{$row}" ] = isset( $merge_field['type'] ) ? (string) $merge_field['type'] : 'text';
+			if ( 'EMAIL' === $tag ) {
+				$settings['email'] = $field_name;
+			}
+			++$row;
+		}
+
+		// Clear stale contiguous rows beyond what was just mirrored.
+		for ( $i = $row; $i <= 50; $i++ ) {
+			if ( ! isset( $settings[ "CustomKey{$i}" ] ) && ! isset( $settings[ "CustomValue{$i}" ] ) ) {
+				break;
+			}
+			unset( $settings[ "CustomKey{$i}" ], $settings[ "CustomValue{$i}" ], $settings[ "CustomKeyType{$i}" ] );
+		}
+
+		return $settings;
 	}
 
 	private static function sanitize_settings( array $posted, array $old ): array {

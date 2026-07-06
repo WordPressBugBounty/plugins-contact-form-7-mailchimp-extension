@@ -19,9 +19,43 @@ final class Cmatic_Field_Mapper_UI {
 		$notice_class  = $show_notice ? 'cmatic-visible' : 'cmatic-hidden';
 		$audience_name = self::resolve_audience_name( $cf7_mch );
 		$docs_url      = Cmatic_Pursuit::url( 'https://chimpmatic.com/mailchimp-default-audience-fields-explained', 'plugin', 'fields_notice', 'docs' );
+		// Limit-hit is the highest-intent upsell moment in the plugin (the user is
+		// looking at fields they cannot map): pair the docs link with a buy CTA that
+		// carries the install source + coupon. Discount comes from the live promo
+		// endpoint (day-cached), never hardcoded, so server-side price changes
+		// propagate here.
+		$cmatic_pricing  = Cmatic_Pursuit::pricing();
+		$cmatic_discount = (int) ( $cmatic_pricing['discount_percent'] ?? 0 );
+		$upgrade_url     = Cmatic_Pursuit::promo_checkout( 'field_limit_notice' );
+		$cmatic_unlock_label = $cmatic_discount > 0
+			/* translators: %d: current discount percentage from the live promo */
+			? sprintf( __( 'Unlock all fields with Pro: %d%% off', 'chimpmatic-lite' ), $cmatic_discount )
+			: __( 'Unlock all fields with Pro', 'chimpmatic-lite' );
 		?>
 		<div class="mce-custom-fields <?php echo esc_attr( $disclosure_class ); ?>" id="cmatic-fields">
 			<?php
+			// Stale-cache guard: the mapper renders one row per CACHED merge field,
+			// so a rotted cache silently drops mapping rows (and syncs empty values)
+			// with no error anywhere. If the cache holds fewer fields than the
+			// audience supports (up to the Lite cap), say so and point at the fix.
+			$cmatic_cached_fields = is_array( $cf7_mch['merge_fields'] ?? null ) ? count( $cf7_mch['merge_fields'] ) : 0;
+			$cmatic_expected      = min( $total_merge, CMATIC_LITE_FIELDS );
+			if ( $total_merge > 0 && $cmatic_cached_fields < $cmatic_expected ) :
+				?>
+				<div class="cmatic-defaults-fields-notice cmatic-visible" id="cmatic-stale-cache-notice">
+					<p class="cmatic-notice">
+						<?php
+						printf(
+							/* translators: 1: cached merge-field count, 2: audience merge-field count */
+							esc_html__( 'Your audience field list looks out of date (%1$d cached, audience reports %2$d). Click Sync Fields above to refresh your mapping rows.', 'chimpmatic-lite' ),
+							(int) $cmatic_cached_fields,
+							(int) $total_merge
+						);
+						?>
+					</p>
+				</div>
+				<?php
+			endif;
 			self::render_merge_fields( $cf7_mch, $form_tags );
 			self::render_optin_checkbox( $form_tags, $cf7_mch, $form_id );
 			self::render_double_optin( $cf7_mch );
@@ -39,15 +73,22 @@ final class Cmatic_Field_Mapper_UI {
 						);
 						echo wp_kses( $notice_text, array( 'strong' => array() ) );
 						?>
-						<a href="<?php echo esc_url( $docs_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">
-							<?php esc_html_e( 'Read More', 'chimpmatic-lite' ); ?>
-						</a>
 					<?php endif; ?>
+					<?php // The links render even while the notice is hidden: the JS
+					// rebuild harvests them from the DOM, and an empty container left
+					// the rebuilt banner linkless right after an OAuth connect. ?>
+					<a href="<?php echo esc_url( $docs_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">
+						<?php esc_html_e( 'Read More', 'chimpmatic-lite' ); ?>
+					</a>
+					<a href="<?php echo esc_url( $upgrade_url ); ?>" class="helping-field cmatic-unlock-fields" target="_blank" rel="noopener noreferrer">
+						<?php echo esc_html( $cmatic_unlock_label ); ?>
+					</a>
 				</p>
 			</div>
 		</div>
 		<?php
 		Cmatic_Tags_Preview::render( $form_tags, $cf7_mch, $api_valid );
+		Cmatic_Pro_Showcase::render( $api_valid );
 	}
 
 	private static function render_merge_fields( array $cf7_mch, array $form_tags ): void {
@@ -210,8 +251,15 @@ final class Cmatic_Field_Mapper_UI {
 					<?php endforeach; ?>
 				<?php endif; ?>
 			</select>
-			<small class="description">
-				<?php esc_html_e( 'Only subscribe if this checkbox is checked', 'chimpmatic-lite' ); ?>
+			<?php
+			// State-aware caption: must match the current selection ('None -
+			// Always subscribe' has no checkbox). JS flips it live on change.
+			$cmatic_accept_saved  = trim( (string) ( $cf7_mch['accept'] ?? '' ) );
+			$cmatic_optin_always  = __( 'Every valid submission is subscribed. Pick a checkbox field to require consent first.', 'chimpmatic-lite' );
+			$cmatic_optin_gated   = __( 'Only subscribe if this checkbox is checked', 'chimpmatic-lite' );
+			?>
+			<small class="description" id="cmatic-optin-helper" data-always="<?php echo esc_attr( $cmatic_optin_always ); ?>" data-gated="<?php echo esc_attr( $cmatic_optin_gated ); ?>">
+				<span class="cmatic-optin-helper-text"><?php echo esc_html( '' === $cmatic_accept_saved ? $cmatic_optin_always : $cmatic_optin_gated ); ?></span>
 				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-opt-in-checkbox', 'optin_field' ) ); ?>" class="helping-field" target="_blank"><?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?></a>
 			</small>
 		</div>
@@ -235,7 +283,7 @@ final class Cmatic_Field_Mapper_UI {
 				</option>
 			</select>
 			<small class="description">
-				<?php esc_html_e( 'Choose how subscribers are added to your Mailchimp list', 'chimpmatic-lite' ); ?>
+				<?php esc_html_e( 'Choose how subscribers are added to your Mailchimp audience', 'chimpmatic-lite' ); ?>
 				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-double-opt-in', 'double_optin' ) ); ?>" class="helping-field" target="_blank"><?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?></a>
 			</small>
 		</div>

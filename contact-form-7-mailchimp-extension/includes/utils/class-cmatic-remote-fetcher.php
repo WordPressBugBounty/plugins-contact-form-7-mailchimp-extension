@@ -130,6 +130,15 @@ class CMatic_Remote_Fetcher {
 			'last_updated'     => current_time( 'mysql' ),
 		);
 
+		// Campaign discounts for the license banner (win-back / early-renewal).
+		// Only forwarded when the server publishes them - the banner makes no
+		// numeric claim otherwise.
+		foreach ( array( 'winback_discount', 'renew_discount' ) as $campaign_key ) {
+			if ( isset( $json[ $campaign_key ] ) && (int) $json[ $campaign_key ] > 0 ) {
+				$pricing_data[ $campaign_key ] = (int) $json[ $campaign_key ];
+			}
+		}
+
 		if ( null === $pricing_data['sale_price'] ) {
 			$discount_amount            = $pricing_data['regular_price'] * ( $pricing_data['discount_percent'] / 100 );
 			$pricing_data['sale_price'] = $pricing_data['regular_price'] - $discount_amount;

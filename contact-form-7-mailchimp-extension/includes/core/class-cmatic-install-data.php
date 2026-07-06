@@ -134,7 +134,7 @@ class Cmatic_Install_Data {
 		$new_id = bin2hex( random_bytes( 6 ) );
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( '[ChimpMatic] install_id generated: ' . $new_id ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[Chimpmatic] install_id generated: ' . $new_id ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
 
 		return $new_id;

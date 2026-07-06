@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 class Cmatic_Log_Viewer {
 
 	protected static $namespace = 'chimpmatic-lite/v1';
-	protected static $log_prefix = '[ChimpMatic Lite]';
+	protected static $log_prefix = '[Chimpmatic Lite]';
 	protected static $text_domain = 'chimpmatic-lite';
 	protected static $max_lines = 500;
 	protected static $initialized = false;
@@ -229,7 +229,7 @@ class Cmatic_Log_Viewer {
 		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
 			error_log(
 				sprintf(
-					'[%s] [ChimpMatic Lite] Debug log cleared by user: %s',
+					'[%s] [Chimpmatic Lite] Debug log cleared by user: %s',
 					gmdate( 'd-M-Y H:i:s' ) . ' UTC',
 					wp_get_current_user()->user_login
 				)

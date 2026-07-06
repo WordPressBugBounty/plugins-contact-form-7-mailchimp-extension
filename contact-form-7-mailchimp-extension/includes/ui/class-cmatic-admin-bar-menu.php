@@ -143,7 +143,7 @@ class Cmatic_Admin_Bar_Menu {
 				'parent' => self::MENU_IDENTIFIER,
 				'id'     => 'chimpmatic-docs',
 				'title'  => esc_html__( 'Documentation', 'chimpmatic-lite' ),
-				'href'   => Cmatic_Pursuit::adminbar( 'docs', 'menu_docs' ),
+				'href'   => Cmatic_Pursuit::adminbar( 'help', 'menu_docs' ),
 				'meta'   => array(
 					'target' => '_blank',
 					'rel'    => 'noopener noreferrer',

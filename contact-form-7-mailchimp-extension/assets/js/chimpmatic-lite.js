@@ -45,7 +45,7 @@
 				body: JSON.stringify({ level, message: formattedMessage, data: dataString })
 			});
 		} catch (error) {
-			originalConsole.error('[ChimpMatic Lite] Failed to send log to server:', error);
+			originalConsole.error('[Chimpmatic Lite] Failed to send log to server:', error);
 		}
 	}
 
@@ -263,8 +263,10 @@ function chimpmaticLiteInit() {
 
 		if (totalMergeFields > liteLimit) {
 			if (noticeText) {
-				const docsLink = notice.querySelector('a');
-				const linkHtml = docsLink ? ' ' + docsLink.outerHTML : '';
+				// Preserve ALL action links (Read More + the Pro unlock CTA), not
+				// just the first one.
+				const links = Array.from(notice.querySelectorAll('a')).map(a => a.outerHTML).join(' ');
+				const linkHtml = links ? ' ' + links : '';
 				const name = audienceName ? '<strong>' + audienceName + '</strong> ' : '';
 				noticeText.innerHTML = 'Your ' + name + 'audience has ' + totalMergeFields + ' merge fields. Chimpmatic Lite supports up to ' + liteLimit + ' field mappings.' + linkHtml;
 			}
@@ -289,6 +291,17 @@ function chimpmaticLiteInit() {
 		const label = document.getElementById('cmatic-audiences-label');
 		if (label) {
 			label.textContent = api_valid && total > 0 ? `Total Mailchimp Audiences: ${total}` : 'Mailchimp Audiences';
+			// Keep the caption in the same state branch (it reads 'No audiences
+			// found' forever otherwise; the Learn More link node stays).
+			const caption = label.closest('.cmatic-audiences') ?
+				label.closest('.cmatic-audiences').querySelector('small.description') : null;
+			if (caption && caption.firstChild && caption.firstChild.nodeType === Node.TEXT_NODE) {
+				caption.firstChild.nodeValue = (api_valid && total > 0
+					? 'Contacts from this form join the selected audience. Sync Fields refreshes its merge fields from Mailchimp. '
+					: (api_valid
+						? 'No audiences found in this account. Create one in Mailchimp, then click Sync Fields. '
+						: 'Connect your Mailchimp account above to load your audiences. '));
+			}
 		}
 
 		let optionsHtml = '';
@@ -300,7 +313,8 @@ function chimpmaticLiteInit() {
 
 			lists.forEach((list, index) => {
 				const selected = selectedAudience === list.id ? ' selected' : '';
-				const optionText = `${index + 1}:${list.member_count} ${list.name}  ${list.field_count} fields #${list.id}`;
+				// Same human label the PHP renderer builds; raw id only in value.
+				const optionText = `${list.name} (${Number(list.member_count).toLocaleString()} contacts, ${list.field_count} fields)`;
 				optionsHtml += `<option value="${list.id}"${selected}>${optionText}</option>`;
 			});
 
@@ -453,6 +467,11 @@ function chimpmaticLiteInit() {
 				if (data.api_valid) {
 					updateApiStatus(true);
 					updateLiteBadgeStatus('connected');
+
+					// The two-option chooser has done its job: a validated key
+					// means connected, so the funnel cards leave the stage.
+					const chooser = document.querySelector('.cmatic-connect-options');
+					if (chooser) chooser.classList.add('cmatic-hidden');
 
 					document.querySelectorAll('.chmp-inactive').forEach(el => {
 						el.classList.remove('chmp-inactive');
@@ -1049,10 +1068,16 @@ function chimpmaticLiteInit() {
 				const listDropdownEl = document.getElementById('wpcf7-mailchimp-list');
 				const selectedId = listDropdownEl ? listDropdownEl.value : '';
 				const selectedList = cachedLists.find(l => l.id === selectedId);
-				const fieldCount = selectedList ? selectedList.field_count : 0;
-				const audienceName = selectedList ? selectedList.name : '';
-				updateFieldsNotice(fieldCount, chimpmaticLite.liteFieldsLimit || 4, audienceName);
+				// Server response is the source of truth: cachedLists is empty outside
+				// the connect flow, and its stats count differs from total_merge_fields.
+				const audienceName = data.audience_name || (selectedList ? selectedList.name : '');
+				const totalFields = (typeof data.total_merge_fields === 'number')
+					? data.total_merge_fields
+					: (selectedList ? selectedList.field_count : 0);
+				updateFieldsNotice(totalFields, data.lite_limit || chimpmaticLite.liteFieldsLimit || 4, audienceName);
 				document.querySelectorAll('.audience-name').forEach(el => { el.textContent = audienceName; });
+				// A successful sync means the merge-field cache is fresh by definition.
+				document.getElementById('cmatic-stale-cache-notice')?.remove();
 
 				if (fetchFieldsButton) {
 					if (fetchFieldsButton.tagName === 'INPUT') fetchFieldsButton.value = 'Synced ✓';
@@ -2059,6 +2084,19 @@ function chimpmaticLiteInit() {
 			if (e.key === 'Enter') {
 				lookupBtn.click();
 			}
+		});
+	})();
+
+	// Opt-in helper caption must follow the selection ('None - Always
+	// subscribe' has no checkbox to describe).
+	(function() {
+		const acceptSelect = document.getElementById('wpcf7-mailchimp-accept');
+		const helper = document.getElementById('cmatic-optin-helper');
+		if (!acceptSelect || !helper) return;
+		const textEl = helper.querySelector('.cmatic-optin-helper-text');
+		if (!textEl) return;
+		acceptSelect.addEventListener('change', function() {
+			textEl.textContent = acceptSelect.value.trim() === '' ? helper.dataset.always : helper.dataset.gated;
 		});
 	})();
 }

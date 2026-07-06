@@ -308,7 +308,7 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 		private function get_strings() {
 			return array(
 				'title'           => __( 'Quick Feedback', 'chimpmatic-lite' ),
-				'description'     => __( 'If you have a moment, please let us know why you are deactivating ChimpMatic Lite:', 'chimpmatic-lite' ),
+				'description'     => __( 'If you have a moment, please let us know why you are deactivating Chimpmatic Lite:', 'chimpmatic-lite' ),
 				'submitButton'    => __( 'Submit & Deactivate', 'chimpmatic-lite' ),
 				'skipButton'      => __( 'Skip & Deactivate', 'chimpmatic-lite' ),
 				'cancelButton'    => __( 'Cancel', 'chimpmatic-lite' ),

@@ -90,7 +90,13 @@ final class Cmatic_Rest_Settings {
 						'type'              => 'string',
 						'default'           => 'news',
 						'sanitize_callback' => 'sanitize_text_field',
-						'enum'              => array( 'news', 'upgrade' ),
+						'enum'              => array( 'news', 'upgrade', 'license_banner' ),
+					),
+					'state'     => array(
+						'required'          => false,
+						'type'              => 'string',
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_key',
 					),
 				),
 			)
@@ -188,6 +194,17 @@ final class Cmatic_Rest_Settings {
 		$notice_id = $request->get_param( 'notice_id' );
 
 		switch ( $notice_id ) {
+			case 'license_banner':
+				// Piggybacks the existing dismissal endpoint (no new route surface).
+				$result = class_exists( 'Cmatic_License_Banner' )
+					? Cmatic_License_Banner::handle_dismiss( (string) $request->get_param( 'state' ) )
+					: false;
+				if ( false === $result ) {
+					return new WP_Error( 'bad_state', esc_html__( 'Unknown banner state.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+				}
+				$message = __( 'License banner snoozed.', 'chimpmatic-lite' );
+				break;
+
 			case 'upgrade':
 				Cmatic_Options_Repository::set_option( 'ui.upgrade_clicked', true );
 				$message = __( 'Upgrade notice dismissed.', 'chimpmatic-lite' );

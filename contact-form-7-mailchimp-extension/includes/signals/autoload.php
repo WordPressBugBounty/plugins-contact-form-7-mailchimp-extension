@@ -1,4 +1,13 @@
 <?php
+/**
+ * PSR-4 autoloader for the metrics package.
+ *
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
+ */
+
 defined( 'ABSPATH' ) || exit;
 
 spl_autoload_register( function ( $class ) {

@@ -1046,17 +1046,86 @@ a.helping-field:hover .red-icon::before {
 	flex-shrink: 0;
 }
 
-.cmatic-show-api-key {
-	display: inline-block;
+.cmatic-connect-options {
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+	align-items: stretch;
+}
+
+.cmatic-connect-card {
+	flex: 1 1 320px;
+	border: 1px solid #dcdcde;
+	/* Same radius family as the .cmatic-field-group wrapper (8px): a nested
+	   corner rounder than its parent reads as a mismatch. */
+	border-radius: 8px;
+	padding: 18px 20px;
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+}
+
+.cmatic-connect-card--primary {
+	border-color: #2271b166;
+	box-shadow: 0 1px 6px rgba(34, 113, 177, .08);
+}
+
+.cmatic-connect-benefits {
+	margin: 2px 0 0;
+	padding-left: 18px;
+	font-size: 12px;
+	color: #646970;
+	line-height: 1.7;
+	list-style: disc;
+}
+
+.cmatic-connect-card .button.cmatic-show-api-key {
+	height: 44px;
+	line-height: 42px;
+	padding: 0 24px;
+	border-radius: 22px;
+	font-size: 14px;
+}
+
+.cmatic-oauth-hint {
+	display: block;
 	margin-top: 10px;
 	font-size: 12px;
-	text-decoration: none;
 	color: #787c82;
 }
 
-.cmatic-show-api-key:hover {
-	color: #2271b1;
+.cmatic-recommended-badge {
+	display: inline-block;
+	margin-right: 6px;
+	padding: 1px 8px;
+	border-radius: 10px;
+	background: #edfaef;
+	border: 1px solid #00753e33;
+	color: #00753e;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+/* The second option must LOOK clickable: new users holding an API key
+   previously saw dead grey text and no path for it. */
+.cmatic-show-api-key {
+	display: inline-block;
+	margin-top: 8px;
+	font-size: 13px;
 	text-decoration: underline;
+	text-underline-offset: 3px;
+	color: #2271b1;
+	cursor: pointer;
+}
+
+.cmatic-show-api-key:hover,
+.cmatic-show-api-key:focus {
+	color: #135e96;
+	text-decoration-thickness: 2px;
 }
 
 .cmatic-disconnect-confirm {
@@ -1227,6 +1296,14 @@ a.helping-field:hover .red-icon::before {
 	background: #00a32a;
 }
 
+.cmatic-header__status-dot--neutral {
+	background: #a7aaad;
+}
+
+.chimpmatic-info .chmm.neutral {
+	color: #646970;
+}
+
 .cmatic-header__status-dot--disconnected {
 	background: #d63638;
 }
@@ -1375,6 +1452,14 @@ a.helping-field:hover .red-icon::before {
 .cmatic-help-icon:hover {
 	color: #2271b1;
 	background: #f0f6fc;
+}
+
+/* The modal's header Submit drives the test flow (REST + feedback panel).
+   The CF7 preview form renders its own submit too: two buttons, one job.
+   Hide the inner one so there is exactly one unambiguous action. */
+.cmatic-test-form-wrap .wpcf7-submit,
+.cmatic-test-form-wrap input[type="submit"] {
+	display: none !important;
 }
 
 .cmatic-test-form-wrap {
@@ -1678,4 +1763,59 @@ tr.cmatic-not-pro:hover,
 @keyframes cmatic-fade-in {
 	from { opacity: 0; transform: translateY(-4px); }
 	to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ── Groups + GDPR native previews (Pro showcase) ── */
+.cmatic-showcase-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 14px 28px;
+	margin-top: 6px;
+}
+
+.cmatic-showcase-row {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	cursor: not-allowed;
+}
+
+.cmatic-showcase-row select {
+	max-width: 100%;
+	opacity: .6;
+}
+
+.cmatic-showcase-meta {
+	color: #787c82;
+	font-weight: 400;
+}
+
+.cmatic-showcase-locked {
+	opacity: .55;
+	cursor: not-allowed;
+}
+
+.cmatic-showcase-unlock {
+	margin: 14px 0 0;
+	font-size: 13px;
+}
+
+.cmatic-showcase-off {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 1px 7px;
+	background: #fff;
+	border: 1px dashed #2271b1;
+	border-radius: 3px;
+	font-weight: 700;
+	font-size: 12px;
+	color: #2271b1;
+}
+
+.cmatic-showcase-note {
+	margin: 8px 0 0;
+	font-size: 11px;
+	color: #a7aaad;
 }

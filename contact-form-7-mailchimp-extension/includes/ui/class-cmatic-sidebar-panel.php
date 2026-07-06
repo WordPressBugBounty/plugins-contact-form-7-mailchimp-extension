@@ -16,13 +16,25 @@ final class Cmatic_Sidebar_Panel {
 		$api_valid = (int) ( $cf7_mch['api-validation'] ?? 0 );
 		$sent      = Cmatic_Options_Repository::get_option( 'stats.sent', 0 );
 
-		$status_text = ( 1 === $api_valid )
-			? '<span class="chmm valid">API Connected</span>'
-			: '<span class="chmm invalid">API Inactive</span>';
+		$has_credentials = ( is_array( $cf7_mch ) && ! empty( $cf7_mch['api'] ) )
+			|| ( isset( $cf7_mch['auth_type'] ) && 'oauth' === $cf7_mch['auth_type'] );
+		if ( 1 === $api_valid ) {
+			$status_text = '<span class="chmm valid">API Connected</span>';
+		} elseif ( ! $has_credentials ) {
+			// Pristine form: nothing has failed, so no red error chip.
+			$status_text = '<span class="chmm neutral">Not Connected</span>';
+		} else {
+			$status_text = '<span class="chmm invalid">API Inactive</span>';
+		}
 		?>
 		<div class="misc-pub-section chimpmatic-info" id="chimpmatic-version-info">
 			<div style="margin-bottom: 3px;">
-				<strong><?php echo esc_html__( 'ChimpMatic Lite', 'chimpmatic-lite' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></strong>
+				<?php if ( defined( 'CMATIC_VERSION' ) ) : // Pro active (same detection Cmatic_Dom_Classes uses): show the paying customer their edition; the Lite base version stays a support detail. ?>
+					<strong><?php echo esc_html__( 'Chimpmatic Pro', 'chimpmatic-lite' ) . ' ' . esc_html( CMATIC_VERSION ); ?></strong>
+					<div style="color: #646970; font-size: 11px;"><?php echo esc_html__( 'Lite base', 'chimpmatic-lite' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></div>
+				<?php else : ?>
+					<strong><?php echo esc_html__( 'Chimpmatic Lite', 'chimpmatic-lite' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></strong>
+				<?php endif; ?>
 			</div>
 			<div style="margin-top: 5px;">
 				<div class="mc-stats" style="color: #646970; font-size: 12px; margin-bottom: 3px;">
@@ -44,19 +56,10 @@ final class Cmatic_Sidebar_Panel {
 			return;
 		}
 
-		$pricing  = self::get_pricing_data();
-		$text     = $pricing['formatted'] ?? '$39 → $29.25 • Save 40%';
-		$discount = (int) ( $pricing['discount_percent'] ?? 40 );
-
-		$install_id = Cmatic_Options_Repository::get_option( 'install.id', '' );
-
-		$promo_url = add_query_arg(
-			array(
-				'source' => $install_id,
-				'promo'  => 'pro' . $discount,
-			),
-			Cmatic_Pursuit::promo( 'footer_banner', $discount )
-		);
+		$pricing   = Cmatic_Pursuit::pricing();
+		$text      = $pricing['formatted'] ?? '';
+		$discount  = (int) ( $pricing['discount_percent'] ?? 0 ); // the "<N>% Off!" headline below uses this
+		$promo_url = Cmatic_Pursuit::promo_checkout( 'footer_banner' );
 		?>
 		<div id="informationdiv_aux" class="postbox mce-move mc-lateral">
 			<div class="inside bg-f2">
@@ -81,24 +84,6 @@ final class Cmatic_Sidebar_Panel {
 		<?php
 	}
 
-	private static function get_pricing_data(): array {
-		$fetcher = new CMatic_Remote_Fetcher(
-			array(
-				'url'            => 'https://api.chimpmatic.com/promo',
-				'cache_key'      => 'cmatic_pricing_data',
-				'cache_duration' => DAY_IN_SECONDS,
-				'fallback_data'  => array(
-					'regular_price'    => 39,
-					'sale_price'       => 29.25,
-					'discount_percent' => 40,
-					'coupon_code'      => 'NOW40',
-					'formatted'        => '$39 → $29.25 • Save 40%',
-				),
-			)
-		);
-
-		return $fetcher->get_data();
-	}
 
 	private function __construct() {}
 }

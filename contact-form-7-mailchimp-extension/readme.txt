@@ -1,14 +1,14 @@
 === Connect Contact Form 7 and Mailchimp ===
 Contributors: rnzo, chimpmatic
-Donate link: https://bit.ly/2HdTzmO
+Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.78.05
+Stable tag: 0.9.78.06
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Connect Contact Form 7 to Mailchimp. Automatically sync form submissions to your Mailchimp audiences with merge field mapping, double opt-in, and opt-in checkbox support.
+Connect Contact Form 7 to Mailchimp in one click. Sync form submissions to your Mailchimp audiences with OAuth or API key, merge field mapping, double opt-in, and opt-in checkbox support.
 
 == Description ==
 
@@ -25,6 +25,7 @@ Unlike heavyweight form builders, Chimpmatic is a specialist CF7-to-Mailchimp in
 
 = Free Features =
 
+* **One-click Mailchimp connection (OAuth)**, no API key hunting required
 * Connect any Contact Form 7 form to a Mailchimp audience
 * Map form fields to Mailchimp merge fields (FNAME, LNAME, etc.)
 * Use a **different Mailchimp API key** per contact form
@@ -66,8 +67,9 @@ Upgrade to [Chimpmatic PRO](https://chimpmatic.com/pro) for advanced Mailchimp i
 
 1. Install the plugin from the WordPress Plugin Directory, or upload the plugin folder to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** menu in WordPress.
-3. Edit any Contact Form 7 form - you will see a new **Mailchimp** tab.
-4. Enter your Mailchimp API key, select your audience, and map your fields.
+3. Edit any Contact Form 7 form - you will see a new **Chimpmatic** tab.
+4. Click **Connect with Mailchimp** to authorize in one click (OAuth), or paste your Mailchimp API key instead.
+5. Select your audience and map your fields. Done.
 
 = How to Find Your Mailchimp API Key =
 
@@ -81,6 +83,10 @@ For a detailed walkthrough with screenshots, see our [Mailchimp API Key Guide](h
 
 == Frequently Asked Questions ==
 
+= Can I connect Contact Form 7 to Mailchimp without an API key? =
+
+Yes. Chimpmatic Lite includes one-click OAuth: press **Connect with Mailchimp** in the form editor, approve the connection in the Mailchimp popup, and you are done. No API key to find, copy, or rotate. The classic API key method still works if you prefer it.
+
 = How do I connect Contact Form 7 to Mailchimp? =
 
 After installing Chimpmatic Lite, edit any Contact Form 7 form. Click the **Mailchimp** tab, enter your API key, select your Mailchimp audience, and map your form fields to Mailchimp merge tags. Submissions will sync automatically.
@@ -89,7 +95,7 @@ See the full [setup guide](https://chimpmatic.com/connect-contact-form-7-with-ma
 
 = How do I find my Mailchimp API key? =
 
-The fastest way is our direct link: admin.mailchimp.com/account/api/ — log in and your keys are right there. For the full walkthrough with screenshots, format validation, and troubleshooting, see our [Mailchimp API key guide](https://chimpmatic.com/how-to-get-your-mailchimp-api-key).
+The fastest way is our direct link: admin.mailchimp.com/account/api/ (log in and your keys are right there). For the full walkthrough with screenshots, format validation, and troubleshooting, see our [Mailchimp API key guide](https://chimpmatic.com/how-to-get-your-mailchimp-api-key).
 
 = Can I use different Mailchimp lists for different forms? =
 
@@ -121,129 +127,126 @@ Yes. You can map any Contact Form 7 field to Mailchimp merge fields like FNAME, 
 
 == Screenshots ==
 
-1. Mailchimp tab in the Contact Form 7 editor - enter your API key and select your audience.
-2. Field mapping interface - connect your CF7 form fields to Mailchimp merge fields.
+1. The Chimpmatic panel in the Contact Form 7 editor: Mailchimp connection, audience selection, merge-field mapping, opt-in settings, tags, and previews of Pro Groups and GDPR tools.
+2. Choose your connection: one-click OAuth sign-in (recommended) or your existing API key, with the trade-offs of each spelled out.
+
+== Upgrade Notice ==
+
+= 0.9.78.06 =
+One-click Mailchimp connection (OAuth), a smarter audience panel, and reliability fixes for checkbox fields and special mail-tags. Recommended for all users.
 
 == Changelog ==
 
-For the full changelog with details, see [Release History](https://renzojohnson.com/changelog).
+For the full changelog with details, see [Release History](https://chimpmatic.com/changelog).
+
+= 0.9.78.06 =
+
+[Version 0.9.78.06 release notes](https://chimpmatic.com/changelog#0.9.78.06)
 
 = 0.9.78.05 =
 
-[Version 0.9.78.04 release notes](https://renzojohnson.com/changelog#0.9.78.05)
+[Version 0.9.78.05 release notes](https://chimpmatic.com/changelog#0.9.78.05)
 
 = 0.9.78.04 =
 
-[Version 0.9.78.04 release notes](https://renzojohnson.com/changelog#0.9.78.04)
-
-= 0.9.78.03 =
-
-[Version 0.9.78.03 release notes](https://renzojohnson.com/changelog#0.9.78.03)
+[Version 0.9.78.04 release notes](https://chimpmatic.com/changelog#0.9.78.04)
 
 = 0.9.78.02 =
 
-[Version 0.9.78.02 release notes](https://renzojohnson.com/changelog#0.9.78.02)
-
-= 0.9.78 =
-
-[Version 0.9.78 release notes](https://renzojohnson.com/changelog#0.9.78)
-
-= 0.9.77 =
-
-[Version 0.9.77 release notes](https://renzojohnson.com/changelog#0.9.77)
+[Version 0.9.78.02 release notes](https://chimpmatic.com/changelog#0.9.78.02)
 
 = 0.9.75 =
 
-[Version 0.9.75 release notes](https://renzojohnson.com/changelog#0.9.75)
+[Version 0.9.75 release notes](https://chimpmatic.com/changelog#0.9.75)
 
 = 0.9.73 =
 
-[Version 0.9.73 release notes](https://renzojohnson.com/changelog#0.9.73)
+[Version 0.9.73 release notes](https://chimpmatic.com/changelog#0.9.73)
 
 = 0.9.22 =
 
-[Version 0.9.22 release notes](https://renzojohnson.com/changelog#0.9.22)
+[Version 0.9.22 release notes](https://chimpmatic.com/changelog#0.9.22)
 
 = 0.8.01 =
 
-[Version 0.8.01 release notes](https://renzojohnson.com/changelog#0.8.01)
+[Version 0.8.01 release notes](https://chimpmatic.com/changelog#0.8.01)
 
 = 0.7.50 =
 
-[Version 0.7.50 release notes](https://renzojohnson.com/changelog#0.7.50)
+[Version 0.7.50 release notes](https://chimpmatic.com/changelog#0.7.50)
 
 = 0.7.01 =
 
-[Version 0.7.01 release notes](https://renzojohnson.com/changelog#0.7.01)
+[Version 0.7.01 release notes](https://chimpmatic.com/changelog#0.7.01)
 
 = 0.6.10 =
 
-[Version 0.6.10 release notes](https://renzojohnson.com/changelog#0.6.10)
+[Version 0.6.10 release notes](https://chimpmatic.com/changelog#0.6.10)
 
 = 0.5.64 =
 
-[Version 0.5.64 release notes](https://renzojohnson.com/changelog#0.5.64)
+[Version 0.5.64 release notes](https://chimpmatic.com/changelog#0.5.64)
 
 = 0.5.01 =
 
-[Version 0.5.01 release notes](https://renzojohnson.com/changelog#0.5.01)
+[Version 0.5.01 release notes](https://chimpmatic.com/changelog#0.5.01)
 
 = 0.4.60 =
 
-[Version 0.4.60 release notes](https://renzojohnson.com/changelog#0.4.60)
+[Version 0.4.60 release notes](https://chimpmatic.com/changelog#0.4.60)
 
 = 0.4.43 =
 
-[Version 0.4.43 release notes](https://renzojohnson.com/changelog#0.4.43)
+[Version 0.4.43 release notes](https://chimpmatic.com/changelog#0.4.43)
 
 = 0.4.01 =
 
-[Version 0.4.01 release notes](https://renzojohnson.com/changelog#0.4.01)
+[Version 0.4.01 release notes](https://chimpmatic.com/changelog#0.4.01)
 
 = 0.3.50 =
 
-[Version 0.3.50 release notes](https://renzojohnson.com/changelog#0.3.50)
+[Version 0.3.50 release notes](https://chimpmatic.com/changelog#0.3.50)
 
 = 0.3.40 =
 
-[Version 0.3.40 release notes](https://renzojohnson.com/changelog#0.3.40)
+[Version 0.3.40 release notes](https://chimpmatic.com/changelog#0.3.40)
 
 = 0.3.20 =
 
-[Version 0.3.20 release notes](https://renzojohnson.com/changelog#0.3.20)
+[Version 0.3.20 release notes](https://chimpmatic.com/changelog#0.3.20)
 
 = 0.3.10 =
 
-[Version 0.3.10 release notes](https://renzojohnson.com/changelog#0.3.10)
+[Version 0.3.10 release notes](https://chimpmatic.com/changelog#0.3.10)
 
 = 0.3.01 =
 
-[Version 0.3.01 release notes](https://renzojohnson.com/changelog#0.3.01)
+[Version 0.3.01 release notes](https://chimpmatic.com/changelog#0.3.01)
 
 = 0.2.30 =
 
-[Version 0.2.30 release notes](https://renzojohnson.com/changelog#0.2.30)
+[Version 0.2.30 release notes](https://chimpmatic.com/changelog#0.2.30)
 
 = 0.2.20 =
 
-[Version 0.2.20 release notes](https://renzojohnson.com/changelog#0.2.20)
+[Version 0.2.20 release notes](https://chimpmatic.com/changelog#0.2.20)
 
 = 0.2.15 =
 
-[Version 0.2.15 release notes](https://renzojohnson.com/changelog#0.2.15)
+[Version 0.2.15 release notes](https://chimpmatic.com/changelog#0.2.15)
 
 = 0.2.10 =
 
-[Version 0.2.10 release notes](https://renzojohnson.com/changelog#0.2.10)
+[Version 0.2.10 release notes](https://chimpmatic.com/changelog#0.2.10)
 
 = 0.2.5 =
 
-[Version 0.2.5 release notes](https://renzojohnson.com/changelog#0.2.5)
+[Version 0.2.5 release notes](https://chimpmatic.com/changelog#0.2.5)
 
 = 0.1.5 =
 
-[Version 0.1.5 release notes](https://renzojohnson.com/changelog#0.1.5)
+[Version 0.1.5 release notes](https://chimpmatic.com/changelog#0.1.5)
 
 = 0.1.2 =
 
-[Version 0.1.2 release notes](https://renzojohnson.com/changelog#0.1.2)
+[Version 0.1.2 release notes](https://chimpmatic.com/changelog#0.1.2)

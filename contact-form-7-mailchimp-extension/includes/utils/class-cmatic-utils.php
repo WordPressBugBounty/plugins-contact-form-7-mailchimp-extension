@@ -1,6 +1,6 @@
 <?php
 /**
- * Utility functions for ChimpMatic.
+ * Utility functions for Chimpmatic.
  *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com

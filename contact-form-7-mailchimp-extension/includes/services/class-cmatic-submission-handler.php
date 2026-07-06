@@ -42,7 +42,13 @@ final class Cmatic_Submission_Handler {
 			return;
 		}
 
-		$list_id = Cmatic_Email_Extractor::replace_tags( $cf7_mch['list'] ?? '', $posted_data );
+		// New-schema configs store 'list' as an array of ids; passing it raw into the
+		// string-typed replace_tags() fataled every submission on such forms (TypeError).
+		$list_value = $cf7_mch['list'] ?? '';
+		if ( is_array( $list_value ) ) {
+			$list_value = (string) ( reset( $list_value ) ?: '' );
+		}
+		$list_id = Cmatic_Email_Extractor::replace_tags( $list_value, $posted_data );
 		$status  = Cmatic_Status_Resolver::resolve( $cf7_mch, $posted_data, $logger );
 
 		if ( null === $status ) {

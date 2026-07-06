@@ -274,7 +274,7 @@ final class Cmatic_Rest_Form {
 		if ( $matched_config['pro_only'] && ! defined( 'CMATIC_VERSION' ) ) {
 			return new WP_Error(
 				'pro_required',
-				__( 'This field requires ChimpMatic PRO.', 'chimpmatic-lite' ),
+				__( 'This field requires Chimpmatic Pro.', 'chimpmatic-lite' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -364,7 +364,7 @@ final class Cmatic_Rest_Form {
 				'pro_required',
 				sprintf(
 					/* translators: %s: field label */
-					__( '%s requires ChimpMatic Pro.', 'chimpmatic-lite' ),
+					__( '%s requires Chimpmatic Pro.', 'chimpmatic-lite' ),
 					$field_config['label']
 				),
 				array( 'status' => 403 )

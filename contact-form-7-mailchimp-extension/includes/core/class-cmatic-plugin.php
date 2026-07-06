@@ -111,11 +111,13 @@ final class Cmatic_Plugin {
 			'ui/class-cmatic-data-container.php',
 			'ui/class-cmatic-panel-toggles.php',
 			'ui/class-cmatic-tags-preview.php',
+			'ui/class-cmatic-pro-showcase.php',
 			'ui/class-cmatic-banners.php',
 			'ui/class-cmatic-form-classes.php',
 			'ui/class-cmatic-dom-classes.php',
 			'ui/class-cmatic-field-mapper.php',
 			'ui/class-cmatic-sidebar-panel.php',
+			'ui/class-cmatic-license-banner.php',
 			'ui/class-cmatic-advanced-settings.php',
 		);
 
@@ -133,10 +135,11 @@ final class Cmatic_Plugin {
 
 		// Core services (no dependencies).
 		Cmatic_CF7_Dependency::init();
+		Cmatic_License_Banner::init();
 		Cmatic_Pro_Syncer::init();
 
 		// Logging.
-		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[ChimpMatic Lite]', 'chimpmatic-lite' );
+		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[Chimpmatic Lite]', 'chimpmatic-lite' );
 
 		// REST API Controllers.
 		Cmatic_Rest_Lists::init();

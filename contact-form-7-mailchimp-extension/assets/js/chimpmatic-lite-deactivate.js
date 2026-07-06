@@ -109,7 +109,7 @@
 				return pluginsCache;
 			}
 		} catch (error) {
-			console.error('ChimpMatic: Failed to fetch plugins list', error);
+			console.error('Chimpmatic: Failed to fetch plugins list', error);
 		}
 		return [];
 	}
@@ -245,7 +245,7 @@
 		try {
 			await submitFeedback(reasonId, reasonText);
 		} catch (error) {
-			console.error('ChimpMatic: Failed to submit feedback', error);
+			console.error('Chimpmatic: Failed to submit feedback', error);
 		}
 		window.location.href = deactivateUrl;
 	}
@@ -299,7 +299,7 @@
 			if (retry < MAX_RETRIES) {
 				const delay = Math.pow(2, retry) * 1000;
 				await new Promise(resolve => setTimeout(resolve, delay));
-				console.warn(`ChimpMatic: Retry ${retry + 1}/${MAX_RETRIES}`);
+				console.warn(`Chimpmatic: Retry ${retry + 1}/${MAX_RETRIES}`);
 				return submitFeedback(reasonId, reasonText, retry + 1);
 			}
 			throw new Error('Failed to submit feedback');

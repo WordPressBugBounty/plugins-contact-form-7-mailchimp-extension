@@ -46,8 +46,18 @@ class Cmatic_Audiences {
 			</button>
 
 			<small class="description">
-				<?php esc_html_e( 'Hit the Connect button to load your lists', 'chimpmatic-lite' ); ?>
-				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e( 'Get help with MailChimp List ID', 'chimpmatic-lite' ); ?>">
+				<?php
+				// State-aware caption: describe the NEXT useful action, mirroring
+				// the same state branch the label above uses.
+				if ( '1' === $apivalid && $count > 0 ) {
+					esc_html_e( 'Contacts from this form join the selected audience. Sync Fields refreshes its merge fields from Mailchimp.', 'chimpmatic-lite' );
+				} elseif ( '1' === $apivalid ) {
+					esc_html_e( 'No audiences found in this account. Create one in Mailchimp, then click Sync Fields.', 'chimpmatic-lite' );
+				} else {
+					esc_html_e( 'Connect your Mailchimp account above to load your audiences.', 'chimpmatic-lite' );
+				}
+				?>
+				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e( 'Get help with Mailchimp audiences', 'chimpmatic-lite' ); ?>">
 					<?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?>
 				</a>
 			</small>
@@ -60,12 +70,10 @@ class Cmatic_Audiences {
 			return;
 		}
 
-		$i = 0;
 		foreach ( $listdata['lists'] as $list ) :
 			if ( ! is_array( $list ) || ! isset( $list['id'], $list['name'] ) ) {
 				continue;
 			}
-			++$i;
 			$list_id      = sanitize_text_field( $list['id'] );
 			$list_name    = sanitize_text_field( $list['name'] );
 			$member_count = isset( $list['stats']['member_count'] ) ? (int) $list['stats']['member_count'] : 0;
@@ -74,13 +82,14 @@ class Cmatic_Audiences {
 			?>
 			<option value="<?php echo esc_attr( $list_id ); ?>" <?php echo $selected; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- selected() returns pre-escaped output ?>>
 				<?php
+				// Human label: name + field count. The raw list id stays in the
+				// option value only.
 				printf(
-					'%d:%d %s  %d fields #%s',
-					(int) $i,
-					(int) $member_count,
+					/* translators: 1: audience name, 2: contact count, 3: merge-field count */
+					esc_html__( '%1$s (%2$s contacts, %3$d fields)', 'chimpmatic-lite' ),
 					esc_html( $list_name ),
-					(int) $field_count,
-					esc_html( $list_id )
+					esc_html( number_format_i18n( $member_count ) ),
+					(int) $field_count
 				);
 				?>
 			</option>

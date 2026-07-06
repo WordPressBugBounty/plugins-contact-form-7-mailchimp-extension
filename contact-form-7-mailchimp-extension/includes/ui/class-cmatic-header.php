@@ -26,27 +26,10 @@ class Cmatic_Header {
 		$this->api_status = isset( $args['api_status'] ) && is_string( $args['api_status'] ) ? $args['api_status'] : null;
 		$this->review_url = isset( $args['review_url'] ) && is_string( $args['review_url'] ) ? $args['review_url'] : $this->get_default_review_url();
 
+		// One review voice, always: rotating quips read needy next to the
+		// Pro purchase CTA.
 		$this->review_phrases = array(
 			__( 'Loving Chimpmatic? Leave a review', 'chimpmatic-lite' ),
-			__( 'We run on coffee & 5-star reviews', 'chimpmatic-lite' ),
-			__( 'Make a developer smile today', 'chimpmatic-lite' ),
-			__( 'Got 10 seconds? Rate us!', 'chimpmatic-lite' ),
-			__( 'Fuel our plugin addiction', 'chimpmatic-lite' ),
-			__( 'Stars make us code faster', 'chimpmatic-lite' ),
-			__( 'Help us stay free & caffeinated', 'chimpmatic-lite' ),
-			__( "Love us? Don't keep it a secret", 'chimpmatic-lite' ),
-			__( 'Your review = our dopamine', 'chimpmatic-lite' ),
-			__( 'Be our hero on WordPress.org', 'chimpmatic-lite' ),
-			__( 'Psst... we love 5 stars', 'chimpmatic-lite' ),
-			__( 'Worth 5 stars? Let us know', 'chimpmatic-lite' ),
-			__( 'Support indie plugins', 'chimpmatic-lite' ),
-			__( 'Reviews keep the lights on', 'chimpmatic-lite' ),
-			__( 'Spread the Chimpmatic love', 'chimpmatic-lite' ),
-			__( 'Got love? Leave stars', 'chimpmatic-lite' ),
-			__( 'One click, endless gratitude', 'chimpmatic-lite' ),
-			__( 'Help other WP folks find us', 'chimpmatic-lite' ),
-			__( 'Like us? Rate us!', 'chimpmatic-lite' ),
-			__( 'Your stars = our motivation', 'chimpmatic-lite' ),
 		);
 	}
 
@@ -87,8 +70,7 @@ class Cmatic_Header {
 
 
 	private function get_review_phrase(): string {
-		$index = wp_rand( 0, count( $this->review_phrases ) - 1 );
-		return $this->review_phrases[ $index ];
+		return $this->review_phrases[0];
 	}
 
 
@@ -105,10 +87,16 @@ class Cmatic_Header {
 					<?php $this->render_api_status(); ?>
 				</div>
 				<div class="cmatic-header__actions">
-					<a href="<?php echo esc_url( $this->review_url ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review">
-						<?php echo esc_html( $this->get_review_phrase() ); ?>
-						<span class="cmatic-sparkles" aria-label="5 sparkles"></span>
-					</a>
+					<?php if ( $this->is_pro ) : // paying customers get their account (renewals), not a wp.org star ask ?>
+						<a href="<?php echo esc_url( Cmatic_Pursuit::url( 'https://chimpmatic.com/my-account', 'plugin', 'header_account', 'account' ) ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review">
+							<?php esc_html_e( 'My Account', 'chimpmatic-lite' ); ?>
+						</a>
+					<?php else : ?>
+						<a href="<?php echo esc_url( $this->review_url ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review">
+							<?php echo esc_html( $this->get_review_phrase() ); ?>
+							<span class="cmatic-sparkles" aria-label="5 sparkles"></span>
+						</a>
+					<?php endif; ?>
 				</div>
 			</div>
 		</header>
@@ -121,11 +109,16 @@ class Cmatic_Header {
 			return;
 		}
 
-		$is_connected = ( 'connected' === $this->api_status );
-		$dot_class    = $is_connected ? 'cmatic-header__status-dot--connected' : 'cmatic-header__status-dot--disconnected';
-		$status_text  = $is_connected
-			? __( 'API Connected', 'chimpmatic-lite' )
-			: __( 'API Inactive', 'chimpmatic-lite' );
+		if ( 'connected' === $this->api_status ) {
+			$dot_class   = 'cmatic-header__status-dot--connected';
+			$status_text = __( 'API Connected', 'chimpmatic-lite' );
+		} elseif ( 'fresh' === $this->api_status ) {
+			$dot_class   = 'cmatic-header__status-dot--neutral';
+			$status_text = __( 'Not Connected', 'chimpmatic-lite' );
+		} else {
+			$dot_class   = 'cmatic-header__status-dot--disconnected';
+			$status_text = __( 'API Inactive', 'chimpmatic-lite' );
+		}
 		?>
 		<div class="cmatic-header__status">
 			<span class="cmatic-header__status-dot <?php echo esc_attr( $dot_class ); ?>"></span>

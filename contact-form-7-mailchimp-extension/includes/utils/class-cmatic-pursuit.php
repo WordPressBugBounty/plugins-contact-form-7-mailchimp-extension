@@ -15,6 +15,7 @@ final class Cmatic_Pursuit {
 	const PLUGIN_ID = 'chimpmatic_lite';
 	const BASE_URLS = array(
 		'docs'    => 'https://chimpmatic.com',
+		'help'    => 'https://chimpmatic.com/help',
 		'pricing' => 'https://chimpmatic.com/pricing',
 		'support' => 'https://chimpmatic.com/contact',
 		'promo'   => 'https://chimpmatic.com/almost-there',
@@ -55,7 +56,50 @@ final class Cmatic_Pursuit {
 		return self::url( self::BASE_URLS['support'], 'plugin', $content, 'support' );
 	}
 
-	public static function promo( string $content = '', int $discount = 40 ): string {
+	/**
+	 * Canonical /promo read. ONE url, ONE cache key, ONE fallback: every surface
+	 * (sidebar box, limit-notice CTA, tags overlay, banners) MUST consume this
+	 * instead of instantiating its own fetcher, or discounts drift per surface.
+	 */
+	public static function pricing(): array {
+		$fetcher = new CMatic_Remote_Fetcher(
+			array(
+				'url'            => 'https://api.chimpmatic.com/promo',
+				'cache_key'      => 'cmatic_pricing_data',
+				'cache_duration' => DAY_IN_SECONDS,
+				'fallback_data'  => array(
+					'regular_price'    => 39,
+					'sale_price'       => 29.25,
+					'discount_percent' => 40,
+					'coupon_code'      => 'NOW40',
+					'formatted'        => '$39 → $29.25 • Save 40%',
+				),
+			)
+		);
+		return $fetcher->get_data();
+	}
+
+	/** Full coupon-carrying checkout URL: promo() + install source + proN param. */
+	public static function promo_checkout( string $content = '' ): string {
+		$pricing  = self::pricing();
+		$discount = (int) ( $pricing['discount_percent'] ?? 0 );
+		$source   = class_exists( 'Cmatic_Options_Repository' )
+			? Cmatic_Options_Repository::get_option( 'install.id', '' )
+			: '';
+		return add_query_arg(
+			array(
+				'source' => $source,
+				'promo'  => 'pro' . $discount,
+			),
+			self::promo( $content, $discount )
+		);
+	}
+
+	public static function promo( string $content = '', ?int $discount = null ): string {
+		if ( null === $discount ) { // default follows the live promo, not a constant
+			$pricing  = self::pricing();
+			$discount = (int) ( $pricing['discount_percent'] ?? 0 );
+		}
 		$params = array(
 			'u_source'   => self::PLUGIN_ID,
 			'u_medium'   => 'banner',
