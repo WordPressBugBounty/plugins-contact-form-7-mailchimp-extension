@@ -29,7 +29,8 @@ class Cmatic_Merge_Vars_Builder {
 			if ( ! empty( $cf7_mch[ $field_key ] ) && ! empty( $merge_tag ) ) {
 				$value = Cmatic_Email_Extractor::replace_tags( $cf7_mch[ $field_key ], $posted_data );
 				if ( ! empty( $value ) ) {
-					$merge_vars[ $merge_tag ] = $value;
+					// Strip HTML from visitor input before it reaches Mailchimp (CVE-2026-15000).
+					$merge_vars[ $merge_tag ] = self::sanitize_value( $value );
 				}
 			}
 
@@ -40,6 +41,13 @@ class Cmatic_Merge_Vars_Builder {
 		}
 
 		return self::filter_empty( $merge_vars );
+	}
+
+	private static function sanitize_value( $value ) {
+		if ( is_array( $value ) ) {
+			return array_map( array( __CLASS__, 'sanitize_value' ), $value );
+		}
+		return sanitize_text_field( (string) $value );
 	}
 
 	private static function filter_empty( array $merge_vars ): array {

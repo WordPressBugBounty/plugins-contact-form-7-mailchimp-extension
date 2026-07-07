@@ -1676,6 +1676,19 @@ function chimpmaticLiteInit() {
 			return;
 		}
 
+		// Escape Mailchimp-supplied values before they hit innerHTML (CVE-2026-15000).
+		function esc(value) {
+			if (value === null || value === undefined) {
+				return '';
+			}
+			return String(value)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;');
+		}
+
 		function showForm() {
 			formContainer.classList.remove('cmatic-hidden');
 			resultsContainer.classList.add('cmatic-hidden');
@@ -1722,13 +1735,13 @@ function chimpmaticLiteInit() {
 					if (value.addr1 || value.city || value.state || value.zip || value.country) {
 						const addrParts = [value.addr1, value.addr2, value.city, value.state, value.zip, value.country].filter(Boolean);
 						const label = fieldLabels[key] || key;
-						rows += `<tr data-field="${fieldKey}"><th>${label}</th><td class="cmatic-val">${addrParts.length ? addrParts.join(', ') : '—'}</td></tr>`;
+						rows += `<tr data-field="${esc(fieldKey)}"><th>${esc(label)}</th><td class="cmatic-val">${addrParts.length ? esc(addrParts.join(', ')) : '—'}</td></tr>`;
 					}
 					continue;
 				}
 				const label = fieldLabels[key] || key;
-				const displayValue = (value && value !== '') ? value : '—';
-				rows += `<tr data-field="${fieldKey}"><th>${label}</th><td class="cmatic-val">${displayValue}</td></tr>`;
+				const displayValue = (value && value !== '') ? esc(value) : '—';
+				rows += `<tr data-field="${esc(fieldKey)}"><th>${esc(label)}</th><td class="cmatic-val">${displayValue}</td></tr>`;
 			}
 
 			if (!rows) return '<span class="cmatic-empty">No fields configured</span>';
@@ -1740,7 +1753,7 @@ function chimpmaticLiteInit() {
 				return '<div data-section="tags"><span class="cmatic-empty">No tags</span></div>';
 			}
 			return '<div data-section="tags" class="cmatic-tag-list">' +
-				tags.map(tag => `<span class="cmatic-tag-chip cmatic-val">${tag}</span>`).join('') +
+				tags.map(tag => `<span class="cmatic-tag-chip cmatic-val">${esc(tag)}</span>`).join('') +
 				'</div>';
 		}
 
@@ -1752,8 +1765,8 @@ function chimpmaticLiteInit() {
 			for (const [category, items] of Object.entries(interests)) {
 				const catKey = category.toLowerCase().replace(/\s+/g, '-');
 				const itemsArray = Array.isArray(items) ? items : [items];
-				html += `<div data-group="${catKey}" style="margin-bottom: 6px;"><strong style="font-size: 10px;">${category}:</strong> `;
-				html += itemsArray.map(i => `<span class="cmatic-tag-chip cmatic-val">${i}</span>`).join(' ');
+				html += `<div data-group="${esc(catKey)}" style="margin-bottom: 6px;"><strong style="font-size: 10px;">${esc(category)}:</strong> `;
+				html += itemsArray.map(i => `<span class="cmatic-tag-chip cmatic-val">${esc(i)}</span>`).join(' ');
 				html += '</div>';
 			}
 			html += '</div>';
@@ -1780,7 +1793,7 @@ function chimpmaticLiteInit() {
 				let idx = 0;
 				for (const [key, value] of Object.entries(permissions)) {
 					const displayVal = Array.isArray(value) ? value.join(', ') : value;
-					rows += `<tr data-field="gdpr-${idx}"><th>Permission ${idx + 1}</th><td class="cmatic-val">${displayVal}</td></tr>`;
+					rows += `<tr data-field="gdpr-${idx}"><th>Permission ${idx + 1}</th><td class="cmatic-val">${esc(displayVal)}</td></tr>`;
 					idx++;
 				}
 				return `<table class="cmatic-field-table" data-section="gdpr">${rows}</table>`;
@@ -1788,7 +1801,7 @@ function chimpmaticLiteInit() {
 
 			if (typeof permissions[0] === 'string') {
 				permissions.forEach((hash, idx) => {
-					rows += `<tr data-field="gdpr-${idx}"><th>Permission ${idx + 1}</th><td class="cmatic-val">${hash}</td></tr>`;
+					rows += `<tr data-field="gdpr-${idx}"><th>Permission ${idx + 1}</th><td class="cmatic-val">${esc(hash)}</td></tr>`;
 				});
 				return `<table class="cmatic-field-table" data-section="gdpr">${rows}</table>`;
 			}
@@ -1796,7 +1809,7 @@ function chimpmaticLiteInit() {
 			permissions.forEach((perm, idx) => {
 				const permKey = perm.marketing_permission_id || `gdpr-${idx}`;
 				const enabled = perm.enabled ? '✓ Yes' : '✗ No';
-				rows += `<tr data-field="${permKey}"><th>${perm.text || perm.marketing_permission_id}</th><td class="cmatic-val">${enabled}</td></tr>`;
+				rows += `<tr data-field="${esc(permKey)}"><th>${esc(perm.text || perm.marketing_permission_id)}</th><td class="cmatic-val">${enabled}</td></tr>`;
 			});
 			return `<table class="cmatic-field-table" data-section="gdpr">${rows}</table>`;
 		}
@@ -1822,10 +1835,10 @@ function chimpmaticLiteInit() {
 			let rows = '';
 
 			const emailType = result.email_type ? result.email_type.toUpperCase() : '—';
-			rows += `<tr data-field="email_type"><th>Email format</th><td class="cmatic-val">${emailType}</td></tr>`;
+			rows += `<tr data-field="email_type"><th>Email format</th><td class="cmatic-val">${esc(emailType)}</td></tr>`;
 
 			const language = getLanguageName(result.language);
-			rows += `<tr data-field="language"><th>Language</th><td class="cmatic-val">${language}</td></tr>`;
+			rows += `<tr data-field="language"><th>Language</th><td class="cmatic-val">${esc(language)}</td></tr>`;
 
 			const vip = result.vip ? 'Yes' : 'No';
 			rows += `<tr data-field="vip"><th>VIP</th><td class="cmatic-val">${vip}</td></tr>`;
@@ -1837,14 +1850,14 @@ function chimpmaticLiteInit() {
 				rows += `<tr data-field="member_rating"><th>Contact rating</th><td class="cmatic-val">—</td></tr>`;
 			}
 
-			rows += `<tr data-field="email_client"><th>Email client</th><td class="cmatic-val">${result.email_client || '—'}</td></tr>`;
+			rows += `<tr data-field="email_client"><th>Email client</th><td class="cmatic-val">${esc(result.email_client || '—')}</td></tr>`;
 
 			if (result.location && (result.location.country_code || result.location.timezone)) {
 				const locParts = [];
 				if (result.location.country_code) locParts.push(result.location.country_code);
 				if (result.location.region) locParts.push(result.location.region);
 				if (result.location.timezone) locParts.push(`(${result.location.timezone})`);
-				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">${locParts.join(' ') || '—'}</td></tr>`;
+				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">${esc(locParts.join(' ')) || '—'}</td></tr>`;
 			} else {
 				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">—</td></tr>`;
 			}
@@ -1872,10 +1885,10 @@ function chimpmaticLiteInit() {
 			html += `
 				<div class="cmatic-header-left">
 					<span class="cmatic-status-dot ${statusInfo.class}"></span>
-					<strong>${result.list_name}</strong>
+					<strong>${esc(result.list_name)}</strong>
 				</div>
 				<div class="cmatic-header-right">
-					<span class="cmatic-badge ${statusInfo.badge}">${statusInfo.label}</span>
+					<span class="cmatic-badge ${statusInfo.badge}">${esc(statusInfo.label)}</span>
 					${isFound ? '<span class="cmatic-chevron"></span>' : ''}
 				</div>
 			</div>`;
@@ -1886,7 +1899,7 @@ function chimpmaticLiteInit() {
 
 				html += '<div class="cmatic-section-header">Contact Info</div>';
 				html += `<div data-section="contact-info">`;
-				html += `<table class="cmatic-field-table"><tr data-field="source"><th>Source</th><td class="cmatic-val">${result.source || '—'}</td></tr></table>`;
+				html += `<table class="cmatic-field-table"><tr data-field="source"><th>Source</th><td class="cmatic-val">${esc(result.source || '—')}</td></tr></table>`;
 				html += renderMergeFields(result.merge_fields);
 				html += `</div>`;
 
@@ -1903,9 +1916,9 @@ function chimpmaticLiteInit() {
 				html += '<table class="cmatic-field-table" data-section="details">';
 				html += `<tr data-field="subscribed"><th>Subscribed</th><td class="cmatic-val">${result.subscribed ? formatDate(result.subscribed) : '—'}</td></tr>`;
 				html += `<tr data-field="timestamp_signup"><th>Signup date</th><td class="cmatic-val">${result.timestamp_signup ? formatDate(result.timestamp_signup) : '—'}</td></tr>`;
-				html += `<tr data-field="ip_signup"><th>IP signup</th><td class="cmatic-val">${result.ip_signup || '—'}</td></tr>`;
+				html += `<tr data-field="ip_signup"><th>IP signup</th><td class="cmatic-val">${esc(result.ip_signup || '—')}</td></tr>`;
 				html += `<tr data-field="last_changed"><th>Last changed</th><td class="cmatic-val">${result.last_changed ? formatDate(result.last_changed) : '—'}</td></tr>`;
-				html += `<tr data-field="unsubscribe_reason"><th>Unsubscribe reason</th><td class="cmatic-val">${result.unsubscribe_reason || '—'}</td></tr>`;
+				html += `<tr data-field="unsubscribe_reason"><th>Unsubscribe reason</th><td class="cmatic-val">${esc(result.unsubscribe_reason || '—')}</td></tr>`;
 				html += '</table>';
 
 				html += '<div class="cmatic-section-header">Preferences</div>';
@@ -1922,7 +1935,7 @@ function chimpmaticLiteInit() {
 			let html = '';
 
 			const summaryClass = data.found ? 'cmatic-found' : 'cmatic-not-found';
-			html += `<div class="cmatic-lookup-summary ${summaryClass}"><strong>${data.message}</strong></div>`;
+			html += `<div class="cmatic-lookup-summary ${summaryClass}"><strong>${esc(data.message)}</strong></div>`;
 
 			const sortedResults = [...data.results].sort((a, b) => {
 				if (a.found && !b.found) return -1;
@@ -2073,7 +2086,7 @@ function chimpmaticLiteInit() {
 				}
 
 			} catch (error) {
-				resultsContainer.innerHTML = `<div class="cmatic-lookup-summary cmatic-not-found">Error: ${error.message}</div>`;
+				resultsContainer.innerHTML = `<div class="cmatic-lookup-summary cmatic-not-found">Error: ${esc(error.message)}</div>`;
 			} finally {
 				lookupBtn.disabled = false;
 				lookupBtn.textContent = 'Lookup';

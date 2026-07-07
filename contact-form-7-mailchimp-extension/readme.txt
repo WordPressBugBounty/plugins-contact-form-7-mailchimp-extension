@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.78.06
+Stable tag: 0.9.78.07
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -132,12 +132,19 @@ Yes. You can map any Contact Form 7 field to Mailchimp merge fields like FNAME, 
 
 == Upgrade Notice ==
 
+= 0.9.78.07 =
+Security release: fixes a stored cross-site scripting (XSS) vulnerability in the Contact Lookup tool (CVE-2026-15000). All users should update.
+
 = 0.9.78.06 =
 One-click Mailchimp connection (OAuth), a smarter audience panel, and reliability fixes for checkbox fields and special mail-tags. Recommended for all users.
 
 == Changelog ==
 
 For the full changelog with details, see [Release History](https://chimpmatic.com/changelog).
+
+= 0.9.78.07 =
+
+* Security: Fixed a stored cross-site scripting (XSS) vulnerability in the Contact Lookup tool. Subscriber merge-field values returned from Mailchimp are now HTML-escaped before they are displayed, and values submitted through mapped form fields are sanitized before being sent to Mailchimp. Reported responsibly via Wordfence (CVE-2026-15000). All users should update.
 
 = 0.9.78.06 =
 
