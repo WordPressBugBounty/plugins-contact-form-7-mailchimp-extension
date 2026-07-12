@@ -12,10 +12,10 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Log_Viewer {
 
-	protected static $namespace = 'chimpmatic-lite/v1';
-	protected static $log_prefix = '[Chimpmatic Lite]';
+	protected static $namespace   = 'chimpmatic-lite/v1';
+	protected static $log_prefix  = '[Chimpmatic Lite]';
 	protected static $text_domain = 'chimpmatic-lite';
-	protected static $max_lines = 500;
+	protected static $max_lines   = 500;
 	protected static $initialized = false;
 
 	public static function init( $namespace = null, $log_prefix = null, $text_domain = null ) {
@@ -126,7 +126,7 @@ class Cmatic_Log_Viewer {
 			return new WP_REST_Response(
 				array(
 					'success'  => false,
-					'message'  => __( 'Debug log file not found. Ensure WP_DEBUG_LOG is enabled.', self::$text_domain ),
+					'message'  => __( 'Debug log file not found. Ensure WP_DEBUG_LOG is enabled.', 'chimpmatic-lite' ),
 					'logs'     => '',
 					'filtered' => $apply_filter,
 				),
@@ -156,11 +156,11 @@ class Cmatic_Log_Viewer {
 			$message = $apply_filter
 				? sprintf(
 					/* translators: %1$s: prefix, %2$d: number of lines checked */
-					__( 'No %1$s entries found in the recent log data. Note: This viewer only shows the last %2$d lines of the log file.', self::$text_domain ),
+					__( 'No %1$s entries found in the recent log data. Note: This viewer only shows the last %2$d lines of the log file.', 'chimpmatic-lite' ),
 					$prefix,
 					self::$max_lines
 				)
-				: __( 'Debug log is empty.', self::$text_domain );
+				: __( 'Debug log is empty.', 'chimpmatic-lite' );
 
 			return new WP_REST_Response(
 				array(
@@ -194,7 +194,7 @@ class Cmatic_Log_Viewer {
 				array(
 					'success' => true,
 					'cleared' => false,
-					'message' => __( 'Debug log file does not exist.', self::$text_domain ),
+					'message' => __( 'Debug log file does not exist.', 'chimpmatic-lite' ),
 				),
 				200
 			);
@@ -205,7 +205,7 @@ class Cmatic_Log_Viewer {
 				array(
 					'success' => false,
 					'cleared' => false,
-					'message' => __( 'Debug log file is not writable.', self::$text_domain ),
+					'message' => __( 'Debug log file is not writable.', 'chimpmatic-lite' ),
 				),
 				500
 			);
@@ -218,7 +218,7 @@ class Cmatic_Log_Viewer {
 				array(
 					'success' => false,
 					'cleared' => false,
-					'message' => __( 'Failed to clear debug log file.', self::$text_domain ),
+					'message' => __( 'Failed to clear debug log file.', 'chimpmatic-lite' ),
 				),
 				500
 			);
@@ -240,7 +240,7 @@ class Cmatic_Log_Viewer {
 			array(
 				'success' => true,
 				'cleared' => true,
-				'message' => __( 'Debug log cleared successfully.', self::$text_domain ),
+				'message' => __( 'Debug log cleared successfully.', 'chimpmatic-lite' ),
 			),
 			200
 		);
@@ -275,7 +275,7 @@ class Cmatic_Log_Viewer {
 			error_log( $log_message );
 		}
 		$logfile_enabled = (bool) get_option( CMATIC_LOG_OPTION, false );
-		$logger = new Cmatic_File_Logger( 'Browser-Console', $logfile_enabled );
+		$logger          = new Cmatic_File_Logger( 'Browser-Console', $logfile_enabled );
 		$logger->log( $wp_level, 'Browser: ' . $message, $data ? json_decode( $data, true ) : null );
 
 		return new WP_REST_Response(
@@ -302,7 +302,7 @@ class Cmatic_Log_Viewer {
 		}
 		$pos    = $file_size;
 		$buffer = '';
-		while ( $pos > 0 && count( $result ) < $lines ) {
+		while ( $pos > 0 && count( $result ) < $lines ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found -- Result growth is the loop termination condition.
 			$read_size = min( $chunk, $pos );
 			$pos      -= $read_size;
 			fseek( $handle, $pos );
@@ -331,20 +331,16 @@ class Cmatic_Log_Viewer {
 	var CmaticLogViewer = {
 		namespace: '{$namespace}',
 
-		// Get REST API root URL (supports both LITE and PRO configurations).
 		getRestRoot: function() {
 			if (typeof wpApiSettings !== 'undefined' && wpApiSettings.root) {
 				return wpApiSettings.root;
 			}
 			if (typeof chimpmaticLite !== 'undefined' && chimpmaticLite.restUrl) {
-				// chimpmaticLite.restUrl includes 'chimpmatic-lite/v1/' already.
 				return chimpmaticLite.restUrl.replace(/chimpmatic-lite\/v1\/$/, '');
 			}
-			// Fallback: construct from current URL.
 			return window.location.origin + '/wp-json/';
 		},
 
-		// Get REST API nonce.
 		getNonce: function() {
 			if (typeof wpApiSettings !== 'undefined' && wpApiSettings.nonce) {
 				return wpApiSettings.nonce;
@@ -419,7 +415,6 @@ class Cmatic_Log_Viewer {
 		CmaticLogViewer.init();
 	});
 
-	// Expose for external use (e.g., after test submission).
 	window.CmaticLogViewer = CmaticLogViewer;
 })(jQuery);
 JS;
@@ -427,9 +422,9 @@ JS;
 
 	public static function render( $args = array() ) {
 		$defaults = array(
-			'title'       => __( 'Submission Logs', self::$text_domain ),
-			'clear_text'  => __( 'Clear Logs', self::$text_domain ),
-			'placeholder' => __( 'Click "View Debug Logs" to fetch the log content.', self::$text_domain ),
+			'title'       => __( 'Submission Logs', 'chimpmatic-lite' ),
+			'clear_text'  => __( 'Clear Logs', 'chimpmatic-lite' ),
+			'placeholder' => __( 'Click "View Debug Logs" to fetch the log content.', 'chimpmatic-lite' ),
 			'class'       => '',
 		);
 

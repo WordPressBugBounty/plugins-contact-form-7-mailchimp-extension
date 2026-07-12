@@ -60,7 +60,7 @@ class Lifecycle_Collector {
 			'upgrade_timestamps'          => $upgrades,
 		);
 
-		$data = array_filter( $data, fn( $v ) => $v !== 0 && $v !== '' && $v !== 'unknown' );
+		$data                   = array_filter( $data, fn( $v ) => $v !== 0 && $v !== '' && $v !== 'unknown' );
 		$data['active_session'] = $active_session;
 
 		return $data;

@@ -27,8 +27,8 @@ class Cmatic_Buster {
 		$version_parts = array( $this->plugin_version );
 
 		if ( file_exists( $file_path ) ) {
-			$version_parts[] = (string) filemtime( $file_path );
-			$version_parts[] = substr( md5_file( $file_path ), 0, 8 );
+			$version_parts[]     = (string) filemtime( $file_path );
+				$version_parts[] = substr( (string) hash_file( 'sha256', $file_path ), 0, 8 );
 		}
 
 		if ( $this->is_debug ) {

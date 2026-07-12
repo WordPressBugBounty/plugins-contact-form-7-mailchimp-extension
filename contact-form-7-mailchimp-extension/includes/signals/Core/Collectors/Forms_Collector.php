@@ -18,18 +18,18 @@ class Forms_Collector {
 	private const MAX_FORMS = 100;
 
 	public static function collect(): array {
-		$cf7_forms         = self::get_cf7_forms();
-		$processed_forms   = count( $cf7_forms );
-		$total_forms       = self::get_total_form_count();
-		$forms_truncated   = $total_forms > self::MAX_FORMS;
-		$active_forms      = 0;
-		$forms_with_api    = 0;
-		$forms_with_lists  = 0;
-		$total_lists       = 0;
-		$total_fields      = 0;
-		$unique_audiences  = array();
-		$forms_data        = array();
-		$paired_lists      = array();
+		$cf7_forms        = self::get_cf7_forms();
+		$processed_forms  = count( $cf7_forms );
+		$total_forms      = self::get_total_form_count();
+		$forms_truncated  = $total_forms > self::MAX_FORMS;
+		$active_forms     = 0;
+		$forms_with_api   = 0;
+		$forms_with_lists = 0;
+		$total_lists      = 0;
+		$total_fields     = 0;
+		$unique_audiences = array();
+		$forms_data       = array();
+		$paired_lists     = array();
 
 		$forms_detail      = array();
 		$field_type_counts = array();
@@ -209,11 +209,14 @@ class Forms_Collector {
 		}
 
 		$placeholders = implode( ', ', array_fill( 0, count( $option_names ), '%s' ) );
-		$query        = $wpdb->prepare(
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Placeholder list is generated locally and every value is prepared below.
+		$query = $wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Placeholder list is generated locally and every value is prepared.
 			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ({$placeholders})",
 			...$option_names
 		);
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Prepared immediately above with generated placeholders.
 		$results = $wpdb->get_results( $query, ARRAY_A );
 
 		$options_map = array();
@@ -322,7 +325,7 @@ class Forms_Collector {
 			if ( ! empty( $mc_tag ) ) {
 				++$total_mc_fields;
 				if ( '' !== $cf7_field ) {
-					$form_mappings[] = array(
+					$form_mappings[]     = array(
 						'cf7_field' => $cf7_field,
 						'mc_tag'    => $mc_tag,
 						'mc_type'   => $mc_type,

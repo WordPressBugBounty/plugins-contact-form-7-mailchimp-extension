@@ -69,7 +69,7 @@ final class Cmatic_Rest_Form {
 		if ( self::$initialized ) {
 			return;
 		}
-		add_action( 'rest_api_init', array( static::class, 'register_routes' ) );
+		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
 		self::$initialized = true;
 	}
 
@@ -79,8 +79,8 @@ final class Cmatic_Rest_Form {
 			'/tags/toggle',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'toggle_tag' ),
-				'permission_callback' => array( static::class, 'check_admin_permission' ),
+				'callback'            => array( self::class, 'toggle_tag' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
 				'args'                => array(
 					'form_id' => array(
 						'required'          => true,
@@ -106,8 +106,8 @@ final class Cmatic_Rest_Form {
 			'/form/field',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'save_field' ),
-				'permission_callback' => array( static::class, 'check_form_permission' ),
+				'callback'            => array( self::class, 'save_field' ),
+				'permission_callback' => array( self::class, 'check_form_permission' ),
 				'args'                => array(
 					'form_id' => array(
 						'required'          => true,
@@ -132,8 +132,8 @@ final class Cmatic_Rest_Form {
 			'/form/setting',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'save_setting' ),
-				'permission_callback' => array( static::class, 'check_admin_permission' ),
+				'callback'            => array( self::class, 'save_setting' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
 				'args'                => array(
 					'form_id' => array(
 						'required'          => true,

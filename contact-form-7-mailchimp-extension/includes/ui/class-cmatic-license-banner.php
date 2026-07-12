@@ -2,11 +2,7 @@
 /**
  * Admin-wide license state banner.
  *
- * Ships in LITE deliberately: Lite is the wp.org-updated base that the entire
- * installed fleet keeps current (including pirated-Pro sites), so it is the one
- * delivery vehicle that reaches every Pro install. It only ever renders when
- * the Pro plugin is present; pure-Lite users never see it (wp.org notice
- * etiquette, and the panel already carries their upsells).
+ * Renders only when ChimpMatic Pro is installed.
  *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
@@ -18,24 +14,12 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_License_Banner {
 
-	/** Mirrors Pro's baked amnesty deadline (2026-08-31 23:59:59 America/New_York). */
 	private const AMNESTY_DEFAULT_UNTIL = 1788235199;
 
-	/**
-	 * Campaign keys. chimpmatic.com mints SINGLE-USE, short-expiry coupons per
-	 * visitor (now45-wknd-*, renew-<order>-*) precisely so codes cannot leak to
-	 * coupon sites - therefore the banner NEVER displays a static code. It shows
-	 * a live percentage only when the /promo read vouches for it, and the CTA
-	 * carries the campaign param the store's minting flow understands.
-	 * Spec for the server: activate = live new-buyer discount (already served);
-	 * winback target 50%; renew target 30% (see /promo fields winback_discount,
-	 * renew_discount).
-	 */
 	private const CAMPAIGNS = array( 'activate', 'winback', 'renew' );
 
 	private const META_KEY = 'cmatic_banner_dismissals';
 
-	/** Snooze seconds per state; a state CHANGE re-arms automatically (keyed by state). */
 	private const SNOOZE = array(
 		'unlicensed'        => 7 * DAY_IN_SECONDS,
 		'unlicensed_urgent' => DAY_IN_SECONDS,
@@ -49,13 +33,10 @@ final class Cmatic_License_Banner {
 		add_action( 'admin_notices', array( __CLASS__, 'render' ) );
 	}
 
-	/**
-	 * Resolve the banner state, or '' for none. All Pro introspection is
-	 * guarded: Lite must behave identically when Pro is absent or changes.
-	 */
+	/** Resolve the banner state, or an empty string when no banner applies. */
 	public static function resolve_state(): string {
 		if ( ! defined( 'CMATIC_VERSION' ) ) {
-			return ''; // No Pro, no banner. Ever.
+			return '';
 		}
 
 		$license_state = 'none';
@@ -79,7 +60,6 @@ final class Cmatic_License_Banner {
 			return 'invalid';
 		}
 
-		// No key at all: pre-cliff, urgent (final 2 weeks), or post-cliff.
 		$deadline = self::amnesty_until();
 		if ( time() > $deadline ) {
 			return 'unlicensed_over';
@@ -105,17 +85,12 @@ final class Cmatic_License_Banner {
 				return (int) $activation->get_expires_at();
 			}
 		} catch ( \Throwable $e ) {
-			return 0; // Pro internals changed: fail to "no banner", never to a fatal.
+			return 0;
 		}
 		return 0;
 	}
 
-	/**
-	 * Live offer for a campaign: percent (0 = make no numeric claim) + the
-	 * checkout URL param. 'activate' rides the live new-buyer discount that the
-	 * store's minting flow already honors; 'winback'/'renew' show a number only
-	 * once the server publishes it via /promo.
-	 */
+	/** Resolve the current server-provided promotion. */
 	private static function offer( string $kind ): array {
 		$percent = 0;
 		if ( class_exists( 'Cmatic_Pursuit' ) ) {
@@ -124,7 +99,10 @@ final class Cmatic_License_Banner {
 				? (int) ( $pricing['discount_percent'] ?? 0 )
 				: (int) ( $pricing[ $kind . '_discount' ] ?? 0 );
 		}
-		return array( 'kind' => $kind, 'percent' => $percent );
+		return array(
+			'kind'    => $kind,
+			'percent' => $percent,
+		);
 	}
 
 	public static function render(): void {
@@ -134,7 +112,7 @@ final class Cmatic_License_Banner {
 
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		if ( $screen && ( $screen->is_block_editor() || false !== strpos( (string) $screen->id, 'wpcf7' ) ) ) {
-			return; // Block editor stays clean; the CF7 panel already sells in context.
+			return;
 		}
 
 		$state = self::resolve_state();
@@ -142,8 +120,6 @@ final class Cmatic_License_Banner {
 			return;
 		}
 
-		// Server-side dismissal check (user meta): survives page/object caches
-		// that would happily re-serve stale banner HTML.
 		$dismissals = get_user_meta( get_current_user_id(), self::META_KEY, true );
 		if ( is_array( $dismissals ) && isset( $dismissals[ $state ] ) && (int) $dismissals[ $state ] > time() ) {
 			return;
@@ -176,8 +152,6 @@ final class Cmatic_License_Banner {
 					'cta_url'       => self::offer_url(
 						'https://chimpmatic.com/pricing',
 						'activate',
-						// Friendly URL tokens: the visitor sees these in the
-						// checkout address bar, so no "unlicensed" shaming.
 						'unlicensed_urgent' === $state ? 'banner_lastcall' : 'banner_hello'
 					),
 					'secondary'     => __( 'I already have a key', 'chimpmatic-lite' ),
@@ -265,20 +239,15 @@ final class Cmatic_License_Banner {
 			return $base;
 		}
 		if ( 'activate' === $campaign ) {
-			// Rides the exact coupon-minting path the store already honors
-			// (source + pro<N>), just onto the pricing page with banner utm.
 			return add_query_arg(
 				array( 'from' => $content ),
 				Cmatic_Pursuit::promo_checkout( $content )
 			);
 		}
-		// The store's minter (handlePromoClick) requires BOTH source and promo
-		// or it silently skips coupon creation - so winback/renew must carry
-		// source exactly like promo_checkout() does for the activate path.
 		$source = class_exists( 'Cmatic_Options_Repository' )
 			? Cmatic_Options_Repository::get_option( 'install.id', '' )
 			: '';
-		$url = Cmatic_Pursuit::url( $base, 'banner', $content, 'license_banner' );
+		$url    = Cmatic_Pursuit::url( $base, 'banner', $content, 'license_banner' );
 		return add_query_arg(
 			array(
 				'source' => $source ? $source : 'lite-banner',
@@ -289,21 +258,21 @@ final class Cmatic_License_Banner {
 	}
 
 	private static function print_banner( string $state, array $view ): void {
-		$tones = array(
+		$tones               = array(
 			'blue'  => array( '#2271b1', '#f0f6fb' ),
 			'amber' => array( '#996800', '#fcf9e8' ),
 			'red'   => array( '#b32d2e', '#fcf0f1' ),
 			'green' => array( '#00753e', '#edfaef' ),
 		);
 		list( $accent, $bg ) = $tones[ $view['tone'] ] ?? $tones['blue'];
-		$nonce = wp_create_nonce( 'wp_rest' );
+		$nonce               = wp_create_nonce( 'wp_rest' );
 		?>
 		<div class="cmatic-license-banner notice" id="cmatic-license-banner" data-state="<?php echo esc_attr( $state ); ?>"
 			style="display:none;position:relative;border:1px solid <?php echo esc_attr( $accent ); ?>33;border-left:4px solid <?php echo esc_attr( $accent ); ?>;background:<?php echo esc_attr( $bg ); ?>;padding:14px 44px 14px 16px;margin:12px 20px 12px 2px;border-radius:4px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
 			<span style="font-weight:700;color:<?php echo esc_attr( $accent ); ?>;white-space:nowrap;">Chimpmatic</span>
 			<span style="flex:1 1 320px;min-width:240px;color:#1d2327;line-height:1.5;">
 				<?php echo esc_html( $view['message'] ); ?>
-				<?php if ( ! empty( $view['offer']['percent'] ) ) : // live number from /promo - never a static code the checkout might not honor ?>
+				<?php if ( ! empty( $view['offer']['percent'] ) ) : ?>
 					<span style="background:#fff;border:1px dashed <?php echo esc_attr( $accent ); ?>;border-radius:3px;padding:2px 8px;font-weight:700;color:<?php echo esc_attr( $accent ); ?>;margin-left:4px;white-space:nowrap;">
 						<?php
 						printf(
@@ -334,9 +303,7 @@ final class Cmatic_License_Banner {
 			if (!banner) { return; }
 			var state = banner.getAttribute('data-state');
 			var lsKey = 'cmaticBannerDismiss:' + state;
-			// Cache shield: if an aggressive admin cache re-serves stale HTML after a
-			// dismissal, localStorage hides it before first paint AND we re-post the
-			// dismissal so the server truth is repaired too.
+			// Hide cached markup immediately, then persist the dismissal server-side.
 			try {
 				var until = parseInt(window.localStorage.getItem(lsKey) || '0', 10);
 				if (until > Date.now()) {
@@ -362,11 +329,7 @@ final class Cmatic_License_Banner {
 		<?php
 	}
 
-	/**
-	 * Snooze a state for the current admin. Returns the snooze-until timestamp,
-	 * or false for an unknown state. Called by the shared /notices/dismiss REST
-	 * endpoint (piggybacked; the banner registers no route of its own).
-	 */
+	/** Snooze a banner state for the current administrator. */
 	public static function handle_dismiss( string $state ) {
 		if ( ! isset( self::SNOOZE[ $state ] ) ) {
 			return false;

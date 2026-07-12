@@ -40,7 +40,7 @@ final class Cmatic_Rest_Reset {
 		if ( self::$initialized ) {
 			return;
 		}
-		add_action( 'rest_api_init', array( static::class, 'register_routes' ) );
+		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
 		self::$initialized = true;
 	}
 
@@ -50,8 +50,8 @@ final class Cmatic_Rest_Reset {
 			'/settings/reset',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'reset_settings' ),
-				'permission_callback' => array( static::class, 'check_admin_permission' ),
+				'callback'            => array( self::class, 'reset_settings' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
 				'args'                => array(
 					'type'    => array(
 						'required'          => false,
@@ -148,7 +148,7 @@ final class Cmatic_Rest_Reset {
                OR option_name LIKE 'site_transient_%cmatic%'"
 		);
 		$deleted_counts['transients'] = (int) $transients_deleted;
-		$cache_flushed = false;
+		$cache_flushed                = false;
 		if ( function_exists( 'wp_cache_flush' ) ) {
 			$cache_flushed = wp_cache_flush();
 		}

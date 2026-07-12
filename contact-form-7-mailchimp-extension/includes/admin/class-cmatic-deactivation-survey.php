@@ -168,12 +168,12 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 			$activation_date = $activation_timestamp ? gmdate( 'Y-m-d H:i:s', $activation_timestamp ) : '';
 
 			$feedback = array(
-				'reason_id'      => $reason_id,
-				'reason_text'    => $reason_text,
+				'reason_id'       => $reason_id,
+				'reason_text'     => $reason_text,
 				'activation_date' => $activation_date,
-				'plugin_version' => SPARTAN_MCE_VERSION,
-				'timestamp'      => current_time( 'mysql' ),
-				'language'       => get_locale(),
+				'plugin_version'  => SPARTAN_MCE_VERSION,
+				'timestamp'       => current_time( 'mysql' ),
+				'language'        => get_locale(),
 			);
 
 			$this->send_feedback_email( $feedback );
@@ -212,7 +212,7 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 				$install_id = Cmatic_Options_Repository::get_option( 'install.id', '' );
 			}
 
-			$subject = sprintf(
+			$subject  = sprintf(
 				'[%s-%s] %s %s',
 				gmdate( 'md' ),
 				gmdate( 'His' ),

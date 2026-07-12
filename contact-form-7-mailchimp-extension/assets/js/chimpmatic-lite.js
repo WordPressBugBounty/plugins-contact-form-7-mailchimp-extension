@@ -240,11 +240,20 @@ function chimpmaticLiteInit() {
 			const label = document.querySelector(`label[for="wpcf7-mailchimp-${mapping.id}"]`);
 			const container = label ? label.closest('.mcee-container') : null;
 
-			if (mergeFields[mapping.index]) {
-				const field = mergeFields[mapping.index];
-				if (label) {
-					const requiredBadge = field.tag === 'EMAIL' ? '<span class="mce-required">Required</span>' : '';
-					label.innerHTML = `${field.name} - *|${field.tag}|* <span class="mce-type">${field.type}</span> ${requiredBadge}`;
+				if (mergeFields[mapping.index]) {
+					const field = mergeFields[mapping.index];
+					if (label) {
+						const type = document.createElement('span');
+						type.className = 'mce-type';
+						type.textContent = String(field.type || '');
+						const nodes = [document.createTextNode(`${field.name} - *|${field.tag}|* `), type];
+						if (field.tag === 'EMAIL') {
+							const required = document.createElement('span');
+							required.className = 'mce-required';
+							required.textContent = 'Required';
+							nodes.push(document.createTextNode(' '), required);
+						}
+						label.replaceChildren(...nodes);
 				}
 				if (container) container.style.display = '';
 			} else {
@@ -255,21 +264,11 @@ function chimpmaticLiteInit() {
 		applyFuzzyMatching(mergeFields);
 	}
 
-	function updateFieldsNotice(totalMergeFields, liteLimit, audienceName) {
+	function updateFieldsNotice(totalMergeFields, liteLimit) {
 		const notice = document.getElementById('cmatic-fields-notice');
 		if (!notice) return;
 
-		const noticeText = notice.querySelector('.cmatic-notice');
-
 		if (totalMergeFields > liteLimit) {
-			if (noticeText) {
-				// Preserve ALL action links (Read More + the Pro unlock CTA), not
-				// just the first one.
-				const links = Array.from(notice.querySelectorAll('a')).map(a => a.outerHTML).join(' ');
-				const linkHtml = links ? ' ' + links : '';
-				const name = audienceName ? '<strong>' + audienceName + '</strong> ' : '';
-				noticeText.innerHTML = 'Your ' + name + 'audience has ' + totalMergeFields + ' merge fields. Chimpmatic Lite supports up to ' + liteLimit + ' field mappings.' + linkHtml;
-			}
 			notice.classList.remove('cmatic-hidden');
 			notice.classList.add('cmatic-visible');
 		} else {
@@ -291,8 +290,6 @@ function chimpmaticLiteInit() {
 		const label = document.getElementById('cmatic-audiences-label');
 		if (label) {
 			label.textContent = api_valid && total > 0 ? `Total Mailchimp Audiences: ${total}` : 'Mailchimp Audiences';
-			// Keep the caption in the same state branch (it reads 'No audiences
-			// found' forever otherwise; the Learn More link node stays).
 			const caption = label.closest('.cmatic-audiences') ?
 				label.closest('.cmatic-audiences').querySelector('small.description') : null;
 			if (caption && caption.firstChild && caption.firstChild.nodeType === Node.TEXT_NODE) {
@@ -304,25 +301,27 @@ function chimpmaticLiteInit() {
 			}
 		}
 
-		let optionsHtml = '';
+		const options = [];
 		let selectedAudience = '';
 
 		if (api_valid && total > 0) {
 			selectedAudience = currentSelection;
 			if (!selectedAudience && lists.length > 0) selectedAudience = lists[0].id;
 
-			lists.forEach((list, index) => {
-				const selected = selectedAudience === list.id ? ' selected' : '';
-				// Same human label the PHP renderer builds; raw id only in value.
+			lists.forEach(list => {
 				const optionText = `${list.name} (${Number(list.member_count).toLocaleString()} contacts, ${list.field_count} fields)`;
-				optionsHtml += `<option value="${list.id}"${selected}>${optionText}</option>`;
+				const option = document.createElement('option');
+				option.value = String(list.id || '');
+				option.textContent = optionText;
+				option.selected = selectedAudience === list.id;
+				options.push(option);
 			});
 
 			const selectedList = lists.find(l => l.id === selectedAudience) || lists[0];
-			updateFieldsNotice(selectedList.field_count, chimpmaticLite.liteFieldsLimit || 4, selectedList.name);
+			updateFieldsNotice(selectedList.field_count, chimpmaticLite.liteFieldsLimit || 4);
 		}
 
-		return optionsHtml;
+		return options;
 	}
 
 	function updateApiStatus(isValid) {
@@ -369,42 +368,12 @@ function chimpmaticLiteInit() {
 		else liteBadge.classList.add('cm-status-neutral');
 	}
 
-	async function getSecureApiKey(apiKeyInput, formId) {
+	function getSecureApiKey(apiKeyInput) {
 		const isMasked = apiKeyInput.dataset.isMasked === '1';
 		const hasKey = apiKeyInput.dataset.hasKey === '1';
 		const inputValue = apiKeyInput.value.trim();
 
-		if (!isMasked) {
-			return inputValue;
-		}
-
-		if (!hasKey) {
-			return '';
-		}
-
-		try {
-			const response = await fetch(
-				`${chimpmaticLite.restUrl}api-key/${formId}`,
-				{
-					method: 'GET',
-					headers: {
-						'X-WP-Nonce': chimpmaticLite.restNonce,
-						'Content-Type': 'application/json'
-					}
-				}
-			);
-
-			if (!response.ok) {
-				console.error('ChimpMatic: Failed to fetch API key');
-				return '';
-			}
-
-			const data = await response.json();
-			return data.api_key || '';
-		} catch (err) {
-			console.error('ChimpMatic: Error fetching API key', err);
-			return '';
-		}
+		return isMasked && hasKey ? '' : inputValue;
 	}
 
 	const fetchListsButton = document.getElementById('chm_activalist');
@@ -451,7 +420,7 @@ function chimpmaticLiteInit() {
 				const data = await fetchMailchimpLists(formId, apiKey);
 
 				const currentSelection = selectElement.value || '';
-				selectElement.innerHTML = renderListsDropdown(data, currentSelection);
+					selectElement.replaceChildren(...renderListsDropdown(data, currentSelection));
 
 				attachFetchFieldsListeners();
 
@@ -468,8 +437,6 @@ function chimpmaticLiteInit() {
 					updateApiStatus(true);
 					updateLiteBadgeStatus('connected');
 
-					// The two-option chooser has done its job: a validated key
-					// means connected, so the funnel cards leave the stage.
 					const chooser = document.querySelector('.cmatic-connect-options');
 					if (chooser) chooser.classList.add('cmatic-hidden');
 
@@ -542,6 +509,9 @@ function chimpmaticLiteInit() {
 		});
 
 		apiKeyInput.addEventListener('input', function() {
+			if (apiKeyInput.dataset.isMasked === '1' && apiKeyInput.value !== apiKeyInput.dataset.maskedKey) {
+				apiKeyInput.dataset.isMasked = '0';
+			}
 			updateLiteBadgeStatus('neutral');
 		});
 
@@ -1068,15 +1038,12 @@ function chimpmaticLiteInit() {
 				const listDropdownEl = document.getElementById('wpcf7-mailchimp-list');
 				const selectedId = listDropdownEl ? listDropdownEl.value : '';
 				const selectedList = cachedLists.find(l => l.id === selectedId);
-				// Server response is the source of truth: cachedLists is empty outside
-				// the connect flow, and its stats count differs from total_merge_fields.
 				const audienceName = data.audience_name || (selectedList ? selectedList.name : '');
 				const totalFields = (typeof data.total_merge_fields === 'number')
 					? data.total_merge_fields
 					: (selectedList ? selectedList.field_count : 0);
-				updateFieldsNotice(totalFields, data.lite_limit || chimpmaticLite.liteFieldsLimit || 4, audienceName);
+				updateFieldsNotice(totalFields, data.lite_limit || chimpmaticLite.liteFieldsLimit || 4);
 				document.querySelectorAll('.audience-name').forEach(el => { el.textContent = audienceName; });
-				// A successful sync means the merge-field cache is fresh by definition.
 				document.getElementById('cmatic-stale-cache-notice')?.remove();
 
 				if (fetchFieldsButton) {
@@ -1568,102 +1535,18 @@ function chimpmaticLiteInit() {
 
 	const eye = document.querySelector('.cmatic-eye');
 	const input = document.getElementById('cmatic-api');
-	if (eye && input) {
+	if (eye && input && input.dataset.hasKey !== '1') {
+		eye.addEventListener('click', function(e) {
+			e.preventDefault();
+			const icon = this.querySelector('.dashicons');
+			const reveal = input.type === 'password';
 
-	let cachedRealKey = null;
-
-	eye.addEventListener('click', async function(e) {
-		e.preventDefault();
-		const icon = this.querySelector('.dashicons');
-		const isMasked = input.dataset.isMasked === '1';
-		const hasKey = input.dataset.hasKey === '1';
-
-		if (isMasked && hasKey) {
-			if (!cachedRealKey) {
-				const formId = typeof chimpmaticLite !== 'undefined' ? chimpmaticLite.formId : 0;
-				if (!formId) {
-					console.warn('ChimpMatic: No form ID available');
-					return;
-				}
-
-				try {
-					eye.style.opacity = '0.5';
-					const response = await fetch(
-						`${chimpmaticLite.restUrl}api-key/${formId}`,
-						{
-							method: 'GET',
-							headers: {
-								'X-WP-Nonce': chimpmaticLite.restNonce,
-								'Content-Type': 'application/json'
-							}
-						}
-					);
-
-					if (!response.ok) {
-						throw new Error('Failed to fetch API key');
-					}
-
-					const data = await response.json();
-					cachedRealKey = data.api_key || '';
-				} catch (err) {
-					console.error('ChimpMatic: Error fetching API key', err);
-					eye.style.opacity = '1';
-					return;
-				}
-				eye.style.opacity = '1';
-			}
-
-			input.value = cachedRealKey;
-			input.dataset.isMasked = '0';
-			icon.classList.remove('dashicons-visibility');
-			icon.classList.add('dashicons-hidden');
-		} else {
-			input.value = input.dataset.maskedKey;
-			input.dataset.isMasked = '1';
-			icon.classList.remove('dashicons-hidden');
-			icon.classList.add('dashicons-visibility');
-		}
-	});
-
-	const form = input.closest('form');
-	if (form) {
-		form.addEventListener('submit', async function(e) {
-			const isMasked = input.dataset.isMasked === '1';
-			const hasKey = input.dataset.hasKey === '1';
-
-			if (isMasked && hasKey) {
-				if (cachedRealKey) {
-					input.value = cachedRealKey;
-				} else {
-					const formId = typeof chimpmaticLite !== 'undefined' ? chimpmaticLite.formId : 0;
-					if (formId) {
-						e.preventDefault();
-						try {
-							const response = await fetch(
-								`${chimpmaticLite.restUrl}api-key/${formId}`,
-								{
-									method: 'GET',
-									headers: {
-										'X-WP-Nonce': chimpmaticLite.restNonce,
-										'Content-Type': 'application/json'
-									}
-								}
-							);
-
-							if (response.ok) {
-								const data = await response.json();
-								cachedRealKey = data.api_key || '';
-								input.value = cachedRealKey;
-							}
-						} catch (err) {
-							console.error('ChimpMatic: Error fetching API key for submit', err);
-						}
-						form.submit();
-					}
-				}
+			input.type = reveal ? 'text' : 'password';
+			if (icon) {
+				icon.classList.toggle('dashicons-visibility', !reveal);
+				icon.classList.toggle('dashicons-hidden', reveal);
 			}
 		});
-	}
 	}
 
 	(function initContactLookup() {
@@ -2100,8 +1983,6 @@ function chimpmaticLiteInit() {
 		});
 	})();
 
-	// Opt-in helper caption must follow the selection ('None - Always
-	// subscribe' has no checkbox to describe).
 	(function() {
 		const acceptSelect = document.getElementById('wpcf7-mailchimp-accept');
 		const helper = document.getElementById('cmatic-optin-helper');

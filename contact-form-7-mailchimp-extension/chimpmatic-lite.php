@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Connect Contact Form 7 and Mailchimp
  * Plugin URI: https://chimpmatic.com
- * Description: Connect Contact Form 7 to Mailchimp and automatically sync form submissions to your newsletter lists. Streamline your email marketing effortlessly.
- * Version: 0.9.78.07
+ * Description: Connect Contact Form 7 to Mailchimp, Brevo, MailerLite, or Klaviyo with per-form destinations, field mapping, and provider-specific opt-in.
+ * Version: 0.9.80.00
  * Author: Renzo Johnson
  * Author URI: https://renzojohnson.com
  * License: GPL v3 or later
@@ -29,7 +29,8 @@ if ( ! function_exists( 'add_filter' ) ) {
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'SPARTAN_MCE_VERSION' ) ) {
-	define( 'SPARTAN_MCE_VERSION', '0.9.78.07' );
+	define( 'SPARTAN_MCE_VERSION', '0.9.80.00' );
+	define( 'SPARTAN_MCE_RELEASE_TRAIN', '2026.07.11.20' );
 
 	define( 'SPARTAN_MCE_PLUGIN_FILE', __FILE__ );
 	define( 'SPARTAN_MCE_PLUGIN_BASENAME', plugin_basename( SPARTAN_MCE_PLUGIN_FILE ) );
@@ -51,5 +52,11 @@ require_once SPARTAN_MCE_PLUGIN_DIR . 'includes/bootstrap.php';
 if ( ! function_exists( 'mce_get_cmatic' ) ) {
 	function mce_get_cmatic( $key, $default = null ) {
 		return Cmatic_Options_Repository::get_option( $key, $default );
+	}
+}
+
+if ( ! function_exists( 'cmatic_get_cmatic' ) ) {
+	function cmatic_get_cmatic( $key, $default = null ) {
+		return mce_get_cmatic( $key, $default );
 	}
 }

@@ -14,19 +14,19 @@ class Cmatic_Panel_Toggles {
 	public static function cmatic_get_default_buttons() {
 		return array(
 			'advanced_settings' => array(
-				'label'         => __( 'Advanced Settings', 'flavor' ),
+				'label'         => __( 'Advanced Settings', 'chimpmatic-lite' ),
 				'aria_controls' => 'cme-container',
 				'extra_class'   => '',
 				'priority'      => 10,
 			),
 			'submission_logs'   => array(
-				'label'         => __( 'Submission Logs', 'flavor' ),
+				'label'         => __( 'Submission Logs', 'chimpmatic-lite' ),
 				'aria_controls' => 'eventlog-sys',
 				'extra_class'   => '',
 				'priority'      => 40,
 			),
 			'form_preview'      => array(
-				'label'         => __( 'Form Preview and Test', 'flavor' ),
+				'label'         => __( 'Form Preview and Test', 'chimpmatic-lite' ),
 				'aria_controls' => 'cmatic-test-container',
 				'extra_class'   => 'vc-test-submission',
 				'priority'      => 50,
@@ -38,7 +38,6 @@ class Cmatic_Panel_Toggles {
 		$buttons = self::cmatic_get_default_buttons();
 		$buttons = apply_filters( 'cmatic_panel_toggle_buttons', $buttons );
 
-		// Sort by priority.
 		uasort(
 			$buttons,
 			function ( $a, $b ) {

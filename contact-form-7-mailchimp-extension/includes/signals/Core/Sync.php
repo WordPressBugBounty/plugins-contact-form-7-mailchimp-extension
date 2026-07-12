@@ -105,7 +105,7 @@ class Sync {
 	private static function handle_success( $payload ) {
 		Storage::update_last_heartbeat();
 
-		$payload_hash = md5( wp_json_encode( $payload ) );
+			$payload_hash = hash( 'sha256', (string) wp_json_encode( $payload ) );
 		Storage::save_payload_hash( $payload_hash );
 		Storage::save_error( '' );
 
@@ -137,7 +137,6 @@ class Sync {
 			return;
 		}
 
-		// Use resilient lookup: singleton cache -> dedicated option -> raw blob.
 		$install_id = Storage::get_install_id();
 		if ( empty( $install_id ) ) {
 			return;

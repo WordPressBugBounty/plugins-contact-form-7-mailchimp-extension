@@ -39,7 +39,7 @@ class Submissions_Collector {
 		$days_since_last  = $last_submission > 0 ? floor( ( time() - $last_submission ) / DAY_IN_SECONDS ) : 0;
 		$hours_since_last = $last_submission > 0 ? floor( ( time() - $last_submission ) / HOUR_IN_SECONDS ) : 0;
 
-		list( $busiest_hour, $max_submissions ) = self::get_busiest_hour();
+		list( $busiest_hour, $max_submissions )    = self::get_busiest_hour();
 		list( $busiest_day, $max_day_submissions ) = self::get_busiest_day();
 
 		$this_month = (int) Cmatic_Options_Repository::get_option( 'submissions.this_month', 0 );

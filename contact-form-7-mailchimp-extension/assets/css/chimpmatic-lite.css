@@ -1005,127 +1005,205 @@ a.helping-field:hover .red-icon::before {
 }
 
 .cmatic-oauth-connect-wrap {
-	display: inline-flex;
+	display: flex;
 	flex-direction: column;
-	align-items: center;
-}
-
-.cmatic-oauth-connect {
-	display: inline-flex;
-	align-items: center;
-	gap: 10px;
-	height: 44px;
-	min-width: 280px;
-	justify-content: center;
-	padding: 0 28px;
-	background: #2271b1;
-	color: #fff;
-	border: none;
-	border-radius: 22px;
-	font-size: 14px;
-	font-weight: 500;
-	cursor: pointer;
-	box-shadow: 0 2px 8px rgba(34, 113, 177, .3);
-	transition: all 0.15s;
-}
-
-.cmatic-oauth-connect:hover {
-	background: #135e96;
-	box-shadow: 0 4px 12px rgba(34, 113, 177, .4);
-	transform: translateY(-1px);
-}
-
-.cmatic-oauth-connect:disabled {
-	opacity: 0.7;
-	cursor: default;
-	transform: none;
-	box-shadow: 0 2px 8px rgba(34, 113, 177, .2);
-}
-
-.cmatic-oauth-connect svg {
-	flex-shrink: 0;
 }
 
 .cmatic-connect-options {
-	display: flex;
-	gap: 16px;
-	flex-wrap: wrap;
-	align-items: stretch;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
 }
 
-.cmatic-connect-card {
-	flex: 1 1 320px;
-	border: 1px solid #dcdcde;
-	/* Same radius family as the .cmatic-field-group wrapper (8px): a nested
-	   corner rounder than its parent reads as a mismatch. */
-	border-radius: 8px;
-	padding: 18px 20px;
-	background: #fff;
+.cmatic-mailchimp-connect-intro {
+	margin-bottom: 16px;
+}
+
+.cmatic-mailchimp-connect-intro h2 {
+	margin: 0 0 5px;
+	color: #18212f;
+	font-size: 18px;
+	line-height: 1.3;
+}
+
+.cmatic-mailchimp-connect-intro p {
+	margin: 0;
+	color: #5d6878;
+	font-size: 13px;
+}
+
+.cmatic-auth-choice-wrap {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
-	gap: 10px;
 }
 
-.cmatic-connect-card--primary {
-	border-color: #2271b166;
-	box-shadow: 0 1px 6px rgba(34, 113, 177, .08);
+.cmatic-auth-choice-wrap[hidden] {
+	display: none;
 }
 
-.cmatic-connect-benefits {
-	margin: 2px 0 0;
-	padding-left: 18px;
-	font-size: 12px;
-	color: #646970;
-	line-height: 1.7;
-	list-style: disc;
+.cmatic-auth-choice {
+	position: relative;
+	display: flex;
+	width: 100%;
+	min-height: 166px;
+	padding: 17px;
+	flex: 1;
+	flex-direction: column;
+	border: 1px solid #d9e0e8;
+	border-radius: 11px;
+	background: #f8fafc;
+	color: #18212f;
+	cursor: pointer;
+	font: inherit;
+	text-align: left;
+	transition: border-color .16s, box-shadow .16s, transform .16s;
 }
 
-.cmatic-connect-card .button.cmatic-show-api-key {
-	height: 44px;
-	line-height: 42px;
-	padding: 0 24px;
-	border-radius: 22px;
-	font-size: 14px;
+.cmatic-auth-choice:hover {
+	transform: translateY(-2px);
+	border-color: #9db1ee;
+	background: #fff;
+	box-shadow: 0 9px 22px rgba(45, 70, 115, .09);
 }
 
-.cmatic-oauth-hint {
-	display: block;
-	margin-top: 10px;
-	font-size: 12px;
-	color: #787c82;
+.cmatic-auth-choice:focus-visible {
+	outline: 3px solid rgba(47, 91, 231, .24);
+	outline-offset: 2px;
+}
+
+.cmatic-auth-choice:disabled {
+	transform: none;
+	cursor: wait;
+	opacity: .68;
+	box-shadow: none;
+}
+
+.cmatic-auth-choice--recommended {
+	border-color: #b9c8f7;
+	background: #f8faff;
+}
+
+.cmatic-auth-choice__top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.cmatic-auth-choice__icon {
+	display: grid;
+	width: 34px;
+	height: 34px;
+	place-items: center;
+	border: 1px solid #d5ddea;
+	border-radius: 9px;
+	background: #fff;
+	color: #3d526b;
+	font-size: 16px;
+	font-weight: 800;
+	line-height: 32px;
+	text-align: center;
+}
+
+.cmatic-auth-choice--recommended .cmatic-auth-choice__icon {
+	border-color: #c9d5fb;
+	background: #edf2ff;
+	color: #2f5be7;
 }
 
 .cmatic-recommended-badge {
 	display: inline-block;
-	margin-right: 6px;
-	padding: 1px 8px;
-	border-radius: 10px;
-	background: #edfaef;
-	border: 1px solid #00753e33;
-	color: #00753e;
-	font-size: 11px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
+	padding: 3px 7px;
+	border-radius: 999px;
+	background: #e8f7f0;
+	color: #167752;
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: .04em;
 }
 
-/* The second option must LOOK clickable: new users holding an API key
-   previously saw dead grey text and no path for it. */
-.cmatic-show-api-key {
-	display: inline-block;
-	margin-top: 8px;
-	font-size: 13px;
+.cmatic-auth-choice__title {
+	display: block;
+	margin-bottom: 5px;
+	font-size: 15px;
+}
+
+.cmatic-auth-choice__description {
+	display: block;
+	max-width: 430px;
+	min-height: 34px;
+	color: #5d6878;
+	font-size: 12px;
+}
+
+.cmatic-auth-choice__description[hidden] {
+	display: none;
+}
+
+.cmatic-auth-choice__action {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: auto;
+	padding-top: 15px;
+	color: #2f5be7;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.cmatic-auth-choice__action > :last-child {
+	transition: transform .16s;
+}
+
+.cmatic-auth-choice:disabled .cmatic-auth-choice__action > :last-child {
+	display: none;
+}
+
+.cmatic-auth-choice:hover .cmatic-auth-choice__action > :last-child {
+	transform: translateX(2px);
+}
+
+.cmatic-oauth-status {
+	display: block;
+	max-width: 430px;
+	min-height: 34px;
+	margin: 0;
+	font-size: 12px;
+	font-style: normal;
+	text-align: left;
+}
+
+.cmatic-oauth-status[hidden] {
+	display: none;
+}
+
+.cmatic-manual-api-panel {
+	margin-top: 12px;
+}
+
+.cmatic-back-auth-options {
+	display: block;
+	margin: 0 0 14px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: #2f5be7;
+	cursor: pointer;
+	font: inherit;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.cmatic-back-auth-options:hover {
+	color: #2548bd;
 	text-decoration: underline;
 	text-underline-offset: 3px;
-	color: #2271b1;
-	cursor: pointer;
 }
 
-.cmatic-show-api-key:hover,
-.cmatic-show-api-key:focus {
-	color: #135e96;
-	text-decoration-thickness: 2px;
+.cmatic-back-auth-options:focus-visible {
+	outline: 3px solid rgba(47, 91, 231, .24);
+	outline-offset: 2px;
 }
 
 .cmatic-disconnect-confirm {
@@ -1210,6 +1288,8 @@ a.helping-field:hover .red-icon::before {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 16px;
 	padding: 14px 20px;
 }
 
@@ -1250,6 +1330,31 @@ a.helping-field:hover .red-icon::before {
 .cmatic-header__actions {
 	display: flex;
 	align-items: center;
+}
+
+.cmatic-header__context {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-left: auto;
+}
+
+.cmatic-header__provider-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.cmatic-header__provider-control label {
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.cmatic-header__provider-control select {
+	min-width: 150px;
+	max-width: 220px;
 }
 
 .cmatic-header__review {
@@ -1814,8 +1919,556 @@ tr.cmatic-not-pro:hover,
 	color: #2271b1;
 }
 
+.cmatic-field-offer {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 1px 7px;
+	border: 1px dashed currentColor;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
 .cmatic-showcase-note {
 	margin: 8px 0 0;
 	font-size: 11px;
 	color: #a7aaad;
+}
+
+.cmatic-provider-panel[hidden],
+[data-cmatic-provider-view][hidden] {
+	display: none !important;
+}
+
+.cmatic-provider-section {
+	background: rgba(255, 255, 255, .95);
+	border: 1px solid #e5e5e5;
+	border-radius: 8px;
+	margin-bottom: 20px;
+	padding: 16px 20px 20px;
+}
+
+.cmatic-provider-section h3 {
+	margin: 0 0 12px;
+}
+
+.cmatic-provider-auth-row,
+.cmatic-provider-destination-row {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+#cmatic-provider-auth-fields {
+	display: flex;
+	flex: 1 1 420px;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.cmatic-provider-auth-field {
+	flex: 1 1 320px;
+	max-width: 520px;
+}
+
+.cmatic-provider-auth-field label,
+.cmatic-provider-auth-field input,
+.cmatic-provider-auth-field small {
+	display: block;
+}
+
+.cmatic-provider-auth-field input,
+#cmatic-provider-list {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 520px;
+}
+
+.cmatic-provider-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.cmatic-provider-mapping-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px 24px;
+}
+
+.cmatic-provider-mapping-row label,
+.cmatic-provider-mapping-row select {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+}
+
+.cmatic-provider-mapping-row label {
+	margin-bottom: 5px;
+}
+
+.cmatic-provider-message:empty {
+	display: none;
+}
+
+.cmatic-provider-message.is-error {
+	color: #b32d2e;
+}
+
+.cmatic-provider-message.is-success {
+	color: #008a20;
+}
+
+.cmatic-header__context[hidden],
+.cmatic-provider-onboarding[hidden],
+.cmatic-provider-completion[hidden],
+.cmatic-provider-locked[hidden],
+.cmatic-provider-connection-summary[hidden],
+.cmatic-provider-recovery-summary[hidden],
+.cmatic-provider-auth-row[hidden],
+.cmatic-provider-destination-row[hidden],
+.cmatic-provider-mapping-grid[hidden],
+.cmatic-provider-save-row[hidden] {
+	display: none !important;
+}
+
+.cmatic-provider-onboarding {
+	margin: 0 0 20px;
+	padding: clamp(26px, 4vw, 46px);
+	border: 1px solid #d8e0e8;
+	border-radius: 12px;
+	background: #fff;
+	text-align: center;
+}
+
+.cmatic-provider-onboarding__kicker {
+	display: inline-block;
+	margin-bottom: 8px;
+	color: #3153b9;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+}
+
+.cmatic-provider-onboarding h2 {
+	margin: 0 0 7px;
+	font-size: clamp(21px, 2.4vw, 28px);
+}
+
+.cmatic-provider-onboarding > p {
+	margin: 0;
+	color: #5d6878;
+}
+
+.cmatic-provider-choices {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+	margin-top: 25px;
+	text-align: left;
+}
+
+.cmatic-provider-choice {
+	min-height: 150px;
+	padding: 16px;
+	border: 1px solid #d8e0e8;
+	border-radius: 10px;
+	background: #f8fafc;
+	color: #1d2734;
+	text-align: left;
+	transition: border-color .16s, box-shadow .16s, transform .16s;
+}
+
+.cmatic-provider-choice:hover,
+.cmatic-provider-choice:focus-visible {
+	transform: translateY(-2px);
+	border-color: #9db1ee;
+	box-shadow: 0 9px 22px rgba(45, 70, 115, .09);
+}
+
+.cmatic-provider-choice img {
+	display: block;
+	width: 118px;
+	height: 36px;
+	margin-bottom: 15px;
+	object-fit: contain;
+	object-position: left center;
+}
+
+.cmatic-provider-choice strong,
+.cmatic-provider-choice span {
+	display: block;
+}
+
+.cmatic-provider-choice strong {
+	margin-bottom: 4px;
+}
+
+.cmatic-provider-choice span {
+	color: #5d6878;
+	font-size: 11px;
+	line-height: 1.4;
+}
+
+.cmatic-provider-progress {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin: 0 0 18px;
+	padding: 0;
+	list-style: none;
+}
+
+.cmatic-provider-progress[hidden] {
+	display: none;
+}
+
+.cmatic-provider-progress li {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	color: #7c8796;
+	font-size: 12px;
+}
+
+.cmatic-provider-progress li::after {
+	position: absolute;
+	top: 13px;
+	right: 10px;
+	left: 42px;
+	height: 2px;
+	background: #dce3eb;
+	content: "";
+}
+
+.cmatic-provider-progress li:last-child::after {
+	display: none;
+}
+
+.cmatic-provider-progress li > span,
+.cmatic-provider-progress li > b {
+	position: relative;
+	z-index: 1;
+}
+
+.cmatic-provider-progress li > span {
+	display: grid;
+	width: 28px;
+	height: 28px;
+	flex: 0 0 28px;
+	place-items: center;
+	border: 1px solid #d2dae4;
+	border-radius: 50%;
+	background: #fff;
+}
+
+.cmatic-provider-progress li > b {
+	padding-right: 10px;
+	background: #f2f4f6;
+}
+
+.cmatic-provider-progress li.is-current {
+	color: #2f5be7;
+}
+
+.cmatic-provider-progress li.is-current > span {
+	border-color: #2f5be7;
+	background: #edf2ff;
+}
+
+.cmatic-provider-progress li.is-done {
+	color: #16835b;
+}
+
+.cmatic-provider-progress li.is-done > span {
+	border-color: #83ceb2;
+	background: #eaf8f2;
+}
+
+.cmatic-provider-progress li.is-done::after {
+	background: #9dd9c3;
+}
+
+.cmatic-provider-completion {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin: 0 0 18px;
+	padding: 15px 17px;
+	border: 1px solid #a9dcc8;
+	border-radius: 10px;
+	background: #eaf8f2;
+	color: #285e4b;
+}
+
+.cmatic-provider-completion__icon,
+.cmatic-provider-connection-summary__icon {
+	display: grid;
+	width: 32px;
+	height: 32px;
+	flex: 0 0 32px;
+	place-items: center;
+	border-radius: 50%;
+	background: #16835b;
+	color: #fff;
+	font-weight: 700;
+}
+
+.cmatic-provider-completion strong {
+	display: block;
+	margin-bottom: 2px;
+	font-size: 15px;
+}
+
+.cmatic-provider-completion p {
+	margin: 0 0 3px;
+}
+
+#cmatic-provider-completion-meta {
+	font-size: 12px;
+}
+
+.cmatic-provider-section {
+	border-color: #d8e0e8;
+	border-radius: 12px;
+	padding: 20px;
+}
+
+.cmatic-provider-section h3 {
+	margin-bottom: 4px;
+	font-size: 18px;
+}
+
+.cmatic-provider-section > .description,
+#cmatic-provider-credentials-intro .description {
+	margin: 0 0 18px;
+	color: #5d6878;
+}
+
+.cmatic-provider-auth-field small {
+	margin-top: 6px;
+	color: #5d6878;
+}
+
+.cmatic-provider-auth-field .cmatic-provider-credential-readiness {
+	min-height: 16px;
+	margin-top: 3px;
+	color: #16835b;
+	font-weight: 600;
+}
+
+.cmatic-provider-connection-summary,
+.cmatic-provider-recovery-summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 15px;
+	border: 1px solid #bfe4d5;
+	border-radius: 9px;
+	background: #eaf8f2;
+}
+
+.cmatic-provider-recovery-summary {
+	border-color: #efd49c;
+	background: #fff6df;
+}
+
+.cmatic-provider-recovery-summary p {
+	margin: 3px 0 0;
+	color: #795f35;
+}
+
+.cmatic-provider-connection-summary__text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+}
+
+.cmatic-provider-connection-summary__text span {
+	color: #477163;
+	font-size: 12px;
+}
+
+.cmatic-provider-locked {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px;
+	border: 1px dashed #ccd5df;
+	border-radius: 9px;
+	background: #f8fafc;
+	color: #5d6878;
+}
+
+.cmatic-provider-locked > span {
+	display: grid;
+	width: 28px;
+	height: 28px;
+	place-items: center;
+	border-radius: 50%;
+	background: #e8edf2;
+}
+
+.cmatic-provider-locked p {
+	margin: 0;
+}
+
+.cmatic-provider-mapping-row {
+	padding: 13px;
+	border: 1px solid #e1e6ec;
+	border-radius: 9px;
+	background: #fbfcfe;
+}
+
+.cmatic-provider-mapping-warning {
+	margin: 8px 0 0;
+	color: #875407;
+	font-size: 11px;
+}
+
+.cmatic-defaults-fields-notice {
+	margin-top: 14px;
+	padding: 11px 13px;
+	border-left: 3px solid #6c8ef3;
+	background: #f0f4ff;
+}
+
+.cmatic-defaults-fields-notice a {
+	font-weight: 600;
+}
+
+.cmatic-provider-save-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	margin-top: 17px;
+	padding-top: 16px;
+	border-top: 1px solid #d8e0e8;
+}
+
+#cmatic-provider-save-status {
+	color: #477163;
+	font-size: 12px;
+}
+
+.cmatic-provider-message {
+	margin: 0 0 12px;
+}
+
+.cmatic-provider-message:not(:empty) {
+	padding: 10px 12px;
+	border-left: 3px solid #6c8ef3;
+	background: #f0f4ff;
+}
+
+.cmatic-provider-message.is-error {
+	border-left-color: #d63638;
+	background: #fcf0f1;
+}
+
+.cmatic-provider-message.is-success {
+	border-left-color: #00a32a;
+	background: #edfaef;
+}
+
+@media only screen and (max-width: 782px) {
+	.cmatic-connect-options {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.cmatic-header__context {
+		flex-wrap: wrap;
+		width: 100%;
+		margin-left: 0;
+	}
+
+	.cmatic-header__provider-control {
+		flex: 1 1 280px;
+	}
+
+	.cmatic-header__provider-control select {
+		flex: 1 1 auto;
+		max-width: none;
+	}
+
+	.cmatic-header__actions {
+		margin-left: auto;
+	}
+
+	.cmatic-provider-mapping-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.cmatic-provider-choices {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.cmatic-provider-connection-summary,
+	.cmatic-provider-recovery-summary {
+		align-items: stretch;
+		flex-direction: column;
+	}
+}
+
+@media only screen and (max-width: 600px) {
+	.cmatic-header__provider-control {
+		align-items: stretch;
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.cmatic-header__provider-control select,
+	.cmatic-provider-auth-field,
+	.cmatic-provider-auth-field input,
+	#cmatic-provider-list,
+	.cmatic-provider-actions,
+	.cmatic-provider-actions .button {
+		width: 100%;
+		max-width: none;
+	}
+
+	.cmatic-header__status {
+		margin-left: 0;
+		padding-left: 0;
+		border-left: 0;
+	}
+
+	.cmatic-provider-choices {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.cmatic-provider-progress {
+		gap: 5px;
+	}
+
+	.cmatic-provider-progress li {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.cmatic-provider-progress li > b {
+		font-size: 10px;
+	}
+
+	.cmatic-provider-save-row {
+		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.cmatic-provider-save-row .button {
+		width: 100%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cmatic-provider-panel *,
+	.cmatic-header__context * {
+		scroll-behavior: auto;
+		transition-duration: .001ms !important;
+	}
 }

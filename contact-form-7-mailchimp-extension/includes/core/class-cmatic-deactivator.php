@@ -22,7 +22,6 @@ class Cmatic_Deactivator {
 	}
 
 	public function deactivate() {
-		// Mark inactive FIRST (state must update before cleanup).
 		$this->options->set( 'lifecycle.is_active', false );
 
 		$this->record_deactivation();

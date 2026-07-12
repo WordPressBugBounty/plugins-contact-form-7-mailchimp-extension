@@ -19,6 +19,7 @@ class Cmatic_Data_Container {
 		printf(
 			'<div id="%s"%s style="display:none;"></div>',
 			esc_attr( self::ELEMENT_ID ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built exclusively from escaped data attributes.
 			$attrs_html
 		);
 	}
@@ -29,6 +30,7 @@ class Cmatic_Data_Container {
 		printf(
 			'<div id="%s" class="cmatic-inner"%s>',
 			esc_attr( self::ELEMENT_ID ),
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built exclusively from escaped data attributes.
 			$attrs_html
 		);
 	}

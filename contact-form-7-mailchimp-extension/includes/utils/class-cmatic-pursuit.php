@@ -56,11 +56,6 @@ final class Cmatic_Pursuit {
 		return self::url( self::BASE_URLS['support'], 'plugin', $content, 'support' );
 	}
 
-	/**
-	 * Canonical /promo read. ONE url, ONE cache key, ONE fallback: every surface
-	 * (sidebar box, limit-notice CTA, tags overlay, banners) MUST consume this
-	 * instead of instantiating its own fetcher, or discounts drift per surface.
-	 */
 	public static function pricing(): array {
 		$fetcher = new CMatic_Remote_Fetcher(
 			array(
@@ -79,13 +74,16 @@ final class Cmatic_Pursuit {
 		return $fetcher->get_data();
 	}
 
-	/** Full coupon-carrying checkout URL: promo() + install source + proN param. */
+	public static function discount(): int {
+		$pricing = self::pricing();
+		return max( 0, (int) ( $pricing['discount_percent'] ?? 0 ) );
+	}
+
 	public static function promo_checkout( string $content = '' ): string {
-		$pricing  = self::pricing();
-		$discount = (int) ( $pricing['discount_percent'] ?? 0 );
+		$discount = self::discount();
 		$source   = class_exists( 'Cmatic_Options_Repository' )
-			? Cmatic_Options_Repository::get_option( 'install.id', '' )
-			: '';
+		? Cmatic_Options_Repository::get_option( 'install.id', '' )
+		: '';
 		return add_query_arg(
 			array(
 				'source' => $source,
@@ -96,7 +94,7 @@ final class Cmatic_Pursuit {
 	}
 
 	public static function promo( string $content = '', ?int $discount = null ): string {
-		if ( null === $discount ) { // default follows the live promo, not a constant
+		if ( null === $discount ) { // Default follows the live promo, not a constant.
 			$pricing  = self::pricing();
 			$discount = (int) ( $pricing['discount_percent'] ?? 0 );
 		}

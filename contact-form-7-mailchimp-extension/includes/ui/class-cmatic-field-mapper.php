@@ -14,30 +14,14 @@ final class Cmatic_Field_Mapper_UI {
 	public static function render( int $api_valid, ?array $list_data, array $cf7_mch, array $form_tags, int $form_id ): void {
 		$disclosure_class = ( 1 === $api_valid ) ? 'chmp-active' : 'chmp-inactive';
 
-		$total_merge   = isset( $cf7_mch['total_merge_fields'] ) ? (int) $cf7_mch['total_merge_fields'] : 0;
-		$show_notice   = $total_merge > CMATIC_LITE_FIELDS;
-		$notice_class  = $show_notice ? 'cmatic-visible' : 'cmatic-hidden';
-		$audience_name = self::resolve_audience_name( $cf7_mch );
-		$docs_url      = Cmatic_Pursuit::url( 'https://chimpmatic.com/mailchimp-default-audience-fields-explained', 'plugin', 'fields_notice', 'docs' );
-		// Limit-hit is the highest-intent upsell moment in the plugin (the user is
-		// looking at fields they cannot map): pair the docs link with a buy CTA that
-		// carries the install source + coupon. Discount comes from the live promo
-		// endpoint (day-cached), never hardcoded, so server-side price changes
-		// propagate here.
-		$cmatic_pricing  = Cmatic_Pursuit::pricing();
-		$cmatic_discount = (int) ( $cmatic_pricing['discount_percent'] ?? 0 );
-		$upgrade_url     = Cmatic_Pursuit::promo_checkout( 'field_limit_notice' );
-		$cmatic_unlock_label = $cmatic_discount > 0
-			/* translators: %d: current discount percentage from the live promo */
-			? sprintf( __( 'Unlock all fields with Pro: %d%% off', 'chimpmatic-lite' ), $cmatic_discount )
-			: __( 'Unlock all fields with Pro', 'chimpmatic-lite' );
+		$total_merge  = isset( $cf7_mch['total_merge_fields'] ) ? (int) $cf7_mch['total_merge_fields'] : 0;
+		$show_notice  = $total_merge > CMATIC_LITE_FIELDS;
+		$notice_class = $show_notice ? 'cmatic-visible' : 'cmatic-hidden';
+		$upgrade_url  = Cmatic_Pursuit::promo_checkout( 'field_mapping_limit' );
+		$discount     = Cmatic_Pursuit::discount();
 		?>
 		<div class="mce-custom-fields <?php echo esc_attr( $disclosure_class ); ?>" id="cmatic-fields">
 			<?php
-			// Stale-cache guard: the mapper renders one row per CACHED merge field,
-			// so a rotted cache silently drops mapping rows (and syncs empty values)
-			// with no error anywhere. If the cache holds fewer fields than the
-			// audience supports (up to the Lite cap), say so and point at the fix.
 			$cmatic_cached_fields = is_array( $cf7_mch['merge_fields'] ?? null ) ? count( $cf7_mch['merge_fields'] ) : 0;
 			$cmatic_expected      = min( $total_merge, CMATIC_LITE_FIELDS );
 			if ( $total_merge > 0 && $cmatic_cached_fields < $cmatic_expected ) :
@@ -62,26 +46,24 @@ final class Cmatic_Field_Mapper_UI {
 			?>
 			<div class="cmatic-defaults-fields-notice <?php echo esc_attr( $notice_class ); ?>" id="cmatic-fields-notice">
 				<p class="cmatic-notice">
-					<?php if ( $show_notice ) : ?>
-						<?php
-						$notice_text = sprintf(
-							/* translators: 1: audience name wrapped in <strong>, 2: total merge fields count, 3: lite fields limit */
-							__( 'Your %1$s audience has %2$d merge fields. Chimpmatic Lite supports up to %3$d field mappings.', 'chimpmatic-lite' ),
-							'<strong>' . esc_html( $audience_name ) . '</strong>',
-							$total_merge,
-							CMATIC_LITE_FIELDS
-						);
-						echo wp_kses( $notice_text, array( 'strong' => array() ) );
-						?>
-					<?php endif; ?>
-					<?php // The links render even while the notice is hidden: the JS
-					// rebuild harvests them from the DOM, and an empty container left
-					// the rebuilt banner linkless right after an OAuth connect. ?>
-					<a href="<?php echo esc_url( $docs_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">
-						<?php esc_html_e( 'Read More', 'chimpmatic-lite' ); ?>
-					</a>
+					<?php
+					printf(
+						/* translators: %d: number of fields included in Lite. */
+						esc_html__( 'Your Lite setup includes %d fields. Subscriber Email is always included.', 'chimpmatic-lite' ),
+						(int) CMATIC_LITE_FIELDS
+					);
+					?>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" class="helping-field cmatic-unlock-fields" target="_blank" rel="noopener noreferrer">
-						<?php echo esc_html( $cmatic_unlock_label ); ?>
+						<?php esc_html_e( 'Unlock every available field and advanced features with Chimpmatic Pro', 'chimpmatic-lite' ); ?>
+						<?php if ( $discount > 0 ) : ?>
+							<span class="cmatic-field-offer">
+								<?php
+								/* translators: %d: current discount percentage from the live promotion. */
+								printf( esc_html__( '%d%% off', 'chimpmatic-lite' ), (int) $discount );
+								?>
+							</span>
+						<?php endif; ?>
+						<span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'chimpmatic-lite' ); ?></span>
 					</a>
 				</p>
 			</div>
@@ -252,11 +234,9 @@ final class Cmatic_Field_Mapper_UI {
 				<?php endif; ?>
 			</select>
 			<?php
-			// State-aware caption: must match the current selection ('None -
-			// Always subscribe' has no checkbox). JS flips it live on change.
-			$cmatic_accept_saved  = trim( (string) ( $cf7_mch['accept'] ?? '' ) );
-			$cmatic_optin_always  = __( 'Every valid submission is subscribed. Pick a checkbox field to require consent first.', 'chimpmatic-lite' );
-			$cmatic_optin_gated   = __( 'Only subscribe if this checkbox is checked', 'chimpmatic-lite' );
+			$cmatic_accept_saved = trim( (string) ( $cf7_mch['accept'] ?? '' ) );
+			$cmatic_optin_always = __( 'Every valid submission is subscribed. Pick a checkbox field to require consent first.', 'chimpmatic-lite' );
+			$cmatic_optin_gated  = __( 'Only subscribe if this checkbox is checked', 'chimpmatic-lite' );
 			?>
 			<small class="description" id="cmatic-optin-helper" data-always="<?php echo esc_attr( $cmatic_optin_always ); ?>" data-gated="<?php echo esc_attr( $cmatic_optin_gated ); ?>">
 				<span class="cmatic-optin-helper-text"><?php echo esc_html( '' === $cmatic_accept_saved ? $cmatic_optin_always : $cmatic_optin_gated ); ?></span>
@@ -288,19 +268,6 @@ final class Cmatic_Field_Mapper_UI {
 			</small>
 		</div>
 		<?php
-	}
-
-	private static function resolve_audience_name( array $cf7_mch ): string {
-		$list_id = $cf7_mch['list'] ?? '';
-		$lists   = $cf7_mch['lisdata']['lists'] ?? array();
-
-		foreach ( $lists as $list ) {
-			if ( isset( $list['id'], $list['name'] ) && $list['id'] === $list_id ) {
-				return $list['name'];
-			}
-		}
-
-		return '';
 	}
 
 	private function __construct() {}

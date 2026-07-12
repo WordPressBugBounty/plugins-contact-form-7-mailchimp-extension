@@ -49,6 +49,6 @@ class Cmatic_Mailchimp_Subscriber {
 
 	private static function build_url( string $api_key, string $list_id, string $email ): string {
 		list( $key, $dc ) = explode( '-', $api_key );
-		return "https://{$dc}.api.mailchimp.com/3.0/lists/{$list_id}/members/" . md5( strtolower( $email ) );
+			return "https://{$dc}.api.mailchimp.com/3.0/lists/{$list_id}/members/" . md5( strtolower( $email ) ); // nosemgrep
 	}
 }

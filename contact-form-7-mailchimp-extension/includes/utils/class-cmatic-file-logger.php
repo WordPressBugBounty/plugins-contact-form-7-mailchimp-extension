@@ -27,7 +27,7 @@ class Cmatic_File_Logger implements Cmatic_Logger_Interface {
 			return;
 		}
 
-		$level_str  = strtoupper( $level );
+		$level_str   = strtoupper( $level );
 		$log_message = "[Chimpmatic Lite] {$this->log_prefix} [{$level_str}] " . trim( $message );
 
 		if ( ! is_null( $context ) ) {

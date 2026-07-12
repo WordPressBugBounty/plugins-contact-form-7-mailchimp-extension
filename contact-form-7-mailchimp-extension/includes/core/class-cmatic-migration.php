@@ -145,12 +145,10 @@ class Cmatic_Migration {
 	}
 
 	private function migrate_api_data( &$data ) {
-		// Skip if already set.
 		if ( ! empty( $data['api']['first_connected'] ) ) {
 			return;
 		}
 
-		// First, try to use existing api.setup_first_success timestamp.
 		$setup_first_success = isset( $data['api']['setup_first_success'] ) ? (int) $data['api']['setup_first_success'] : 0;
 		if ( $setup_first_success > 1000000000 ) {
 			if ( ! isset( $data['api'] ) ) {
@@ -160,7 +158,6 @@ class Cmatic_Migration {
 			return;
 		}
 
-		// Fallback: Check if any form has a successful API connection.
 		global $wpdb;
 		$form_options = $wpdb->get_results(
 			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'cf7_mch_%'",
@@ -174,7 +171,6 @@ class Cmatic_Migration {
 		foreach ( $form_options as $row ) {
 			$form_data = maybe_unserialize( $row['option_value'] );
 			if ( is_array( $form_data ) && ! empty( $form_data['api-validation'] ) && 1 === (int) $form_data['api-validation'] ) {
-				// Found a form with valid API - backfill first_connected with current time.
 				if ( ! isset( $data['api'] ) ) {
 					$data['api'] = array();
 				}

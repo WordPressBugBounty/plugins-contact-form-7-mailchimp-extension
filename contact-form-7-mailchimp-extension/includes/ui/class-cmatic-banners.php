@@ -16,12 +16,10 @@ class Cmatic_Banners {
 	}
 
 	public static function maybe_append_backlink( string $output, string $class, string $content, $contact_form ): string {
-		// Check if backlink setting is enabled.
 		if ( ! Cmatic_Options_Repository::get_option( 'backlink', false ) ) {
 			return $output;
 		}
 
-		// Check if this form has Chimpmatic configured.
 		$form_id = $contact_form->id();
 		$cf7_mch = get_option( 'cf7_mch_' . $form_id, array() );
 
@@ -29,7 +27,6 @@ class Cmatic_Banners {
 			return $output;
 		}
 
-		// Append the author credit.
 		return $output . self::get_author_credit();
 	}
 

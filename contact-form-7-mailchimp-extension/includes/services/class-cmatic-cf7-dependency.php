@@ -17,9 +17,7 @@ class Cmatic_CF7_Dependency {
 	const CF7_PLUGIN_DIR = 'contact-form-7';
 
 	public static function init() {
-		// Auto-activate CF7 early (before page capability checks).
 		add_action( 'admin_init', array( __CLASS__, 'maybe_activate_cf7' ), 1 );
-		// Show notice if CF7 not installed.
 		add_action( 'admin_notices', array( __CLASS__, 'maybe_show_notice' ) );
 	}
 
@@ -50,7 +48,6 @@ class Cmatic_CF7_Dependency {
 			return;
 		}
 
-		// CF7 not installed - show notice with install link on plugins page.
 		$screen = get_current_screen();
 		if ( $screen && 'plugins' === $screen->id ) {
 			self::render_not_installed_notice();
@@ -58,7 +55,6 @@ class Cmatic_CF7_Dependency {
 	}
 
 	public static function activate_cf7() {
-		// Must have capability to activate plugins.
 		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return false;
 		}
@@ -71,7 +67,6 @@ class Cmatic_CF7_Dependency {
 			return true;
 		}
 
-		// Use silent mode to prevent redirect issues.
 		$result = activate_plugin( self::CF7_PLUGIN_FILE, '', false, true );
 
 		return ! is_wp_error( $result );

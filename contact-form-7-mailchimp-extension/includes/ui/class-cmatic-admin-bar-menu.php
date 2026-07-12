@@ -11,7 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Admin_Bar_Menu {
-	const MENU_IDENTIFIER = 'chimpmatic-menu';
+	const MENU_IDENTIFIER    = 'chimpmatic-menu';
 	private static $instance = null;
 
 	public static function instance() {
@@ -135,7 +135,6 @@ class Cmatic_Admin_Bar_Menu {
 			);
 		}
 
-		// Add Forms submenu with all CF7 forms.
 		$this->add_forms_submenu( $wp_admin_bar );
 
 		$wp_admin_bar->add_menu(
@@ -200,19 +199,16 @@ class Cmatic_Admin_Bar_Menu {
 	}
 
 	private function add_forms_submenu( WP_Admin_Bar $wp_admin_bar ) {
-		// Check if CF7 is active.
 		if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
 			return;
 		}
 
-		// Get all CF7 forms.
 		$forms = WPCF7_ContactForm::find( array( 'posts_per_page' => -1 ) );
 
 		if ( empty( $forms ) ) {
 			return;
 		}
 
-		// Add "Form Settings" section header (non-clickable label).
 		$wp_admin_bar->add_menu(
 			array(
 				'parent' => self::MENU_IDENTIFIER,
@@ -222,7 +218,6 @@ class Cmatic_Admin_Bar_Menu {
 			)
 		);
 
-		// Add each form directly to main menu (flat, not nested).
 		foreach ( $forms as $form ) {
 			$form_url = admin_url(
 				sprintf(
@@ -231,7 +226,6 @@ class Cmatic_Admin_Bar_Menu {
 				)
 			);
 
-			// Check API connection status for this form.
 			$api_status = $this->get_form_api_status( $form->id() );
 
 			$wp_admin_bar->add_menu(
@@ -251,9 +245,8 @@ class Cmatic_Admin_Bar_Menu {
 	private function get_form_api_status( $form_id ) {
 		$cf7_mch = get_option( 'cf7_mch_' . $form_id, array() );
 
-		// Check if API is validated and a list/audience is selected.
 		$is_connected = ! empty( $cf7_mch['api-validation'] )
-			&& 1 == $cf7_mch['api-validation']
+				&& 1 === (int) $cf7_mch['api-validation']
 			&& ! empty( $cf7_mch['list'] );
 
 		if ( $is_connected ) {

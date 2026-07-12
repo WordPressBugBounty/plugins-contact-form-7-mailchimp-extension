@@ -22,7 +22,7 @@ final class Cmatic_Rest_Lists {
 		if ( self::$initialized ) {
 			return;
 		}
-		add_action( 'rest_api_init', array( static::class, 'register_routes' ) );
+		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
 		self::$initialized = true;
 	}
 
@@ -32,8 +32,8 @@ final class Cmatic_Rest_Lists {
 			'/lists',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'get_lists' ),
-				'permission_callback' => array( static::class, 'check_form_permission' ),
+				'callback'            => array( self::class, 'get_lists' ),
+				'permission_callback' => array( self::class, 'check_form_permission' ),
 				'args'                => array(
 					'form_id' => array(
 						'required'          => true,
@@ -50,7 +50,7 @@ final class Cmatic_Rest_Lists {
 						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => function ( $param ) {
 							if ( empty( $param ) ) {
-								return true; // Allow empty for OAuth resolution.
+								return true;
 							}
 							return preg_match( '/^[a-f0-9]{32}-[a-z]{2,3}\d+$/', $param );
 						},
@@ -64,8 +64,8 @@ final class Cmatic_Rest_Lists {
 			'/merge-fields',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'get_merge_fields' ),
-				'permission_callback' => array( static::class, 'check_form_permission' ),
+				'callback'            => array( self::class, 'get_merge_fields' ),
+				'permission_callback' => array( self::class, 'check_form_permission' ),
 				'args'                => array(
 					'form_id' => array(
 						'required'          => true,
@@ -86,8 +86,8 @@ final class Cmatic_Rest_Lists {
 			'/api-key/(?P<form_id>\d+)',
 			array(
 				'methods'             => 'GET',
-				'callback'            => array( static::class, 'get_api_key' ),
-				'permission_callback' => array( static::class, 'check_form_permission' ),
+				'callback'            => array( self::class, 'get_api_key' ),
+				'permission_callback' => array( self::class, 'check_form_permission' ),
 				'args'                => array(
 					'form_id' => array(
 						'required'          => true,
@@ -129,10 +129,6 @@ final class Cmatic_Rest_Lists {
 		$form_id = $request->get_param( 'form_id' );
 		$api_key = $request->get_param( 'api_key' );
 
-		// Track whether the key came from OAuth storage (not from the request
-		// or from the cf7_mch['api'] fallback in resolve_api_key).
-		// Use get_credentials() directly for precision — this only returns
-		// non-null when actual OAuth encrypted data exists.
 		$key_from_oauth = false;
 
 		if ( empty( $api_key ) ) {
@@ -143,7 +139,6 @@ final class Cmatic_Rest_Lists {
 					$api_key        = $credentials->get_api_key();
 					$key_from_oauth = true;
 				} else {
-					// No OAuth credentials — try the composite resolver for fallback.
 					$api_key = $auth_manager->resolve_api_key( $form_id );
 				}
 			}
@@ -254,7 +249,6 @@ final class Cmatic_Rest_Lists {
 			$settings_to_save = array_merge( $cf7_mch, $validation_result, $lists_result, $extra );
 			update_option( $option_name, $settings_to_save );
 
-			// Record first successful connection after form settings are saved.
 			if ( 1 === (int) $api_valid && ! Cmatic_Options_Repository::get_option( 'api.first_connected' ) ) {
 				Cmatic_Options_Repository::set_option( 'api.first_connected', time() );
 			}
@@ -376,8 +370,6 @@ final class Cmatic_Rest_Lists {
 				\Cmatic\Metrics\Core\Sync::send_async( $payload );
 			}
 
-			// Resolve the audience name from the cached lists so the client can
-			// refresh the limit banner without a reload on live audience switches.
 			$audience_name = '';
 			if ( isset( $cf7_mch['lisdata']['lists'] ) && is_array( $cf7_mch['lisdata']['lists'] ) ) {
 				foreach ( $cf7_mch['lisdata']['lists'] as $cmatic_list ) {
@@ -416,26 +408,18 @@ final class Cmatic_Rest_Lists {
 			$cf7_mch = array();
 		}
 
-		// OAuth-backed forms: never expose the decrypted key over this endpoint.
-		// The OAuth key is used internally by resolve_api_key() for Mailchimp API
-		// calls, but must not be returned to the client via REST.
-		$auth_type = isset( $cf7_mch['auth_type'] ) ? $cf7_mch['auth_type'] : '';
-		if ( 'oauth' === $auth_type ) {
-			return rest_ensure_response(
-				array(
-					'success'   => true,
-					'api_key'   => '',
-					'auth_type' => 'oauth',
-				)
-			);
-		}
-
-		$api_key = isset( $cf7_mch['api'] ) && ! empty( $cf7_mch['api'] ) ? $cf7_mch['api'] : '';
+		$auth_type          = isset( $cf7_mch['auth_type'] ) ? sanitize_key( (string) $cf7_mch['auth_type'] ) : '';
+		$auth_manager       = Cmatic_Lite_Container::get( 'auth.manager' );
+		$credential_present = 'oauth' === $auth_type
+			? ( $auth_manager && (bool) $auth_manager->get_credentials( $form_id ) )
+			: ! empty( $cf7_mch['api'] );
 
 		return rest_ensure_response(
 			array(
-				'success' => true,
-				'api_key' => $api_key,
+				'success'            => true,
+				'api_key'            => '',
+				'auth_type'          => $auth_type,
+				'credential_present' => $credential_present,
 			)
 		);
 	}

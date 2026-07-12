@@ -12,7 +12,7 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Contact_Lookup {
 
-	protected static $namespace = 'chimpmatic-lite/v1';
+	protected static $namespace   = 'chimpmatic-lite/v1';
 	protected static $initialized = false;
 
 	public static function cmatic_is_pro_active() {
@@ -23,7 +23,7 @@ class Cmatic_Contact_Lookup {
 		if ( empty( $value ) || $value === null ) {
 			return null;
 		}
-		return substr( md5( wp_json_encode( $value ) . wp_salt() ), 0, 7 );
+			return substr( hash_hmac( 'sha256', (string) wp_json_encode( $value ), wp_salt( 'auth' ) ), 0, 7 );
 	}
 
 	protected static function cmatic_fltr_pro_fields( $result ) {
@@ -94,7 +94,7 @@ class Cmatic_Contact_Lookup {
 						'required'          => true,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_email',
-						'validate_callback' => function( $param ) {
+						'validate_callback' => function ( $param ) {
 							return is_email( $param );
 						},
 					),
@@ -179,9 +179,9 @@ class Cmatic_Contact_Lookup {
 			);
 		}
 
-		$subscriber_hash = md5( $email );
-		$results         = array();
-		$found_count     = 0;
+			$subscriber_hash = md5( strtolower( $email ) ); // nosemgrep
+		$results             = array();
+		$found_count         = 0;
 
 		foreach ( $lists as $list ) {
 			$list_id   = $list['id'];
@@ -229,27 +229,27 @@ class Cmatic_Contact_Lookup {
 				}
 
 				$results[] = array(
-					'list_id'               => $list_id,
-					'list_name'             => $list_name,
-					'found'                 => true,
-					'status'                => $member_data['status'] ?? 'unknown',
-					'email'                 => $member_data['email_address'] ?? $email,
-					'merge_fields'          => $member_data['merge_fields'] ?? array(),
-					'tags'                  => array_column( $member_data['tags'] ?? array(), 'name' ),
-					'interests'             => $interests,
-					'marketing_permissions' => $member_data['marketing_permissions'] ?? array(),
-					'source'                => $member_data['source'] ?? null,
-					'ip_signup'             => $member_data['ip_signup'] ?? null,
-					'timestamp_signup'      => $member_data['timestamp_signup'] ?? null,
-					'subscribed'            => $member_data['timestamp_opt'] ?? null,
-					'last_changed'          => $member_data['last_changed'] ?? null,
-					'unsubscribe_reason'    => $member_data['unsubscribe_reason'] ?? null,
-					'language'              => $member_data['language'] ?? null,
-					'email_type'            => $member_data['email_type'] ?? null,
-					'vip'                   => $member_data['vip'] ?? false,
-					'email_client'          => $member_data['email_client'] ?? null,
-					'location'              => $member_data['location'] ?? null,
-					'member_rating'         => $member_data['member_rating'] ?? null,
+					'list_id'                          => $list_id,
+					'list_name'                        => $list_name,
+					'found'                            => true,
+					'status'                           => $member_data['status'] ?? 'unknown',
+					'email'                            => $member_data['email_address'] ?? $email,
+					'merge_fields'                     => $member_data['merge_fields'] ?? array(),
+					'tags'                             => array_column( $member_data['tags'] ?? array(), 'name' ),
+					'interests'                        => $interests,
+					'marketing_permissions'            => $member_data['marketing_permissions'] ?? array(),
+					'source'                           => $member_data['source'] ?? null,
+					'ip_signup'                        => $member_data['ip_signup'] ?? null,
+					'timestamp_signup'                 => $member_data['timestamp_signup'] ?? null,
+					'subscribed'                       => $member_data['timestamp_opt'] ?? null,
+					'last_changed'                     => $member_data['last_changed'] ?? null,
+					'unsubscribe_reason'               => $member_data['unsubscribe_reason'] ?? null,
+					'language'                         => $member_data['language'] ?? null,
+					'email_type'                       => $member_data['email_type'] ?? null,
+					'vip'                              => $member_data['vip'] ?? false,
+					'email_client'                     => $member_data['email_client'] ?? null,
+					'location'                         => $member_data['location'] ?? null,
+					'member_rating'                    => $member_data['member_rating'] ?? null,
 					'consents_to_one_to_one_messaging' => $member_data['consents_to_one_to_one_messaging'] ?? null,
 				);
 			} elseif ( 404 === $status_code ) {
@@ -296,7 +296,7 @@ class Cmatic_Contact_Lookup {
 		$defaults = array(
 			'form_id' => 0,
 		);
-		$args = wp_parse_args( $args, $defaults );
+		$args     = wp_parse_args( $args, $defaults );
 		?>
 		<div id="cmatic-contact-lookup" class="postbox mce-move mce-hidden">
 			<div class="inside" style="padding: 15px;">

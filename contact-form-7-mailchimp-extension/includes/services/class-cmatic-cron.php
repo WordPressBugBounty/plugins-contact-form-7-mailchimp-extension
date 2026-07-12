@@ -32,7 +32,6 @@ class Cmatic_Cron {
 	}
 
 	public static function unschedule(): void {
-		// Idempotent: wp_clear_scheduled_hook is safe if hook doesn't exist.
 		wp_clear_scheduled_hook( self::DAILY_HOOK );
 	}
 

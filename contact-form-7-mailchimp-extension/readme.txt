@@ -1,150 +1,151 @@
-=== Connect Contact Form 7 and Mailchimp ===
+=== Connect Contact Form 7 to Mailchimp, Brevo, MailerLite & Klaviyo ===
 Contributors: rnzo, chimpmatic
 Donate link: https://chimpmatic.com/pricing
-Tags: contact form 7 mailchimp, cf7 mailchimp, mailchimp, mailchimp integration, contact form 7
+Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.78.07
+Stable tag: 0.9.80.00
+Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Connect Contact Form 7 to Mailchimp in one click. Sync form submissions to your Mailchimp audiences with OAuth or API key, merge field mapping, double opt-in, and opt-in checkbox support.
+Connect Contact Form 7 to Mailchimp, Brevo, MailerLite, or Klaviyo. Choose a provider per form, select a destination, and map subscriber fields.
 
 == Description ==
 
-**Chimpmatic Lite** is the easiest way to connect **Contact Form 7 to Mailchimp**. When a visitor submits your CF7 form, their information is automatically added to your Mailchimp audience using the Mailchimp API v3.
+**ChimpMatic Lite connects Contact Form 7 to Mailchimp, Brevo, MailerLite, and Klaviyo.** Send form submissions to the email marketing provider and destination you choose, without replacing Contact Form 7 or adding a heavyweight automation platform.
 
-Unlike heavyweight form builders, Chimpmatic is a specialist CF7-to-Mailchimp integration. It does one thing and does it well: syncing your Contact Form 7 submissions directly to Mailchimp.
+Select a provider for each form, connect your account, choose an audience, list, or group, and map Contact Form 7 fields to subscriber fields. Existing Mailchimp forms remain compatible and continue using their saved settings after upgrading.
 
-= Why Chimpmatic? =
+= Four Email Marketing Integrations, One Familiar Workflow =
 
-* **Built specifically for Contact Form 7** - not a generic form connector
-* **Lightweight** - no bloat, no extra form builders, no overhead
-* **Mailchimp API v3** - uses the latest official Mailchimp API
-* **50,000+ active installs** - trusted by WordPress sites worldwide
+* **Mailchimp for Contact Form 7** - Connect with one-click OAuth or an API key, select an audience, map merge fields, and choose single or double opt-in. [Read the Mailchimp setup guide](https://chimpmatic.com/integrations/mailchimp/).
+* **Brevo for Contact Form 7** - Connect with a Brevo API key, select a list, map contact attributes, and choose direct subscription or a Brevo confirmation email. [Read the Brevo setup guide](https://chimpmatic.com/integrations/brevo/).
+* **MailerLite for Contact Form 7** - Connect with a MailerLite API token, select a group, and map subscriber fields. Double opt-in follows your MailerLite account setting. [Read the MailerLite setup guide](https://chimpmatic.com/integrations/mailerlite/).
+* **Klaviyo for Contact Form 7** - Connect with a Klaviyo private API key, select a list, and map profile properties. Confirmation behavior follows the selected Klaviyo list. [Read the Klaviyo setup guide](https://chimpmatic.com/integrations/klaviyo/).
 
 = Free Features =
 
-* **One-click Mailchimp connection (OAuth)**, no API key hunting required
-* Connect any Contact Form 7 form to a Mailchimp audience
-* Map form fields to Mailchimp merge fields (FNAME, LNAME, etc.)
-* Use a **different Mailchimp API key** per contact form
-* Use a **different mailing list** per contact form
-* **Single opt-in** or **double opt-in** support
-* **Opt-in checkbox** - let visitors choose to subscribe
-* Unlimited contact forms
-* Works with any Contact Form 7 form layout
+* Choose Mailchimp, Brevo, MailerLite, or Klaviyo independently for each Contact Form 7 form.
+* Use different provider accounts and destinations on different forms.
+* Load audiences, lists, or groups inside the Contact Form 7 editor.
+* Map the required email address and up to four additional Contact Form 7 fields.
+* Require an opt-in checkbox before subscriber data is sent.
+* Control or respect provider-specific confirmation behavior.
+* Keep existing Mailchimp configurations working after upgrading.
+* Use unlimited Contact Form 7 forms.
 
-= Premium Features (Chimpmatic PRO) =
+= Built for Contact Form 7 =
 
-Upgrade to [Chimpmatic PRO](https://chimpmatic.com/pro) for advanced Mailchimp integration:
+ChimpMatic adds a focused integration panel to each Contact Form 7 form. It does not replace your forms, introduce another form builder, or require a generic automation service between WordPress and your email provider.
 
-* **Mailchimp Tags** - automatically tag subscribers from form submissions
-* **Mailchimp Groups** - assign subscribers to interest groups
-* **Unlimited custom merge fields** - map any CF7 field to Mailchimp
-* **GDPR consent checkbox** - built-in compliance for email marketing
-* **Birthday field support** - sync date fields to Mailchimp
-* **Email verification** - validate emails before subscribing
-* **Unsubscribe, archive, and delete** subscriber management
-* **Priority support** - direct help from the developer
+Brevo API keys, MailerLite API tokens, and Klaviyo private API keys are encrypted before storage and are not displayed again after saving. Mailchimp users can avoid storing an API key by using the OAuth connection.
 
-[Learn more about Chimpmatic PRO](https://chimpmatic.com/pro)
+= ChimpMatic Pro =
+
+ChimpMatic Pro is an optional add-on for teams that need advanced provider features, expanded field mapping, advanced consent controls, subscriber tools, and priority support. ChimpMatic Lite remains a complete Contact Form 7 integration on its own.
+
+[Compare ChimpMatic Lite and Pro](https://chimpmatic.com/pro/).
+
+= External Services and Data Disclosure =
+
+ChimpMatic is independently developed and is not affiliated with or endorsed by Mailchimp, Brevo, MailerLite, or Klaviyo. When a configured form is submitted, its email address, mapped fields, destination, and consent choice are sent directly to the provider you selected; an account with that provider is required.
+
+[Read how each external service is used, what data is sent, and review provider terms and privacy policies](https://chimpmatic.com/external-services/).
 
 = Requirements =
 
-1. WordPress 6.4 or higher
-2. Contact Form 7 (5.0 or higher)
-3. PHP 7.4 or higher
-4. A free or paid Mailchimp account
+1. WordPress 6.4 or higher.
+2. Contact Form 7 5.0 or higher.
+3. PHP 7.4 or higher.
+4. An account with at least one supported email marketing provider.
 
 = Support =
 
-* [Documentation & Help Center](https://chimpmatic.com/help)
-* [Getting Started Guide](https://chimpmatic.com/connect-contact-form-7-with-mailchimp)
-* [Bug Reports & Feature Requests](https://chimpmatic.com/contact)
+* [Provider integration guides](https://chimpmatic.com/integrations/)
+* [Documentation and Help Center](https://chimpmatic.com/help/)
+* [Contact the ChimpMatic team](https://chimpmatic.com/contact)
 
 == Installation ==
 
-1. Install the plugin from the WordPress Plugin Directory, or upload the plugin folder to `/wp-content/plugins/`.
-2. Activate the plugin through the **Plugins** menu in WordPress.
-3. Edit any Contact Form 7 form - you will see a new **Chimpmatic** tab.
-4. Click **Connect with Mailchimp** to authorize in one click (OAuth), or paste your Mailchimp API key instead.
-5. Select your audience and map your fields. Done.
+1. Install and activate Contact Form 7.
+2. Install ChimpMatic Lite from the WordPress Plugin Directory and activate it.
+3. Edit a Contact Form 7 form and open its **Chimpmatic** tab.
+4. Choose Mailchimp, Brevo, MailerLite, or Klaviyo.
+5. Connect the provider, select an audience, list, or group, and map the email field plus any additional fields.
+6. Configure consent behavior, save the form, and submit a test entry.
 
-= How to Find Your Mailchimp API Key =
+= Provider Credentials =
 
-1. Log in to your Mailchimp account.
-2. Click your profile icon and select **Account & billing**.
-3. Go to **Extras** > **API Keys**.
-4. Click **Create A Key** and copy the key.
-5. Paste it into the Mailchimp tab in your Contact Form 7 editor.
-
-For a detailed walkthrough with screenshots, see our [Mailchimp API Key Guide](https://chimpmatic.com/how-to-get-your-mailchimp-api-key).
+Mailchimp supports OAuth or an API key. Brevo uses an API key, MailerLite uses an API token, and Klaviyo uses a private API key. For current screenshots and exact provider navigation, use the [integration setup guides](https://chimpmatic.com/integrations/).
 
 == Frequently Asked Questions ==
 
-= Can I connect Contact Form 7 to Mailchimp without an API key? =
+= Which email marketing providers does ChimpMatic Lite support? =
 
-Yes. Chimpmatic Lite includes one-click OAuth: press **Connect with Mailchimp** in the form editor, approve the connection in the Mailchimp popup, and you are done. No API key to find, copy, or rotate. The classic API key method still works if you prefer it.
+Version 0.9.80.00 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
 
-= How do I connect Contact Form 7 to Mailchimp? =
+[Read more about supported email marketing integrations](https://chimpmatic.com/integrations/).
 
-After installing Chimpmatic Lite, edit any Contact Form 7 form. Click the **Mailchimp** tab, enter your API key, select your Mailchimp audience, and map your form fields to Mailchimp merge tags. Submissions will sync automatically.
+= Will my existing Mailchimp forms keep working? =
 
-See the full [setup guide](https://chimpmatic.com/connect-contact-form-7-with-mailchimp).
+Yes. Existing configurations default to Mailchimp and retain their saved audience, field mappings, API credentials, and opt-in behavior.
 
-= How do I find my Mailchimp API key? =
+[Read more about the Contact Form 7 Mailchimp integration](https://chimpmatic.com/integrations/mailchimp/).
 
-The fastest way is our direct link: admin.mailchimp.com/account/api/ (log in and your keys are right there). For the full walkthrough with screenshots, format validation, and troubleshooting, see our [Mailchimp API key guide](https://chimpmatic.com/how-to-get-your-mailchimp-api-key).
+= Can I connect without an API key? =
 
-= Can I use different Mailchimp lists for different forms? =
+Mailchimp supports one-click OAuth. Brevo requires an API key, MailerLite requires an API token, and Klaviyo requires a private API key.
 
-Yes. Each Contact Form 7 form has its own Mailchimp tab where you can set a different API key, audience, and field mapping.
+[Read more about connecting each provider and finding its API credentials](https://chimpmatic.com/integrations/).
 
-= Does this support double opt-in? =
+= Can different forms use different providers? =
 
-Yes. You can choose between single opt-in (subscriber is added immediately) or double opt-in (Mailchimp sends a confirmation email first). This is configured per form.
+Yes. A newsletter form can send to MailerLite while a lead form sends to Brevo, for example. Every form stores its own provider, credentials, destination, mappings, and opt-in configuration.
 
-= Can I add an opt-in checkbox? =
+[Read more about configuring providers per Contact Form 7 form](https://chimpmatic.com/integrations/).
 
-Yes. Chimpmatic Lite includes an opt-in checkbox feature so visitors can choose whether to subscribe to your Mailchimp list when submitting the form.
+= Does ChimpMatic support double opt-in? =
 
-= What is the difference between Mailchimp tags and groups? =
+Yes, but the control differs by provider. Mailchimp offers single or double opt-in per form. Brevo can send a confirmation email. MailerLite follows the account's API double-opt-in setting. Klaviyo follows the selected list's consent behavior.
 
-Tags are labels you assign to subscribers for internal organization (e.g., "From Contact Page"). Groups are subscriber-facing categories that let people choose their interests. Both are available in [Chimpmatic PRO](https://chimpmatic.com/pricing).
+[Read more about provider-specific double opt-in](https://chimpmatic.com/help/double-opt-in/).
 
-= How do I add GDPR consent to Contact Form 7? =
+= How many fields can I map in Lite? =
 
-GDPR consent checkbox support is available in [Chimpmatic PRO](https://chimpmatic.com/pro). It adds a required opt-in checkbox that maps to Mailchimp's GDPR marketing permission fields.
+Lite maps the required email address plus up to four additional form fields. Compatible ChimpMatic Pro features can expand the mapping limit.
 
-= Contact Form 7 not sending to Mailchimp? =
+[Read more about Contact Form 7 field mapping](https://chimpmatic.com/help/field-mapping/).
 
-Common fixes: (1) Check your API key is correct and not expired. (2) Verify the email field is mapped properly. (3) Check for trailing spaces in the API key. (4) Make sure your Mailchimp audience is not archived. See our [troubleshooting guide](https://chimpmatic.com/contact-form-7-not-sending-to-mailchimp-7-common-fixes).
+= Where do I get help? =
 
-= Does this work with Mailchimp merge fields? =
-
-Yes. You can map any Contact Form 7 field to Mailchimp merge fields like FNAME, LNAME, ADDRESS, and more. For unlimited custom merge fields, upgrade to [Chimpmatic PRO](https://chimpmatic.com/pro).
+Start with the [provider integration guides](https://chimpmatic.com/integrations/), visit the [Help Center](https://chimpmatic.com/help/), or [contact the ChimpMatic team](https://chimpmatic.com/contact).
 
 == Screenshots ==
 
-1. The Chimpmatic panel in the Contact Form 7 editor: Mailchimp connection, audience selection, merge-field mapping, opt-in settings, tags, and previews of Pro Groups and GDPR tools.
-2. Choose your connection: one-click OAuth sign-in (recommended) or your existing API key, with the trade-offs of each spelled out.
+1. Choose Mailchimp, Brevo, MailerLite, or Klaviyo inside a Contact Form 7 form.
+2. Select an audience, list, or group and map Contact Form 7 fields to subscriber fields.
 
 == Upgrade Notice ==
 
+= 0.9.80.00 =
+Adds per-form integrations for Brevo, MailerLite, and Klaviyo alongside Mailchimp. Existing Mailchimp configurations remain compatible.
+
 = 0.9.78.07 =
-Security release: fixes a stored cross-site scripting (XSS) vulnerability in the Contact Lookup tool (CVE-2026-15000). All users should update.
+Security release: fixes a stored cross-site scripting vulnerability in the Contact Lookup tool (CVE-2026-15000). All users should update.
 
 = 0.9.78.06 =
-One-click Mailchimp connection (OAuth), a smarter audience panel, and reliability fixes for checkbox fields and special mail-tags. Recommended for all users.
+One-click Mailchimp connection, a smarter audience panel, and reliability fixes for checkbox fields and special mail-tags.
 
 == Changelog ==
 
-For the full changelog with details, see [Release History](https://chimpmatic.com/changelog).
+= 0.9.80.00 =
+
+[Version 0.9.80.00 release notes](https://chimpmatic.com/changelog#0.9.80.00)
 
 = 0.9.78.07 =
 
-* Security: Fixed a stored cross-site scripting (XSS) vulnerability in the Contact Lookup tool. Subscriber merge-field values returned from Mailchimp are now HTML-escaped before they are displayed, and values submitted through mapped form fields are sanitized before being sent to Mailchimp. Reported responsibly via Wordfence (CVE-2026-15000). All users should update.
+[Version 0.9.78.07 release notes](https://chimpmatic.com/changelog#0.9.78.07)
 
 = 0.9.78.06 =
 

@@ -78,9 +78,6 @@ class Cmatic_Options_Repository implements Cmatic_Options_Interface {
 		$this->cache = null;
 	}
 
-	// =========================================================================
-	// STATIC API (for global access without instantiation)
-	// =========================================================================
 
 	private static $instance = null;
 

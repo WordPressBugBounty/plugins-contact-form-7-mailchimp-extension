@@ -21,7 +21,6 @@ final class Cmatic_Sidebar_Panel {
 		if ( 1 === $api_valid ) {
 			$status_text = '<span class="chmm valid">API Connected</span>';
 		} elseif ( ! $has_credentials ) {
-			// Pristine form: nothing has failed, so no red error chip.
 			$status_text = '<span class="chmm neutral">Not Connected</span>';
 		} else {
 			$status_text = '<span class="chmm invalid">API Inactive</span>';
@@ -29,7 +28,7 @@ final class Cmatic_Sidebar_Panel {
 		?>
 		<div class="misc-pub-section chimpmatic-info" id="chimpmatic-version-info">
 			<div style="margin-bottom: 3px;">
-				<?php if ( defined( 'CMATIC_VERSION' ) ) : // Pro active (same detection Cmatic_Dom_Classes uses): show the paying customer their edition; the Lite base version stays a support detail. ?>
+				<?php if ( defined( 'CMATIC_VERSION' ) ) : ?>
 					<strong><?php echo esc_html__( 'Chimpmatic Pro', 'chimpmatic-lite' ) . ' ' . esc_html( CMATIC_VERSION ); ?></strong>
 					<div style="color: #646970; font-size: 11px;"><?php echo esc_html__( 'Lite base', 'chimpmatic-lite' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></div>
 				<?php else : ?>
@@ -58,7 +57,7 @@ final class Cmatic_Sidebar_Panel {
 
 		$pricing   = Cmatic_Pursuit::pricing();
 		$text      = $pricing['formatted'] ?? '';
-		$discount  = (int) ( $pricing['discount_percent'] ?? 0 ); // the "<N>% Off!" headline below uses this
+		$discount  = (int) ( $pricing['discount_percent'] ?? 0 );
 		$promo_url = Cmatic_Pursuit::promo_checkout( 'footer_banner' );
 		?>
 		<div id="informationdiv_aux" class="postbox mce-move mc-lateral">

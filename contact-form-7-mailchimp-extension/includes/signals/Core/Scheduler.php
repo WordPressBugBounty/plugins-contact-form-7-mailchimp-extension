@@ -177,7 +177,6 @@ class Scheduler {
 			}
 		}
 
-		// Always update - either with found data or empty array to clear stale data.
 		Cmatic_Options_Repository::set_option( 'lisdata', $best_lisdata ?? array() );
 		Cmatic_Options_Repository::set_option( 'lisdata_updated', time() );
 	}

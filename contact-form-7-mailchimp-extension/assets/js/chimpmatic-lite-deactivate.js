@@ -42,13 +42,13 @@
 			<div class="cmatic-modal__overlay"></div>
 			<div class="cmatic-modal__dialog">
 				<div class="cmatic-modal__header">
-					<h2 id="cmatic-modal-title">${config.strings.title}</h2>
-					<button type="button" class="cmatic-modal__close" aria-label="${config.strings.closeLabel}">
+					<h2 id="cmatic-modal-title">${escapeHtml(config.strings.title)}</h2>
+					<button type="button" class="cmatic-modal__close" aria-label="${escapeHtml(config.strings.closeLabel)}">
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
 				<div class="cmatic-modal__body">
-					<h3 id="cmatic-modal-description">${config.strings.description}</h3>
+					<h3 id="cmatic-modal-description">${escapeHtml(config.strings.description)}</h3>
 					<form id="cmatic-deactivate-form">
 						<div class="cmatic-reasons" role="radiogroup" aria-labelledby="cmatic-modal-description">
 							${buildReasonsList()}
@@ -57,9 +57,9 @@
 					</form>
 				</div>
 				<div class="cmatic-modal__footer">
-					<a href="#" class="cmatic-skip-link" style="display: none;">${config.strings.skipButton}</a>
+					<a href="#" class="cmatic-skip-link" style="display: none;">${escapeHtml(config.strings.skipButton)}</a>
 					<button type="submit" form="cmatic-deactivate-form" class="button button-primary cmatic-submit-button">
-						${config.strings.submitButton}
+						${escapeHtml(config.strings.submitButton)}
 					</button>
 				</div>
 			</div>
@@ -67,30 +67,46 @@
 	}
 
 	function buildReasonsList() {
-		return config.reasons.map(reason => {
+		return (Array.isArray(config.reasons) ? config.reasons : []).map(reason => {
 			return `
-				<button type="button" class="cmatic-reason-btn" data-reason-id="${reason.id}" data-input-type="${reason.input_type}" aria-pressed="false">
-					${reason.text}
+				<button type="button" class="cmatic-reason-btn" data-reason-id="${Number(reason.id) || 0}" data-input-type="${escapeHtml(reason.input_type || '')}" aria-pressed="false">
+					${escapeHtml(reason.text || '')}
 				</button>
 			`;
 		}).join('');
+	}
+
+	function escapeHtml(value) {
+		const element = document.createElement('div');
+		element.textContent = String(value || '');
+		return element.innerHTML;
 	}
 
 	function buildInputField(reasonId, inputType) {
 		const reason = config.reasons.find(r => r.id === reasonId);
 		if (!reason) return '';
 
-		let inputHtml = '';
+		const wrapper = document.createElement('div');
+		wrapper.className = 'cmatic-input-wrapper';
+		let input = null;
 		if (inputType === 'plugin-dropdown') {
-			inputHtml = `<select class="cmatic-input-field" aria-label="${reason.placeholder || 'Select a plugin'}" disabled><option value="">Loading plugins...</option></select>`;
+			input = document.createElement('select');
+			input.disabled = true;
+			const loading = document.createElement('option');
+			loading.textContent = 'Loading plugins...';
+			input.appendChild(loading);
 		} else if (inputType === 'textfield') {
-			inputHtml = `<input type="text" class="cmatic-input-field" placeholder="${reason.placeholder}" maxlength="${reason.max_length || 200}" aria-label="${reason.placeholder}" />`;
+			input = document.createElement('input');
+			input.type = 'text';
+			input.placeholder = String(reason.placeholder || '');
+			input.maxLength = Number(reason.max_length) || 200;
 		}
 
-		if (inputHtml) {
-			return `<div class="cmatic-input-wrapper">${inputHtml}</div>`;
-		}
-		return '';
+		if (!input) return null;
+		input.className = 'cmatic-input-field';
+		input.setAttribute('aria-label', String(reason.placeholder || 'Select a plugin'));
+		wrapper.appendChild(input);
+		return wrapper;
 	}
 
 	async function fetchPluginsList() {
@@ -115,13 +131,17 @@
 	}
 
 	function populatePluginDropdown(selectElement, plugins) {
-		let optionsHtml = '<option value="">-- Select Plugin --</option>';
-		if (plugins && plugins.length > 0) {
-			plugins.forEach(plugin => {
-				optionsHtml += `<option value="${plugin.value}">${plugin.label}</option>`;
-			});
-		}
-		selectElement.innerHTML = optionsHtml;
+		const options = [];
+		const prompt = document.createElement('option');
+		prompt.textContent = '-- Select Plugin --';
+		options.push(prompt);
+		(Array.isArray(plugins) ? plugins : []).forEach(plugin => {
+			const option = document.createElement('option');
+			option.value = String(plugin.value || '');
+			option.textContent = String(plugin.label || '');
+			options.push(option);
+		});
+		selectElement.replaceChildren(...options);
 		selectElement.disabled = false;
 	}
 
@@ -174,17 +194,19 @@
 			reason_text: '',
 		};
 
-		const submitBtn = modalElement.querySelector('.cmatic-submit-btn');
+		const submitBtn = modalElement.querySelector('.cmatic-submit-button');
 		const skipLink = modalElement.querySelector('.cmatic-skip-link');
-		submitBtn.disabled = true;
-		submitBtn.textContent = cmaticData.i18n.submitting;
+		if (submitBtn) {
+			submitBtn.disabled = true;
+			submitBtn.textContent = config.strings.deactivating;
+		}
 		skipLink.style.display = 'none';
 
-		fetch(cmaticData.restUrl, {
+		fetch(config.restUrl, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'X-WP-Nonce': cmaticData.nonce,
+				'X-WP-Nonce': config.restNonce,
 			},
 			body: JSON.stringify(skipData),
 		}).finally(() => {
@@ -210,10 +232,10 @@
 		clickedBtn.setAttribute('aria-pressed', 'true');
 
 		if (inputType && inputType !== '') {
-			const inputHtml = buildInputField(reasonId, inputType);
-			if (inputHtml) {
-				clickedBtn.insertAdjacentHTML('afterend', inputHtml);
-				const input = clickedBtn.nextElementSibling.querySelector('.cmatic-input-field');
+			const inputWrapper = buildInputField(reasonId, inputType);
+			if (inputWrapper) {
+				clickedBtn.insertAdjacentElement('afterend', inputWrapper);
+				const input = inputWrapper.querySelector('.cmatic-input-field');
 
 				if (inputType === 'plugin-dropdown' && input) {
 					const plugins = await fetchPluginsList();

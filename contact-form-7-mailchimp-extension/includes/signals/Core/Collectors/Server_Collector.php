@@ -17,8 +17,8 @@ class Server_Collector {
 		$server_load = self::get_load_average();
 
 		list( $disk_free, $disk_total ) = self::get_disk_space();
-		$disk_used          = $disk_total - $disk_free;
-		$disk_usage_percent = $disk_total > 0 ? round( ( $disk_used / $disk_total ) * 100, 2 ) : 0;
+		$disk_used                      = $disk_total - $disk_free;
+		$disk_usage_percent             = $disk_total > 0 ? round( ( $disk_used / $disk_total ) * 100, 2 ) : 0;
 
 		$hostname     = self::get_hostname();
 		$architecture = self::get_architecture();

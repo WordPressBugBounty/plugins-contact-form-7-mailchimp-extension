@@ -25,12 +25,10 @@ class Cmatic_Lite_Container {
 	}
 
 	public static function get( string $id ) {
-		// Return cached instance if exists.
 		if ( isset( self::$services[ $id ] ) ) {
 			return self::$services[ $id ];
 		}
 
-		// Build from factory if exists.
 		if ( isset( self::$factories[ $id ] ) ) {
 			self::$services[ $id ] = call_user_func( self::$factories[ $id ] );
 			unset( self::$factories[ $id ] );
@@ -50,7 +48,6 @@ class Cmatic_Lite_Container {
 	}
 
 	public static function boot(): void {
-		// Register Options Repository.
 		self::factory(
 			Cmatic_Options_Interface::class,
 			function () {
@@ -58,7 +55,6 @@ class Cmatic_Lite_Container {
 			}
 		);
 
-		// Alias for backward compatibility.
 		self::factory(
 			'options',
 			function () {
@@ -66,7 +62,6 @@ class Cmatic_Lite_Container {
 			}
 		);
 
-		// OAuth credential manager.
 		self::factory(
 			'auth.manager',
 			function () {

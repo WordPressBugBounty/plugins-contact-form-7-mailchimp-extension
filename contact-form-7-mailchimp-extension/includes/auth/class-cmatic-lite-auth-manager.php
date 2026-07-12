@@ -17,12 +17,7 @@ class Cmatic_Lite_Auth_Manager {
 	const CIPHER        = 'aes-256-cbc';
 
 	/**
-	 * Save encrypted OAuth credentials for a form.
-	 *
-	 * Clears the plain API key from cf7_mch, backs up existing key,
-	 * sets auth_type=oauth. Clears audience data (list/lisdata) —
-	 * user must re-select after OAuth connect. This matches Pro
-	 * behavior (cmatic-auth-manager.php L58-61).
+	 * Save encrypted OAuth credentials.
 	 *
 	 * @param int    $form_id Form ID.
 	 * @param string $api_key Plain Mailchimp API key from gateway.
@@ -42,7 +37,6 @@ class Cmatic_Lite_Auth_Manager {
 			$config = array();
 		}
 
-		// Backup existing API key for restore on disconnect.
 		if ( ! empty( $config['api'] ) ) {
 			$config['api_key_backup'] = $config['api'];
 		}
@@ -51,8 +45,6 @@ class Cmatic_Lite_Auth_Manager {
 		$config['auth_type']      = 'oauth';
 		$config['api']            = '';
 
-		// Clear audience data — user must re-select after OAuth connect.
-		// This matches Pro behavior (cmatic-auth-manager.php L58-61).
 		$config['lisdata'] = array();
 		$config['list']    = '';
 
@@ -122,7 +114,6 @@ class Cmatic_Lite_Auth_Manager {
 		unset( $config['oauth_connected_by'] );
 		unset( $config['oauth_connected_date'] );
 
-		// Clear audience data — must re-sync after disconnect.
 		$config['lisdata'] = array();
 		$config['list']    = '';
 
@@ -130,12 +121,7 @@ class Cmatic_Lite_Auth_Manager {
 	}
 
 	/**
-	 * Central credential resolution. ALL call sites use this.
-	 *
-	 * Priority:
-	 *   1. OAuth encrypted credentials (if form has them)
-	 *   2. Explicit fallback key (e.g., passed by JS)
-	 *   3. Stored cf7_mch['api'] key
+	 * Resolve the credential for a form.
 	 *
 	 * @param int    $form_id     Form ID.
 	 * @param string $fallback    Optional explicit API key (from REST param).
@@ -143,18 +129,15 @@ class Cmatic_Lite_Auth_Manager {
 	 * @return string API key or empty string.
 	 */
 	public function resolve_api_key( $form_id, $fallback = '', $cf7_mch = null ) {
-		// Priority 1: OAuth.
 		$credentials = $this->get_credentials( $form_id );
 		if ( $credentials ) {
 			return $credentials->get_api_key();
 		}
 
-		// Priority 2: Explicit fallback.
 		if ( ! empty( $fallback ) ) {
 			return $fallback;
 		}
 
-		// Priority 3: Stored config.
 		if ( null === $cf7_mch ) {
 			$cf7_mch = get_option( 'cf7_mch_' . $form_id, array() );
 		}
@@ -162,10 +145,6 @@ class Cmatic_Lite_Auth_Manager {
 		return ! empty( $cf7_mch['api'] ) ? $cf7_mch['api'] : '';
 	}
 
-	/**
-	 * Restore API keys for all OAuth-connected forms.
-	 * Called on plugin deactivation.
-	 */
 	public static function restore_all_api_keys() {
 		global $wpdb;
 
@@ -220,16 +199,13 @@ class Cmatic_Lite_Auth_Manager {
 		return array( $enc_key, $mac_key );
 	}
 
-	/**
-	 * Legacy key derivation for decrypting credentials stored before key separation.
-	 */
 	private function derive_legacy_key() {
 		return hash( 'sha256', wp_salt( 'auth' ), true );
 	}
 
 	private function encrypt( $plaintext ) {
 		list( $enc_key, $mac_key ) = $this->derive_keys();
-		$iv = openssl_random_pseudo_bytes( openssl_cipher_iv_length( self::CIPHER ) );
+		$iv                        = openssl_random_pseudo_bytes( openssl_cipher_iv_length( self::CIPHER ) );
 
 		$ciphertext = openssl_encrypt( $plaintext, self::CIPHER, $enc_key, OPENSSL_RAW_DATA, $iv );
 		if ( false === $ciphertext ) {
@@ -238,17 +214,17 @@ class Cmatic_Lite_Auth_Manager {
 
 		$hmac = hash_hmac( 'sha256', $iv . $ciphertext, $mac_key, true );
 
-		// Version byte 0x02 distinguishes HKDF-derived keys from legacy (0x01 or absent).
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Binary authenticated ciphertext transport encoding.
 		return base64_encode( "\x02" . $hmac . $iv . $ciphertext );
 	}
 
 	private function decrypt( $encoded ) {
-		$data = base64_decode( $encoded );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Binary authenticated ciphertext transport decoding.
+		$data = base64_decode( $encoded, true );
 		if ( false === $data || strlen( $data ) < 48 ) {
 			return false;
 		}
 
-		// Try HKDF-versioned format first (version byte 0x02 prefix).
 		if ( strlen( $data ) >= 49 && "\x02" === $data[0] ) {
 			$result = $this->decrypt_with_keys(
 				substr( $data, 1 ),
@@ -259,7 +235,6 @@ class Cmatic_Lite_Auth_Manager {
 			}
 		}
 
-		// Fall back to legacy single-key format (no version byte).
 		$legacy_key = $this->derive_legacy_key();
 		return $this->decrypt_with_keys( $data, array( $legacy_key, $legacy_key ) );
 	}

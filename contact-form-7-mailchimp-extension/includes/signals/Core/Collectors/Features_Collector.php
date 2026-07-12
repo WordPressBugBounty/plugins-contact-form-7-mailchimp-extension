@@ -17,20 +17,20 @@ defined( 'ABSPATH' ) || exit;
 class Features_Collector {
 	public static function collect(): array {
 		$features = array(
-			'double_optin'         => 0,
-			'required_consent'     => 0,
-			'debug_logger'         => 0,
-			'custom_merge_fields'  => 0,
-			'interest_groups'      => 0,
-			'groups_total_mapped'  => 0,
-			'tags_enabled'         => 0,
-			'tags_total_selected'  => 0,
-			'arbitrary_tags'       => 0,
-			'conditional_logic'    => 0,
-			'auto_update'          => (bool) Cmatic_Options_Repository::get_option( 'auto_update', true ),
-			'telemetry_enabled'    => true,
-			'debug'                => (bool) Cmatic_Options_Repository::get_option( 'debug', false ),
-			'backlink'             => (bool) Cmatic_Options_Repository::get_option( 'backlink', false ),
+			'double_optin'        => 0,
+			'required_consent'    => 0,
+			'debug_logger'        => 0,
+			'custom_merge_fields' => 0,
+			'interest_groups'     => 0,
+			'groups_total_mapped' => 0,
+			'tags_enabled'        => 0,
+			'tags_total_selected' => 0,
+			'arbitrary_tags'      => 0,
+			'conditional_logic'   => 0,
+			'auto_update'         => (bool) Cmatic_Options_Repository::get_option( 'auto_update', true ),
+			'telemetry_enabled'   => true,
+			'debug'               => (bool) Cmatic_Options_Repository::get_option( 'debug', false ),
+			'backlink'            => (bool) Cmatic_Options_Repository::get_option( 'backlink', false ),
 		);
 
 		$cf7_forms = Forms_Collector::get_cf7_forms();

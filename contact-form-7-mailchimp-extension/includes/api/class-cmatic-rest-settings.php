@@ -50,7 +50,7 @@ final class Cmatic_Rest_Settings {
 		if ( self::$initialized ) {
 			return;
 		}
-		add_action( 'rest_api_init', array( static::class, 'register_routes' ) );
+		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
 		self::$initialized = true;
 	}
 
@@ -60,8 +60,8 @@ final class Cmatic_Rest_Settings {
 			'/settings/toggle',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'toggle_setting' ),
-				'permission_callback' => array( static::class, 'check_admin_permission' ),
+				'callback'            => array( self::class, 'toggle_setting' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
 				'args'                => array(
 					'field'   => array(
 						'required'          => true,
@@ -82,8 +82,8 @@ final class Cmatic_Rest_Settings {
 			'/notices/dismiss',
 			array(
 				'methods'             => 'POST',
-				'callback'            => array( static::class, 'dismiss_notice' ),
-				'permission_callback' => array( static::class, 'check_admin_permission' ),
+				'callback'            => array( self::class, 'dismiss_notice' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
 				'args'                => array(
 					'notice_id' => array(
 						'required'          => false,
@@ -101,7 +101,6 @@ final class Cmatic_Rest_Settings {
 				),
 			)
 		);
-
 	}
 
 	public static function check_admin_permission( $request ) {
@@ -195,7 +194,6 @@ final class Cmatic_Rest_Settings {
 
 		switch ( $notice_id ) {
 			case 'license_banner':
-				// Piggybacks the existing dismissal endpoint (no new route surface).
 				$result = class_exists( 'Cmatic_License_Banner' )
 					? Cmatic_License_Banner::handle_dismiss( (string) $request->get_param( 'state' ) )
 					: false;

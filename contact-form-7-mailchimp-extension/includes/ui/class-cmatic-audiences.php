@@ -12,10 +12,9 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Audiences {
 	public static function render( string $apivalid, ?array $listdata, array $cf7_mch ): void {
-		// Handle list value - can be string or array (Pro stores as array).
 		$raw_list = isset( $cf7_mch['list'] ) ? $cf7_mch['list'] : '';
 		$vlist    = is_array( $raw_list ) ? sanitize_text_field( reset( $raw_list ) ) : sanitize_text_field( $raw_list );
-		$count = isset( $listdata['lists'] ) && is_array( $listdata['lists'] ) ? count( $listdata['lists'] ) : 0;
+		$count    = isset( $listdata['lists'] ) && is_array( $listdata['lists'] ) ? count( $listdata['lists'] ) : 0;
 
 		$help_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'audiences_help' );
 
@@ -47,8 +46,6 @@ class Cmatic_Audiences {
 
 			<small class="description">
 				<?php
-				// State-aware caption: describe the NEXT useful action, mirroring
-				// the same state branch the label above uses.
 				if ( '1' === $apivalid && $count > 0 ) {
 					esc_html_e( 'Contacts from this form join the selected audience. Sync Fields refreshes its merge fields from Mailchimp.', 'chimpmatic-lite' );
 				} elseif ( '1' === $apivalid ) {
@@ -82,8 +79,6 @@ class Cmatic_Audiences {
 			?>
 			<option value="<?php echo esc_attr( $list_id ); ?>" <?php echo $selected; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- selected() returns pre-escaped output ?>>
 				<?php
-				// Human label: name + field count. The raw list id stays in the
-				// option value only.
 				printf(
 					/* translators: 1: audience name, 2: contact count, 3: merge-field count */
 					esc_html__( '%1$s (%2$s contacts, %3$d fields)', 'chimpmatic-lite' ),

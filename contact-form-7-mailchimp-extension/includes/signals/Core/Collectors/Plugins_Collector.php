@@ -22,9 +22,9 @@ class Plugins_Collector {
 		$active_plugins = get_option( 'active_plugins', array() );
 		$mu_plugins     = get_mu_plugins();
 
-		$plugin_list    = self::build_plugin_list( $all_plugins, $active_plugins, $mu_plugins );
-		$plugin_stats   = self::get_plugin_stats( $all_plugins );
-		$known_plugins  = self::get_known_plugins();
+		$plugin_list   = self::build_plugin_list( $all_plugins, $active_plugins, $mu_plugins );
+		$plugin_stats  = self::get_plugin_stats( $all_plugins );
+		$known_plugins = self::get_known_plugins();
 
 		$data = array(
 			'total_plugins'     => count( $all_plugins ),

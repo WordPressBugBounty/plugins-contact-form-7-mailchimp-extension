@@ -16,8 +16,7 @@ class Cmatic_Lite_Credentials {
 	private $datacenter;
 	private $source;
 
-	/** Mailchimp datacenter format: 2 lowercase letters + 1-3 digits (e.g., us7, us21). */
-	const DC_PATTERN = '/^[a-z]{2}\d{1,3}$/';
+		const DC_PATTERN = '/^[a-z]{2}\d{1,3}$/';
 
 	private function __construct( $api_key, $datacenter, $source ) {
 		$this->api_key    = $api_key;

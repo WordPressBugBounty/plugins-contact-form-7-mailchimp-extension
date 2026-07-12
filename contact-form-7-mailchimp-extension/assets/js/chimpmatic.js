@@ -18,17 +18,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('wpcf7-admin-form-element');
     if (!form) return;
 
-    // Sync select defaultValue to prevent false "unsaved changes" warnings
     form.querySelectorAll('select').forEach(function(select) {
         if (select.value && select.defaultValue !== select.value) {
-            // Set defaultValue for select (affects selectedIndex tracking)
             Array.from(select.options).forEach(function(opt) {
                 opt.defaultSelected = opt.selected;
             });
         }
     });
 
-    // Sync checkbox values (browsers set value="on" but defaultValue="")
     form.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
         if (cb.value && !cb.defaultValue) {
             cb.defaultValue = cb.value;
@@ -58,7 +55,6 @@ function getApiValid() {
  * @param {number}      duration      Auto-hide after ms (0 = manual close).
  */
 function showInlineMessage(targetElement, message, type = 'warning', duration = 5000) {
-    // Remove any existing message
     const existingMsg = targetElement.parentNode.querySelector('.cmatic-inline-msg');
     if (existingMsg) existingMsg.remove();
 
@@ -100,8 +96,8 @@ function showInlineMessage(targetElement, message, type = 'warning', duration = 
 }
 
 /**
- * Securely get the API key - fetches from REST endpoint if masked.
- * CVE-2025-68989 fix: API key no longer stored in data-real-key attribute.
+ * Get a newly entered API key. Stored credentials resolve server-side and
+ * never enter JavaScript.
  * @returns {Promise<string>} The API key.
  */
 async function getApiKey() {
@@ -112,51 +108,15 @@ async function getApiKey() {
     const hasKey = apiInput.dataset.hasKey === '1';
     const inputValue = apiInput.value.trim();
 
-    // If not masked, the input contains the real key (user just typed/pasted it).
     if (!isMasked) {
         return inputValue;
     }
 
-    // If masked but no key exists in DB, return empty.
     if (!hasKey) {
         return '';
     }
 
-    // Masked with existing key - fetch the real key from secure endpoint.
-    const formId = getFormId();
-    if (!formId) return '';
-
-    try {
-        // Use Lite endpoint (works for both Lite and PRO).
-        const restUrl = typeof chimpmaticLite !== 'undefined'
-            ? chimpmaticLite.restUrl
-            : getRestUrl().replace('chimpmatic/v1/', 'chimpmatic-lite/v1/');
-        const nonce = typeof chimpmaticLite !== 'undefined'
-            ? chimpmaticLite.restNonce
-            : (typeof wpApiSettings !== 'undefined' ? wpApiSettings.nonce : '');
-
-        const response = await fetch(
-            `${restUrl}api-key/${formId}`,
-            {
-                method: 'GET',
-                headers: {
-                    'X-WP-Nonce': nonce,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        if (!response.ok) {
-            console.error('Chimpmatic: Failed to fetch API key');
-            return '';
-        }
-
-        const data = await response.json();
-        return data.api_key || '';
-    } catch (err) {
-        console.error('Chimpmatic: Error fetching API key', err);
-        return '';
-    }
+    return '';
 }
 
 function setApiValid(value) {
@@ -226,7 +186,6 @@ async function chmRestRequest(endpoint, data = {}) {
     }
 }
 
-// Save Tool Configuration
 document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'chm_submitme') {
         event.preventDefault();
@@ -249,7 +208,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Save Tool Config
 document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'chm_submitme_cfg') {
         event.preventDefault();
@@ -271,7 +229,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Connect and Fetch Your Audiences (Load Lists)
 document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'chm_activalist') {
         event.preventDefault();
@@ -285,7 +242,7 @@ document.addEventListener('click', function(event) {
             apiKeyElement = document.getElementById('cmatic-api');
         }
 
-        const apiKey = apiKeyElement?.value || '';
+        const apiKey = apiKeyElement?.dataset?.isMasked === '1' ? '' : (apiKeyElement?.value || '');
         const dataContainer = document.getElementById('cmatic_data');
         const authType = dataContainer?.dataset?.authType || '';
         if ((!apiKey || apiKey.trim() === '') && authType !== 'oauth') {
@@ -363,7 +320,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Auto-connect on paste
 document.addEventListener('paste', function(event) {
     const apiInput = document.getElementById('cmatic-api');
     if (event.target !== apiInput) return;
@@ -379,7 +335,6 @@ document.addEventListener('paste', function(event) {
     }, 100);
 });
 
-// Auto-refresh fields when audience dropdown changes
 document.addEventListener('change', function(event) {
     if (event.target && event.target.id === 'wpcf7-mailchimp-list') {
         const fieldsBtn = document.getElementById('chm_selgetcampos') || document.getElementById('mce_fetch_fields');
@@ -389,7 +344,6 @@ document.addEventListener('change', function(event) {
     }
 });
 
-// Fetch Your Fields and Groups
 document.addEventListener('click', async function(event) {
     if (event.target && (event.target.id === 'chm_selgetcampos' || event.target.id === 'mce_fetch_fields')) {
         event.preventDefault();
@@ -463,7 +417,6 @@ document.addEventListener('click', async function(event) {
     }
 });
 
-// Load Groups
 document.addEventListener('click', async function(event) {
     if (event.target && event.target.id === 'chm_activagroups') {
         event.preventDefault();
@@ -498,7 +451,6 @@ document.addEventListener('click', async function(event) {
     }
 });
 
-// Export Users
 document.addEventListener('click', async function(event) {
     if (event.target && event.target.id === 'chm_userexport') {
         event.preventDefault();
@@ -535,7 +487,6 @@ document.addEventListener('click', async function(event) {
     }
 });
 
-// Get Interest (Groups - Arbitrary)
 document.addEventListener('change', async function(event) {
     if (event.target && event.target.classList.contains('chimp-gg-arbirary')) {
         event.preventDefault();
@@ -556,25 +507,21 @@ document.addEventListener('change', async function(event) {
 
         chmRequest('wpcf7_chm_get_interest', data)
             .then(response => {
-                // Find the select element and replace it with the response
                 const selectElement = document.getElementById(`wpcf7-mailchimp-ggCustomValue${itag}`);
                 if (selectElement) {
                     selectElement.outerHTML = response;
 
-                    // Auto-select first interest option (backend already saved it)
                     const newSelect = document.getElementById(`wpcf7-mailchimp-ggCustomValue${itag}`);
                     if (newSelect) {
                         if (xchk === 1 && newSelect.options.length > 1) {
                             newSelect.selectedIndex = 1;
                         }
-                        // Sync defaultSelected to prevent false "unsaved changes" warning
                         Array.from(newSelect.options).forEach(opt => {
                             opt.defaultSelected = opt.selected;
                         });
                     }
                 }
 
-                // Sync checkbox defaultChecked after successful save
                 checkbox.defaultChecked = checkbox.checked;
             })
             .catch(error => {
@@ -598,7 +545,6 @@ function togglePanel(panelSelector, buttonElement, showText, hideText) {
     }
 }
 
-// On page load, set Connected button state
 document.addEventListener('DOMContentLoaded', function() {
     const connectBtn = document.getElementById('chm_activalist');
     const isApiValid = getApiValid() === '1';
@@ -772,7 +718,6 @@ async function saveFieldMappingsPro(fields) {
     }
 }
 
-// Tags Chip UI with auto-save
 (function() {
     document.addEventListener('change', function(e) {
         if (e.target.type !== 'checkbox') return;
@@ -782,7 +727,6 @@ async function saveFieldMappingsPro(fields) {
         const checkbox = e.target;
         chip.classList.toggle('selected', checkbox.checked);
 
-        // Extract tag name from checkbox name: wpcf7-mailchimp[labeltags][TAGNAME]
         const nameMatch = checkbox.name.match(/\[labeltags\]\[([^\]]+)\]/);
         if (!nameMatch) return;
 
@@ -791,7 +735,6 @@ async function saveFieldMappingsPro(fields) {
 
         if (!formId) return;
 
-        // Auto-save via unified REST API endpoint
         const restUrl = (typeof wpApiSettings !== 'undefined' && wpApiSettings.root)
             ? wpApiSettings.root + 'chimpmatic-lite/v1/form/field'
             : '/wp-json/chimpmatic-lite/v1/form/field';
@@ -811,7 +754,6 @@ async function saveFieldMappingsPro(fields) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Sync defaultChecked to prevent beforeunload warning
                 checkbox.defaultChecked = checkbox.checked;
             }
         })
@@ -821,12 +763,10 @@ async function saveFieldMappingsPro(fields) {
     });
 })();
 
-// GDPR Dropdown Auto-Save (PRO feature)
 (function() {
     document.addEventListener('change', function(e) {
         if (e.target.tagName !== 'SELECT') return;
 
-        // Match GDPR dropdown: wpcf7-mailchimp[GDPRCustomValue1]
         const nameMatch = e.target.name.match(/wpcf7-mailchimp\[GDPRCustomValue(\d+)\]/);
         if (!nameMatch) return;
 
@@ -853,7 +793,6 @@ async function saveFieldMappingsPro(fields) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Sync defaultValue to prevent beforeunload warning
                 e.target.dataset.savedValue = e.target.value;
             }
         })
@@ -863,12 +802,10 @@ async function saveFieldMappingsPro(fields) {
     });
 })();
 
-// Groups/Interests Dropdown Auto-Save (PRO feature)
 (function() {
     document.addEventListener('change', function(e) {
         if (e.target.tagName !== 'SELECT') return;
 
-        // Match Groups dropdown: wpcf7-mailchimp[ggCustomValue1]
         const nameMatch = e.target.name.match(/wpcf7-mailchimp\[ggCustomValue(\d+)\]/);
         if (!nameMatch) return;
 
@@ -895,7 +832,6 @@ async function saveFieldMappingsPro(fields) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Sync defaultValue to prevent beforeunload warning
                 e.target.dataset.savedValue = e.target.value;
             }
         })
@@ -905,22 +841,17 @@ async function saveFieldMappingsPro(fields) {
     });
 })();
 
-// Per-form Boolean Setting Toggle Auto-Save (sync_tags, checknotaddgroups, etc.)
 (function() {
-    // Global fields are handled by chimpmatic-lite.js via /settings/toggle endpoint
     const globalFields = ['debug', 'backlink', 'auto_update', 'telemetry'];
 
     document.addEventListener('change', function(e) {
         if (e.target.type !== 'checkbox') return;
 
-        // Only handle checkboxes with data-field attribute
         const fieldName = e.target.dataset.field;
         if (!fieldName) return;
 
-        // Skip global fields - handled by chimpmatic-lite.js
         if (globalFields.includes(fieldName)) return;
 
-        // Handle toggle-target visibility (use class, not inline style - CF7 strips inline styles)
         const toggleTarget = e.target.dataset.toggleTarget;
         if (toggleTarget) {
             const target = document.querySelector(toggleTarget);
@@ -959,12 +890,9 @@ async function saveFieldMappingsPro(fields) {
                 toggle.classList.remove('is-saving');
             }
             if (data.success) {
-                // Sync defaultChecked to prevent beforeunload warning
                 e.target.defaultChecked = e.target.checked;
             } else {
-                // Revert on failure
                 e.target.checked = !e.target.checked;
-                // Revert toggle-target visibility
                 if (toggleTarget) {
                     const target = document.querySelector(toggleTarget);
                     if (target) {
@@ -978,9 +906,7 @@ async function saveFieldMappingsPro(fields) {
             if (toggle) {
                 toggle.classList.remove('is-saving');
             }
-            // Revert on error
             e.target.checked = !e.target.checked;
-            // Revert toggle-target visibility
             if (toggleTarget) {
                 const target = document.querySelector(toggleTarget);
                 if (target) {
@@ -992,7 +918,6 @@ async function saveFieldMappingsPro(fields) {
     });
 })();
 
-// License Activation Handler
 document.addEventListener('DOMContentLoaded', function() {
     const activationForm = document.getElementById('chimpmatic-activation-form');
     const deactivateBtn = document.getElementById('chimpmatic-deactivate-btn');
@@ -1140,7 +1065,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// CF7 Integration Page License Activation/Deactivation
 (function() {
     'use strict';
 
@@ -1284,7 +1208,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 
-// Dependency Update Handler
 (function() {
     'use strict';
 

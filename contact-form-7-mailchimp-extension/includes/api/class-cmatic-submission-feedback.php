@@ -152,13 +152,19 @@ class Cmatic_Submission_Feedback {
 
 	private static function get_failure_message( $reason, $detail = '' ) {
 		$messages = array(
-			'invalid_email'         => __( 'Invalid email address provided.', 'chimpmatic-lite' ),
-			'already_subscribed'    => __( 'This email is already subscribed.', 'chimpmatic-lite' ),
-			'permanently_deleted'   => __( 'This email was permanently deleted and cannot be re-imported.', 'chimpmatic-lite' ),
-			'previously_unsubscribed' => __( 'This email previously unsubscribed and cannot be re-added.', 'chimpmatic-lite' ),
-			'compliance_state'      => __( 'This email is in a compliance state and cannot be subscribed.', 'chimpmatic-lite' ),
-			'api_error'             => __( 'Mailchimp API error occurred.', 'chimpmatic-lite' ),
-			'network_error'         => __( 'Network error connecting to Mailchimp.', 'chimpmatic-lite' ),
+			'invalid_email'                => __( 'Invalid email address provided.', 'chimpmatic-lite' ),
+			'already_subscribed'           => __( 'This email is already subscribed.', 'chimpmatic-lite' ),
+			'permanently_deleted'          => __( 'This email was permanently deleted and cannot be re-imported.', 'chimpmatic-lite' ),
+			'previously_unsubscribed'      => __( 'This email previously unsubscribed and cannot be re-added.', 'chimpmatic-lite' ),
+			'compliance_state'             => __( 'This email is in a compliance state and cannot be subscribed.', 'chimpmatic-lite' ),
+			'api_error'                    => __( 'Mailchimp API error occurred.', 'chimpmatic-lite' ),
+			'network_error'                => __( 'Network error connecting to Mailchimp.', 'chimpmatic-lite' ),
+			'provider_api_error'           => __( 'The email provider rejected the subscription request.', 'chimpmatic-lite' ),
+			'provider_network_error'       => __( 'A network error occurred while connecting to the email provider.', 'chimpmatic-lite' ),
+			'provider_configuration_error' => __(
+				'The selected provider cannot honor this form\'s opt-in status without additional configuration.',
+				'chimpmatic-lite'
+			),
 		);
 
 		$message = isset( $messages[ $reason ] ) ? $messages[ $reason ] : __( 'Subscription failed.', 'chimpmatic-lite' );

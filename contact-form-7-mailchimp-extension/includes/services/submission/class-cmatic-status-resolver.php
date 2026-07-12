@@ -13,18 +13,16 @@ defined( 'ABSPATH' ) || exit;
 class Cmatic_Status_Resolver {
 
 	public static function resolve( array $cf7_mch, array $posted_data, Cmatic_File_Logger $logger ): ?string {
-		// Double opt-in enabled (per-form setting).
-		if ( ! empty( $cf7_mch['double_optin'] ) || ! empty( $cf7_mch['confsubs'] ) ) {
-			return 'pending';
-		}
+		$consent_required = 'required' === (string) ( $cf7_mch['consent_gate'] ?? '' );
+		$consent_field    = $consent_required
+			? (string) ( $cf7_mch['consent_field'] ?? '' )
+			: (string) ( $cf7_mch['accept'] ?? '' );
 
-		// Acceptance checkbox required.
-		if ( ! empty( $cf7_mch['accept'] ) ) {
-			$acceptance = Cmatic_Email_Extractor::replace_tags( $cf7_mch['accept'], $posted_data );
+		if ( '' !== trim( $consent_field ) ) {
+			$acceptance = Cmatic_Email_Extractor::replace_tags( $consent_field, $posted_data );
 
 			if ( empty( $acceptance ) ) {
-				// Add as unsubscribed if configured.
-				if ( ! empty( $cf7_mch['addunsubscr'] ) ) {
+				if ( ! $consent_required && ! empty( $cf7_mch['addunsubscr'] ) ) {
 					return 'unsubscribed';
 				}
 
@@ -32,6 +30,14 @@ class Cmatic_Status_Resolver {
 				Cmatic_Submission_Feedback::set_result( Cmatic_Submission_Feedback::skipped( 'acceptance_not_checked' ) );
 				return null;
 			}
+		}
+
+		if ( 'double' === (string) ( $cf7_mch['subscription_mode'] ?? '' ) ) {
+			return 'pending';
+		}
+
+		if ( ! empty( $cf7_mch['double_optin'] ) || ! empty( $cf7_mch['confsubs'] ) ) {
+			return 'pending';
 		}
 
 		return 'subscribed';

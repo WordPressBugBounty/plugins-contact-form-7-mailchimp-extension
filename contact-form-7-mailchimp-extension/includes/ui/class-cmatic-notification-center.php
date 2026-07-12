@@ -13,10 +13,10 @@ defined( 'ABSPATH' ) || exit;
 class Cmatic_Notification_Center {
 	const STORAGE_KEY = 'cmatic_notifications';
 
-	private static $instance            = null;
-	private $notifications              = array();
-	private $notifications_retrieved    = false;
-	private $notifications_dirty        = false;
+	private static $instance         = null;
+	private $notifications           = array();
+	private $notifications_retrieved = false;
+	private $notifications_dirty     = false;
 
 	public static function get() {
 		if ( null === self::$instance ) {

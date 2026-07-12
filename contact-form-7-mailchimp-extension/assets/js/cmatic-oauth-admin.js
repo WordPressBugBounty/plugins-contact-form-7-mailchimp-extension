@@ -124,38 +124,25 @@
         }, 2500);
     }
 
-    function createConnectSvg() {
-        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', '18');
-        svg.setAttribute('height', '18');
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', 'currentColor');
-        svg.setAttribute('stroke-width', '2');
-        svg.setAttribute('stroke-linecap', 'round');
-        svg.setAttribute('stroke-linejoin', 'round');
-        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4');
-        var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-        polyline.setAttribute('points', '10 17 15 12 10 7');
-        var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', '15');
-        line.setAttribute('y1', '12');
-        line.setAttribute('x2', '3');
-        line.setAttribute('y2', '12');
-        svg.appendChild(path);
-        svg.appendChild(polyline);
-        svg.appendChild(line);
-        return svg;
+    function setButtonText(btn, text) {
+        if (!btn) return;
+        var label = btn.querySelector('[data-cmatic-oauth-action-label]');
+        if (label) label.textContent = text;
+        else btn.textContent = text;
     }
 
-    function setButtonText(btn, text, showIcon) {
-        if (!btn) return;
-        btn.textContent = text;
-        if (showIcon) {
-            btn.appendChild(document.createTextNode(' '));
-            btn.appendChild(createConnectSvg());
-        }
+    function setAuthChoicesBusy(apiKeyButton, busy) {
+        if (apiKeyButton) apiKeyButton.disabled = busy;
+    }
+
+    function setOAuthStatus(statusEl, message, color) {
+        if (!statusEl) return;
+        var card = statusEl.closest('.cmatic-oauth-connect');
+        var description = card ? card.querySelector('[data-cmatic-oauth-description]') : null;
+        statusEl.textContent = message || '';
+        statusEl.hidden = !message;
+        statusEl.style.color = color || '';
+        if (description) description.hidden = Boolean(message);
     }
 
     function updateConnectButton(state, message) {
@@ -166,56 +153,50 @@
         if (!statusEl) {
             statusEl = document.createElement('span');
             statusEl.className = 'cmatic-oauth-status';
-            statusEl.style.cssText = 'display: block; margin-top: 6px; font-style: italic; font-size: 12px; text-align: center;';
-            var wrap = document.querySelector('.cmatic-oauth-connect-wrap');
-            if (wrap) {
-                wrap.appendChild(statusEl);
-            } else if (btn && btn.parentNode) {
-                btn.parentNode.insertBefore(statusEl, btn.nextSibling);
+            statusEl.setAttribute('role', 'status');
+            statusEl.setAttribute('aria-live', 'polite');
+            if (btn) {
+                var action = btn.querySelector('.cmatic-auth-choice__action');
+                btn.insertBefore(statusEl, action || null);
             }
         }
 
         switch (state) {
             case 'starting':
-                setButtonText(btn, 'Starting...', false);
+                setButtonText(btn, 'Starting...');
                 if (btn) btn.disabled = true;
-                if (apiKeyLink) apiKeyLink.style.display = 'none';
-                statusEl.textContent = '';
-                statusEl.style.color = '';
+                setAuthChoicesBusy(apiKeyLink, true);
+                setOAuthStatus(statusEl, 'Opening secure sign-in...', '#5d6878');
                 break;
             case 'waiting':
-                setButtonText(btn, 'Waiting...', false);
+                setButtonText(btn, 'Waiting...');
                 if (btn) btn.disabled = true;
-                if (apiKeyLink) apiKeyLink.style.display = 'none';
-                statusEl.textContent = 'Complete login in the popup window';
-                statusEl.style.color = '#666';
+                setAuthChoicesBusy(apiKeyLink, true);
+                setOAuthStatus(statusEl, 'Complete sign-in in the popup.', '#5d6878');
                 break;
             case 'connecting':
-                setButtonText(btn, 'Connecting...', false);
+                setButtonText(btn, 'Connecting...');
                 if (btn) btn.disabled = true;
-                if (apiKeyLink) apiKeyLink.style.display = 'none';
-                statusEl.textContent = 'Saving credentials...';
-                statusEl.style.color = '#666';
+                setAuthChoicesBusy(apiKeyLink, true);
+                setOAuthStatus(statusEl, 'Saving your connection...', '#5d6878');
                 break;
             case 'connected':
-                setButtonText(btn, 'Connected', false);
+                setButtonText(btn, 'Connected');
                 if (btn) btn.disabled = true;
-                if (apiKeyLink) apiKeyLink.style.display = 'none';
-                statusEl.textContent = 'Success!';
-                statusEl.style.color = '#46b450';
+                setAuthChoicesBusy(apiKeyLink, true);
+                setOAuthStatus(statusEl, 'Mailchimp connected.', '#16835b');
                 break;
             case 'error':
-                setButtonText(btn, 'Connect with Mailchimp', true);
+                setButtonText(btn, 'Continue with Mailchimp');
                 if (btn) btn.disabled = false;
-                if (apiKeyLink) apiKeyLink.style.display = '';
-                statusEl.textContent = message || 'Error';
-                statusEl.style.color = '#d63638';
+                setAuthChoicesBusy(apiKeyLink, false);
+                setOAuthStatus(statusEl, message || 'Could not connect. Try again.', '#b42318');
                 break;
             default:
-                setButtonText(btn, 'Connect with Mailchimp', true);
+                setButtonText(btn, 'Continue with Mailchimp');
                 if (btn) btn.disabled = false;
-                if (apiKeyLink) apiKeyLink.style.display = '';
-                statusEl.textContent = '';
+                setAuthChoicesBusy(apiKeyLink, false);
+                setOAuthStatus(statusEl, '', '');
         }
     }
 
@@ -291,19 +272,31 @@
             }
         }
 
-        if (e.target.classList.contains('cmatic-show-api-key')) {
+        var apiKeyButton = e.target.closest('.cmatic-show-api-key');
+        if (apiKeyButton) {
             e.preventDefault();
             var apiPanel = document.getElementById('cmatic-manual-api-panel');
             if (apiPanel) {
-                var opened = apiPanel.classList.toggle('cmatic-hidden') === false;
-                e.target.setAttribute('aria-expanded', opened ? 'true' : 'false');
-                var showL = e.target.getAttribute('data-show-label');
-                var hideL = e.target.getAttribute('data-hide-label');
-                if (showL && hideL) e.target.textContent = opened ? hideL : showL;
-                if (opened) {
-                    var keyInput = document.getElementById('cmatic-api');
-                    if (keyInput) keyInput.focus();
-                }
+                apiPanel.classList.remove('cmatic-hidden');
+                apiKeyButton.setAttribute('aria-expanded', 'true');
+                var options = apiKeyButton.closest('.cmatic-connect-options');
+                if (options) options.classList.add('cmatic-hidden');
+                var keyInput = document.getElementById('cmatic-api');
+                if (keyInput) keyInput.focus();
+            }
+        }
+
+        var backButton = e.target.closest('.cmatic-back-auth-options');
+        if (backButton) {
+            e.preventDefault();
+            var apiPanel = document.getElementById('cmatic-manual-api-panel');
+            var options = document.querySelector('.cmatic-connect-options');
+            var apiKeyButton = document.querySelector('.cmatic-show-api-key');
+            if (apiPanel) apiPanel.classList.add('cmatic-hidden');
+            if (options) options.classList.remove('cmatic-hidden');
+            if (apiKeyButton) {
+                apiKeyButton.setAttribute('aria-expanded', 'false');
+                apiKeyButton.focus();
             }
         }
     });

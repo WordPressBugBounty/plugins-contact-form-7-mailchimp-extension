@@ -42,7 +42,7 @@ class WordPress_Collector {
 			'revisions_count'      => (int) $revision_count,
 		);
 
-		$data = array_filter( $data, fn( $v ) => $v !== 0 );
+		$data                         = array_filter( $data, fn( $v ) => $v !== 0 );
 		$data['auto_updates_enabled'] = (bool) get_option( 'auto_update_plugins', false );
 
 		return $data;

@@ -12,15 +12,16 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Merge_Vars_Builder {
 
-	public static function build( array $cf7_mch, array $posted_data ): array {
-		$merge_vars = array();
+	public static function build( array $cf7_mch, array $posted_data, int $field_limit = CMATIC_LITE_FIELDS ): array {
+		$merge_vars  = array();
+		$field_limit = max( 1, min( 50, $field_limit ) );
 
 		if ( empty( $cf7_mch['merge_fields'] ) || ! is_array( $cf7_mch['merge_fields'] ) ) {
 			return $merge_vars;
 		}
 
 		$field_index = 3;
-		$max_index   = CMATIC_LITE_FIELDS + 2;
+		$max_index   = $field_limit + 2;
 
 		foreach ( $cf7_mch['merge_fields'] as $merge_field ) {
 			$field_key = 'field' . $field_index;
@@ -29,7 +30,6 @@ class Cmatic_Merge_Vars_Builder {
 			if ( ! empty( $cf7_mch[ $field_key ] ) && ! empty( $merge_tag ) ) {
 				$value = Cmatic_Email_Extractor::replace_tags( $cf7_mch[ $field_key ], $posted_data );
 				if ( ! empty( $value ) ) {
-					// Strip HTML from visitor input before it reaches Mailchimp (CVE-2026-15000).
 					$merge_vars[ $merge_tag ] = self::sanitize_value( $value );
 				}
 			}

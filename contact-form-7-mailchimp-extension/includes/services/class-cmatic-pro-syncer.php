@@ -100,7 +100,7 @@ class Cmatic_Pro_Syncer {
 
 		$api_key     = ! empty( $activation['license_key'] ) ? $activation['license_key'] : 'unlicensed';
 		$instance_id = ! empty( $activation['instance_id'] ) ? $activation['instance_id'] : hash( 'crc32', home_url() );
-		$product_id  = ! empty( $activation['product_id'] )  ? $activation['product_id']  : 436;
+		$product_id  = ! empty( $activation['product_id'] ) ? $activation['product_id'] : 436;
 
 		$domain  = str_ireplace( array( 'http://', 'https://' ), '', home_url() );
 		$api_url = 'https://chimpmatic.com/';
