@@ -34,13 +34,44 @@ final class Cmatic_Lite_Esp_Panel {
 
 	public static function render( string $slug, array $config, array $form_tags, int $form_id ): void {
 		$manifest       = Cmatic_Lite_Esp_Manifest::all();
-		$state          = self::get_public_state( $slug, $config, $form_id );
+		$state          = self::get_public_state( $slug, $config, $form_id, $form_tags );
 		$discount       = Cmatic_Pursuit::discount();
 		$initial_slug   = in_array( $slug, array( 'brevo', 'mailerlite', 'klaviyo' ), true ) ? $slug : 'brevo';
 		$field_limit    = Cmatic_Lite_Esp_Capabilities::field_limit( $initial_slug, $form_id );
 		$definition     = $manifest[ $initial_slug ];
 		$provider_state = $state['providers'][ $initial_slug ];
 		$is_hidden      = '' === $slug || 'mailchimp' === $slug;
+		$destination    = strtolower( (string) $definition['destination_singular'] );
+		$destinations   = strtolower( (string) $definition['destination_plural'] );
+		$data_singular  = strtolower( (string) $definition['data_singular'] );
+		$data_plural    = strtolower( (string) $definition['data_plural'] );
+		$person         = strtolower( (string) $definition['person_singular'] );
+		/* translators: %s: provider destination type, such as list or group. */
+		$progress_destination = sprintf( __( 'Choose %s', 'chimpmatic-lite' ), $destination );
+		/* translators: %s: provider data name, such as contact attributes or subscriber fields. */
+		$progress_mappings = sprintf( __( 'Map %s', 'chimpmatic-lite' ), $data_plural );
+		/* translators: %s: provider destination plural, such as lists or groups. */
+		$refresh_destinations = sprintf( __( 'Refresh %s', 'chimpmatic-lite' ), $destinations );
+		/* translators: %s: email provider name. */
+		$connect_to_continue = sprintf( __( 'Connect %s to continue.', 'chimpmatic-lite' ), (string) $definition['label'] );
+		/* translators: 1: email provider name, 2: provider data name. */
+		$mapping_description = sprintf( __( 'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.', 'chimpmatic-lite' ), (string) $definition['label'], $data_plural );
+		/* translators: 1: provider destination type, 2: provider data name. */
+		$mapping_locked = sprintf( __( 'Choose a %1$s to load its %2$s.', 'chimpmatic-lite' ), $destination, $data_plural );
+		/* translators: %s: provider data name. */
+		$unlock_data = sprintf( __( 'Unlock every available %s and advanced features with Chimpmatic Pro', 'chimpmatic-lite' ), $data_singular );
+		/* translators: %s: email provider name. */
+		$consent_gate_title = sprintf( __( 'Send to %s', 'chimpmatic-lite' ), (string) $definition['label'] );
+		/* translators: %s: email provider name. */
+		$consent_gate_explanation = sprintf( __( 'Choose whether every valid form submission is sent to %s or only submissions with affirmative consent.', 'chimpmatic-lite' ), (string) $definition['label'] );
+		/* translators: %s: email provider name. */
+		$provider_optin_title = sprintf( __( 'Confirmation in %s', 'chimpmatic-lite' ), (string) $definition['label'] );
+		/* translators: %s: email provider name. */
+		$confirmation_settings_link = sprintf( __( 'Open %s confirmation settings', 'chimpmatic-lite' ), (string) $definition['label'] );
+		/* translators: %s: email provider name. */
+		$provider_optin_explanation = sprintf( __( 'Controls whether %s requires confirmation after the form is submitted.', 'chimpmatic-lite' ), (string) $definition['label'] );
+		/* translators: 1: provider person name, 2: email provider name. */
+		$testing_notice = sprintf( __( 'Real submission: may create or update a %1$s in %2$s and trigger confirmation emails or automations.', 'chimpmatic-lite' ), $person, (string) $definition['label'] );
 		wp_localize_script( 'cmatic-lite-esp', 'chimpmaticLiteEspState', $state );
 		?>
 		<section
@@ -82,8 +113,8 @@ final class Cmatic_Lite_Esp_Panel {
 			</div>
 			<ol id="cmatic-provider-progress" class="cmatic-provider-progress" aria-label="<?php esc_attr_e( 'Setup progress', 'chimpmatic-lite' ); ?>">
 				<li><span>1</span><b><?php esc_html_e( 'Connect', 'chimpmatic-lite' ); ?></b></li>
-				<li><span>2</span><b id="cmatic-provider-progress-destination"><?php esc_html_e( 'Choose destination', 'chimpmatic-lite' ); ?></b></li>
-				<li><span>3</span><b><?php esc_html_e( 'Map fields', 'chimpmatic-lite' ); ?></b></li>
+				<li><span>2</span><b id="cmatic-provider-progress-destination"><?php echo esc_html( $progress_destination ); ?></b></li>
+				<li><span>3</span><b id="cmatic-provider-progress-mappings"><?php echo esc_html( $progress_mappings ); ?></b></li>
 			</ol>
 			<p id="cmatic-provider-message" class="cmatic-provider-message" role="status" aria-live="polite"></p>
 
@@ -115,10 +146,10 @@ final class Cmatic_Lite_Esp_Panel {
 					<span class="cmatic-provider-connection-summary__icon" aria-hidden="true">&#10003;</span>
 					<div class="cmatic-provider-connection-summary__text">
 						<strong id="cmatic-provider-connected-title"></strong>
-						<span><?php esc_html_e( 'Credential encrypted', 'chimpmatic-lite' ); ?> &middot; <span id="cmatic-provider-checked-status"><?php esc_html_e( 'Checked just now', 'chimpmatic-lite' ); ?></span></span>
+						<span><span id="cmatic-provider-credential-storage"><?php esc_html_e( 'Credential stored securely', 'chimpmatic-lite' ); ?></span> &middot; <span id="cmatic-provider-checked-status"><?php esc_html_e( 'Checked just now', 'chimpmatic-lite' ); ?></span></span>
 					</div>
 					<div class="cmatic-provider-actions">
-						<button type="button" class="button" id="cmatic-provider-refresh"><?php esc_html_e( 'Refresh destinations', 'chimpmatic-lite' ); ?></button>
+						<button type="button" class="button" id="cmatic-provider-refresh"><?php echo esc_html( $refresh_destinations ); ?></button>
 						<button type="button" class="button" id="cmatic-provider-replace-credential"><?php esc_html_e( 'Replace credential', 'chimpmatic-lite' ); ?></button>
 						<button type="button" class="button button-link-delete" id="cmatic-provider-disconnect"><?php esc_html_e( 'Disconnect', 'chimpmatic-lite' ); ?></button>
 					</div>
@@ -137,19 +168,29 @@ final class Cmatic_Lite_Esp_Panel {
 				<h3 id="cmatic-provider-destination-heading">
 					<?php
 					printf(
-						/* translators: %s: provider destination type, such as list or group */
+						/* translators: %s: provider destination type, such as list or group. */
 						esc_html__( 'Choose a %s', 'chimpmatic-lite' ),
-						esc_html( strtolower( (string) $definition['destination_singular'] ) )
+						esc_html( $destination )
 					);
 					?>
 				</h3>
 				<p id="cmatic-provider-destination-description" class="description"></p>
-				<div id="cmatic-provider-destination-locked" class="cmatic-provider-locked"><span>2</span><p><?php esc_html_e( 'Connect this provider to continue.', 'chimpmatic-lite' ); ?></p></div>
+				<div id="cmatic-provider-destination-locked" class="cmatic-provider-locked"><span>2</span><p><?php echo esc_html( $connect_to_continue ); ?></p></div>
 				<div class="cmatic-provider-destination-row" id="cmatic-provider-destination-row" hidden>
 					<label class="screen-reader-text" for="cmatic-provider-list" id="cmatic-provider-destination-label"></label>
 					<select id="cmatic-provider-list" name="wpcf7-cmatic-provider[list]">
 						<?php self::render_destination_options( $definition, $provider_state ); ?>
 					</select>
+				</div>
+				<div id="cmatic-provider-mailerlite-groups" class="cmatic-provider-mapping-grid" aria-label="<?php esc_attr_e( 'MailerLite groups for every subscriber', 'chimpmatic-lite' ); ?>" hidden></div>
+				<div id="cmatic-mailerlite-routing" hidden>
+					<div aria-labelledby="cmatic-routing-heading">
+						<h4 id="cmatic-routing-heading"><?php esc_html_e( 'Add subscribers to groups based on form answers', 'chimpmatic-lite' ); ?></h4>
+						<p id="cmatic-routing-description" class="description"><?php esc_html_e( 'Optional. Subscribers can match more than one rule. Groups selected above are always added.', 'chimpmatic-lite' ); ?></p>
+						<div id="cmatic-routing-rule-list" class="cmatic-routing-table-list"></div>
+						<div class="cmatic-provider-actions cmatic-provider-actions--end"><button type="button" class="button" id="cmatic-routing-add-rule"><?php esc_html_e( 'Add rule', 'chimpmatic-lite' ); ?></button></div>
+						<p id="cmatic-routing-notice" class="cmatic-defaults-fields-notice" hidden></p>
+					</div>
 				</div>
 			</section>
 
@@ -157,87 +198,61 @@ final class Cmatic_Lite_Esp_Panel {
 				<h3 id="cmatic-provider-mappings-heading">
 					<?php
 					printf(
-						/* translators: %s: provider name */
-						esc_html__( 'Map %s fields', 'chimpmatic-lite' ),
-						esc_html( (string) $definition['label'] )
+						/* translators: 1: provider name, 2: provider data name. */
+						esc_html__( 'Map %1$s %2$s', 'chimpmatic-lite' ),
+						esc_html( (string) $definition['label'] ),
+						esc_html( $data_plural )
 					);
 					?>
 				</h3>
 				<p class="description" id="cmatic-provider-mapping-description">
-					<?php esc_html_e( 'Match each provider field to a Contact Form 7 field. Subscriber Email is required.', 'chimpmatic-lite' ); ?>
+					<?php echo esc_html( $mapping_description ); ?>
 				</p>
-				<div id="cmatic-provider-mappings-locked" class="cmatic-provider-locked"><span>3</span><p><?php esc_html_e( 'Choose a destination to load its fields.', 'chimpmatic-lite' ); ?></p></div>
+				<div id="cmatic-provider-mappings-locked" class="cmatic-provider-locked"><span>3</span><p><?php echo esc_html( $mapping_locked ); ?></p></div>
 				<div class="cmatic-provider-mapping-grid" id="cmatic-provider-mappings" <?php echo self::mappings_are_visible( $provider_state ) ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>>
 					<?php self::render_mapping_rows( $provider_state, $form_tags, $field_limit ); ?>
-				</div>
-				<section id="cmatic-provider-consent" class="cmatic-provider-section" aria-labelledby="cmatic-provider-consent-heading">
-					<h3 id="cmatic-provider-consent-heading"><?php esc_html_e( 'Consent and opt-in', 'chimpmatic-lite' ); ?></h3>
-					<p id="cmatic-provider-consent-description" class="description"></p>
-					<div id="cmatic-provider-consent-controls">
-						<label for="cmatic-provider-consent-gate"><?php esc_html_e( 'Subscription consent', 'chimpmatic-lite' ); ?></label>
-						<select id="cmatic-provider-consent-gate" name="wpcf7-cmatic-provider[consent_gate]">
-							<option value="none"><?php esc_html_e( 'Subscribe every valid submission', 'chimpmatic-lite' ); ?></option>
-							<option value="required"><?php esc_html_e( 'Require an acceptance field', 'chimpmatic-lite' ); ?></option>
-						</select>
-						<div id="cmatic-provider-consent-field-row" hidden>
-							<label for="cmatic-provider-consent-field"><?php esc_html_e( 'Required acceptance field', 'chimpmatic-lite' ); ?></label>
-							<select id="cmatic-provider-consent-field" name="wpcf7-cmatic-provider[consent_field]">
-								<option value=""><?php esc_html_e( 'Choose an acceptance field', 'chimpmatic-lite' ); ?></option>
-								<?php foreach ( $form_tags as $tag ) : ?>
-									<?php if ( is_array( $tag ) && 'acceptance' === ( $tag['basetype'] ?? '' ) && ! empty( $tag['name'] ) ) : ?>
-										<?php $tag_value = '[' . sanitize_key( (string) $tag['name'] ) . ']'; ?>
-										<option value="<?php echo esc_attr( $tag_value ); ?>"><?php echo esc_html( $tag_value ); ?></option>
-									<?php endif; ?>
-								<?php endforeach; ?>
-							</select>
+					<div id="cmatic-provider-mailerlite-create-field" class="cmatic-provider-mapping-row" hidden>
+						<div class="cmatic-provider-auth-field"><label for="cmatic-provider-mailerlite-field-name"><?php esc_html_e( 'Create MailerLite subscriber field', 'chimpmatic-lite' ); ?></label><input type="text" id="cmatic-provider-mailerlite-field-name" maxlength="255"></div>
+						<span id="cmatic-provider-mailerlite-field-type-label"><?php esc_html_e( 'Field type', 'chimpmatic-lite' ); ?></span>
+						<div id="cmatic-provider-mailerlite-field-type" class="cmatic-provider-actions" role="radiogroup" aria-labelledby="cmatic-provider-mailerlite-field-type-label">
+							<span><label><input type="radio" name="cmatic-provider-mailerlite-field-type" value="text" checked> <?php esc_html_e( 'Text', 'chimpmatic-lite' ); ?></label></span>
+							<span><label><input type="radio" name="cmatic-provider-mailerlite-field-type" value="number"> <?php esc_html_e( 'Number', 'chimpmatic-lite' ); ?></label></span>
+							<span><label><input type="radio" name="cmatic-provider-mailerlite-field-type" value="date"> <?php esc_html_e( 'Date', 'chimpmatic-lite' ); ?></label></span>
 						</div>
-						<div id="cmatic-provider-brevo-optin" hidden>
-							<label for="cmatic-provider-subscription-mode"><?php esc_html_e( 'Opt-in process', 'chimpmatic-lite' ); ?></label>
-							<select id="cmatic-provider-subscription-mode" name="wpcf7-cmatic-provider[subscription_mode]">
-								<option value="single"><?php esc_html_e( 'Single opt-in', 'chimpmatic-lite' ); ?></option>
-								<option value="double"><?php esc_html_e( 'Double opt-in', 'chimpmatic-lite' ); ?></option>
-							</select>
-							<div id="cmatic-provider-brevo-doi" hidden>
-								<label for="cmatic-provider-doi-template"><?php esc_html_e( 'Brevo DOI template ID', 'chimpmatic-lite' ); ?></label>
-								<input type="number" min="1" id="cmatic-provider-doi-template" name="wpcf7-cmatic-provider[doi_template_id]" value="">
-								<label for="cmatic-provider-doi-redirect"><?php esc_html_e( 'Confirmation redirect URL', 'chimpmatic-lite' ); ?></label>
-								<input type="url" id="cmatic-provider-doi-redirect" name="wpcf7-cmatic-provider[doi_redirect_url]" value="" placeholder="https://example.com/newsletter-confirmed/">
-								<input type="hidden" id="cmatic-provider-doi-token" name="wpcf7-cmatic-provider[doi_verification_token]" value="">
-								<button type="button" class="button" id="cmatic-provider-doi-verify"><?php esc_html_e( 'Verify DOI settings', 'chimpmatic-lite' ); ?></button>
-								<span id="cmatic-provider-doi-status" role="status" aria-live="polite"></span>
-							</div>
-						</div>
-						<div id="cmatic-provider-managed-optin" hidden>
-							<strong id="cmatic-provider-managed-optin-title"></strong>
-							<p id="cmatic-provider-managed-optin-copy"></p>
-							<a id="cmatic-provider-consent-docs" href="#" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open provider opt-in settings', 'chimpmatic-lite' ); ?></a>
-						</div>
+						<div class="cmatic-provider-actions cmatic-provider-actions--end"><button type="button" class="button" id="cmatic-provider-mailerlite-field-create"><?php esc_html_e( 'Create field', 'chimpmatic-lite' ); ?></button></div>
+						<p id="cmatic-provider-mailerlite-field-notice" class="cmatic-defaults-fields-notice" hidden></p>
 					</div>
-					<p class="description"><?php esc_html_e( 'These controls help collect and route consent. They do not provide legal advice or make a site compliant by themselves.', 'chimpmatic-lite' ); ?></p>
-				</section>
+				</div>
 				<p
 					class="cmatic-defaults-fields-notice"
 					id="cmatic-provider-field-limit"
+					data-pro-active="<?php echo esc_attr( $field_limit > CMATIC_LITE_FIELDS ? '1' : '0' ); ?>"
+					data-current-limit="<?php echo esc_attr( (string) $field_limit ); ?>"
+					data-lite-limit="<?php echo esc_attr( (string) CMATIC_LITE_FIELDS ); ?>"
 					<?php echo $provider_state['total_fields'] > $field_limit ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>
 				>
+					<span id="cmatic-provider-field-limit-copy">
 					<?php
 					if ( $field_limit > CMATIC_LITE_FIELDS ) {
 						printf(
-							/* translators: %d: number of provider fields available with Pro. */
-							esc_html__( 'Up to %d provider fields are available with your active Chimpmatic Pro license.', 'chimpmatic-lite' ),
-							(int) $field_limit
+							/* translators: 1: number of provider data fields available with Pro, 2: provider data name. */
+							esc_html__( 'Up to %1$d %2$s are available with your active Chimpmatic Pro license.', 'chimpmatic-lite' ),
+							(int) $field_limit,
+							esc_html( $data_plural )
 						);
 					} else {
 						printf(
-							/* translators: %d: number of fields included in Lite. */
-							esc_html__( 'Your Lite setup includes %d fields. Subscriber Email is always included.', 'chimpmatic-lite' ),
-							(int) CMATIC_LITE_FIELDS
+							/* translators: 1: number of provider data fields included in Lite, 2: provider data name. */
+							esc_html__( 'Your Lite setup includes %1$d %2$s. Email address is always included.', 'chimpmatic-lite' ),
+							(int) CMATIC_LITE_FIELDS,
+							esc_html( $data_plural )
 						);
 					}
 					?>
+					</span>
 					<?php if ( $field_limit <= CMATIC_LITE_FIELDS ) : ?>
 					<a href="<?php echo esc_url( Cmatic_Pursuit::promo_checkout( 'field_mapping_limit' ) ); ?>" target="_blank" rel="noopener noreferrer">
-						<?php esc_html_e( 'Unlock every available field and advanced features with Chimpmatic Pro', 'chimpmatic-lite' ); ?>
+						<span id="cmatic-provider-field-limit-link-copy"><?php echo esc_html( $unlock_data ); ?></span>
 						<?php if ( $discount > 0 ) : ?>
 							<span class="cmatic-field-offer">
 								<?php
@@ -250,12 +265,112 @@ final class Cmatic_Lite_Esp_Panel {
 					</a>
 					<?php endif; ?>
 				</p>
+			</section>
+			<section id="cmatic-provider-consent" class="cmatic-provider-section" aria-labelledby="cmatic-provider-consent-heading">
+				<h3 id="cmatic-provider-consent-heading"><?php esc_html_e( 'Subscription and consent', 'chimpmatic-lite' ); ?></h3>
+				<p id="cmatic-provider-consent-description" class="description"></p>
+				<div class="cmatic-consent-policy-list">
+					<div id="cmatic-provider-consent-controls" class="cmatic-consent-policy-provider">
+						<div class="cmatic-consent-policy-row">
+							<label class="cmatic-consent-policy-name" for="cmatic-provider-consent-gate"><strong id="cmatic-provider-consent-gate-title"><?php echo esc_html( $consent_gate_title ); ?></strong><span><?php esc_html_e( 'Form submission rule', 'chimpmatic-lite' ); ?></span></label>
+							<div class="cmatic-consent-policy-control">
+								<select id="cmatic-provider-consent-gate" name="wpcf7-cmatic-provider[consent_gate]">
+									<option value="none"><?php esc_html_e( 'Every valid form submission', 'chimpmatic-lite' ); ?></option>
+									<option value="required"><?php esc_html_e( 'Only when an acceptance field is checked', 'chimpmatic-lite' ); ?></option>
+								</select>
+							</div>
+							<p id="cmatic-provider-consent-gate-explanation" class="cmatic-consent-policy-explanation"><?php echo esc_html( $consent_gate_explanation ); ?></p>
+						</div>
+						<div id="cmatic-provider-consent-field-row" class="cmatic-consent-policy-row" hidden>
+							<label class="cmatic-consent-policy-name" for="cmatic-provider-consent-field"><strong><?php esc_html_e( 'Acceptance field', 'chimpmatic-lite' ); ?></strong><span><?php esc_html_e( 'Contact Form 7', 'chimpmatic-lite' ); ?></span></label>
+							<div class="cmatic-consent-policy-control">
+								<select id="cmatic-provider-consent-field" name="wpcf7-cmatic-provider[consent_field]">
+									<option value=""><?php esc_html_e( 'Choose an acceptance field', 'chimpmatic-lite' ); ?></option>
+									<?php foreach ( $form_tags as $tag ) : ?>
+										<?php if ( is_array( $tag ) && 'acceptance' === ( $tag['basetype'] ?? '' ) && ! empty( $tag['name'] ) ) : ?>
+											<?php $tag_value = '[' . sanitize_key( (string) $tag['name'] ) . ']'; ?>
+											<option value="<?php echo esc_attr( $tag_value ); ?>"><?php echo esc_html( $tag_value ); ?></option>
+										<?php endif; ?>
+									<?php endforeach; ?>
+								</select>
+							</div>
+							<p class="cmatic-consent-policy-explanation"><?php esc_html_e( 'Only Contact Form 7 acceptance fields can provide the affirmative consent required by this policy.', 'chimpmatic-lite' ); ?></p>
+						</div>
+						<div class="cmatic-consent-policy-row">
+							<div class="cmatic-consent-policy-name"><strong id="cmatic-provider-optin-title"><?php echo esc_html( $provider_optin_title ); ?></strong><span><?php esc_html_e( 'Provider setting', 'chimpmatic-lite' ); ?></span></div>
+							<div class="cmatic-consent-policy-control">
+								<div id="cmatic-provider-brevo-optin" hidden>
+									<label class="screen-reader-text" for="cmatic-provider-subscription-mode"><?php esc_html_e( 'Opt-in process', 'chimpmatic-lite' ); ?></label>
+									<select id="cmatic-provider-subscription-mode" name="wpcf7-cmatic-provider[subscription_mode]">
+										<option value="single"><?php esc_html_e( 'Add contact immediately', 'chimpmatic-lite' ); ?></option>
+										<option value="double"><?php esc_html_e( 'Send a double opt-in confirmation email', 'chimpmatic-lite' ); ?></option>
+									</select>
+									<div id="cmatic-provider-brevo-doi" hidden>
+										<label for="cmatic-provider-doi-template"><?php esc_html_e( 'Double opt-in template ID', 'chimpmatic-lite' ); ?></label>
+										<input type="number" min="1" id="cmatic-provider-doi-template" name="wpcf7-cmatic-provider[doi_template_id]" value="">
+										<label for="cmatic-provider-doi-redirect"><?php esc_html_e( 'Confirmation redirect URL', 'chimpmatic-lite' ); ?></label>
+										<input type="url" id="cmatic-provider-doi-redirect" name="wpcf7-cmatic-provider[doi_redirect_url]" value="" placeholder="https://example.com/newsletter-confirmed/">
+										<input type="hidden" id="cmatic-provider-doi-token" name="wpcf7-cmatic-provider[doi_verification_token]" value="">
+										<button type="button" class="button" id="cmatic-provider-doi-verify"><?php esc_html_e( 'Verify double opt-in settings', 'chimpmatic-lite' ); ?></button>
+										<span id="cmatic-provider-doi-status" role="status" aria-live="polite"></span>
+									</div>
+								</div>
+								<div id="cmatic-provider-managed-optin" class="cmatic-consent-managed-value" hidden>
+									<strong id="cmatic-provider-managed-optin-title"></strong>
+									<p id="cmatic-provider-managed-optin-copy"></p>
+									<a id="cmatic-provider-consent-docs" href="#" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $confirmation_settings_link ); ?></a>
+								</div>
+							</div>
+							<p id="cmatic-provider-optin-explanation" class="cmatic-consent-policy-explanation"><?php echo esc_html( $provider_optin_explanation ); ?></p>
+						</div>
+					</div>
+					<div id="cmatic-provider-mailerlite-options" class="cmatic-consent-policy-provider" hidden>
+						<div class="cmatic-consent-policy-row">
+							<label class="cmatic-consent-policy-name" for="cmatic-provider-mailerlite-status"><strong><?php esc_html_e( 'MailerLite subscriber status', 'chimpmatic-lite' ); ?></strong><span><?php esc_html_e( 'Status after submission', 'chimpmatic-lite' ); ?></span></label>
+							<div class="cmatic-consent-policy-control"><select id="cmatic-provider-mailerlite-status" name="wpcf7-cmatic-provider[status_mode]"><option value="legacy_provider_managed"><?php esc_html_e( 'Active (current Chimpmatic behavior)', 'chimpmatic-lite' ); ?></option><option value="account"><?php esc_html_e( 'Use MailerLite account setting', 'chimpmatic-lite' ); ?></option><option value="active"><?php esc_html_e( 'Active', 'chimpmatic-lite' ); ?></option><option value="unconfirmed"><?php esc_html_e( 'Unconfirmed', 'chimpmatic-lite' ); ?></option></select></div>
+							<p class="cmatic-consent-policy-explanation"><?php esc_html_e( 'Determines the status requested from MailerLite after the configured consent requirement passes.', 'chimpmatic-lite' ); ?></p>
+						</div>
+						<div class="cmatic-consent-policy-row cmatic-consent-policy-row--warning">
+							<div class="cmatic-consent-policy-name"><strong><?php esc_html_e( 'Actions requiring fresh consent', 'chimpmatic-lite' ); ?></strong><span><?php esc_html_e( 'MailerLite', 'chimpmatic-lite' ); ?></span></div>
+							<div class="cmatic-consent-policy-control cmatic-consent-policy-checks">
+								<div id="cmatic-provider-mailerlite-resubscribe" hidden><label><input type="checkbox" id="cmatic-provider-mailerlite-resubscribe-force" name="wpcf7-cmatic-provider[resubscribe_force]" value="1"> <?php esc_html_e( 'Resubscribe previously unsubscribed subscribers', 'chimpmatic-lite' ); ?></label><p><?php esc_html_e( 'Only use this when the selected acceptance field records new permission.', 'chimpmatic-lite' ); ?></p></div>
+								<div id="cmatic-provider-mailerlite-consent-metadata"><label><input type="checkbox" id="cmatic-provider-mailerlite-consent-metadata-enabled" name="wpcf7-cmatic-provider[consent_metadata_enabled]" value="1"> <?php esc_html_e( 'Record opt-in IP address and time in MailerLite', 'chimpmatic-lite' ); ?></label><p><?php esc_html_e( 'Sends the validated request IP address and current UTC time to MailerLite.', 'chimpmatic-lite' ); ?></p></div>
+								<p id="cmatic-provider-mailerlite-status-notice" class="cmatic-defaults-fields-notice" hidden></p>
+							</div>
+							<p class="cmatic-consent-policy-explanation"><?php esc_html_e( 'These actions run only after the selected acceptance field records affirmative consent.', 'chimpmatic-lite' ); ?></p>
+						</div>
+					</div>
+				</div>
+				<p class="cmatic-consent-policy-note"><?php esc_html_e( 'These settings help record consent. They do not provide legal advice or make the form compliant by themselves.', 'chimpmatic-lite' ); ?></p>
 				<div id="cmatic-provider-save-row" class="cmatic-provider-save-row" <?php echo self::mappings_are_visible( $provider_state ) ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>>
 					<span id="cmatic-provider-save-status"></span>
 					<button type="submit" class="button button-primary" id="cmatic-provider-save"><?php esc_html_e( 'Save configuration', 'chimpmatic-lite' ); ?></button>
 				</div>
 				<div id="cmatic-provider-field-state">
 					<?php self::render_field_state_inputs( $provider_state, $field_limit ); ?>
+				</div>
+			</section>
+			<section id="cmatic-provider-tools" class="cmatic-provider-section" aria-labelledby="cmatic-provider-tools-heading">
+				<h3 id="cmatic-provider-tools-heading"><?php esc_html_e( 'Test and inspect', 'chimpmatic-lite' ); ?></h3>
+				<p class="description cmatic-provider-tools-description"><?php esc_html_e( 'Inspect a subscriber or test this Contact Form 7 form without leaving this screen.', 'chimpmatic-lite' ); ?></p>
+				<div class="cmatic-provider-tool-list">
+					<div id="cmatic-provider-mailerlite-lookup" class="cmatic-provider-tool-row cmatic-provider-tool-row--lookup" hidden>
+						<div class="cmatic-provider-tool-copy"><strong><?php esc_html_e( 'Find a subscriber', 'chimpmatic-lite' ); ?></strong><p><?php esc_html_e( 'Inspect the subscriber currently stored in MailerLite.', 'chimpmatic-lite' ); ?></p></div>
+						<div class="cmatic-provider-tool-control"><div class="cmatic-provider-tool-field"><label for="cmatic-provider-mailerlite-lookup-email"><?php esc_html_e( 'Subscriber email address', 'chimpmatic-lite' ); ?></label><input type="email" id="cmatic-provider-mailerlite-lookup-email" autocomplete="off"></div><div class="cmatic-provider-actions"><button type="button" class="button button-primary" id="cmatic-provider-mailerlite-lookup-submit"><?php esc_html_e( 'Find subscriber', 'chimpmatic-lite' ); ?></button></div><div id="cmatic-provider-mailerlite-lookup-results" role="status" aria-live="polite"></div></div>
+					</div>
+					<div class="cmatic-provider-tool-row">
+						<div class="cmatic-provider-tool-copy"><strong><?php esc_html_e( 'Preview and test this form', 'chimpmatic-lite' ); ?></strong><p><?php esc_html_e( 'Fill out this form here and send a real submission using its current Chimpmatic settings.', 'chimpmatic-lite' ); ?></p></div>
+						<p id="cmatic-provider-testing-notice" class="cmatic-provider-tool-warning"><?php echo esc_html( $testing_notice ); ?></p>
+						<div class="cmatic-provider-actions">
+				<?php
+				$tool_buttons = Cmatic_Panel_Toggles::cmatic_get_buttons();
+				if ( isset( $tool_buttons['form_preview'] ) ) {
+					$tool_buttons['form_preview']['label'] = __( 'Preview and test', 'chimpmatic-lite' );
+					Cmatic_Panel_Toggles::cmatic_render_button( 'form_preview', $tool_buttons['form_preview'] );
+				}
+				?>
+						</div>
+					</div>
 				</div>
 			</section>
 		</div>
@@ -266,7 +381,7 @@ final class Cmatic_Lite_Esp_Panel {
 		echo '<p>' . esc_html__( 'Mailchimp settings for this form are managed by Chimpmatic Pro.', 'chimpmatic-lite' ) . '</p>';
 	}
 
-	public static function get_public_state( string $active_slug, array $config, int $form_id ): array {
+	public static function get_public_state( string $active_slug, array $config, int $form_id, array $form_tags = array() ): array {
 		$providers              = array();
 		$mailchimp_creds        = ! empty( $config['api'] )
 			|| ( isset( $config['auth_type'] ) && 'oauth' === $config['auth_type'] );
@@ -282,22 +397,45 @@ final class Cmatic_Lite_Esp_Panel {
 			$has_key     = '' !== $credential;
 			$lists       = self::normalize_lists( $settings );
 			$selected    = self::selected_list( $settings );
+			$definition  = Cmatic_Lite_Esp_Manifest::get( $slug );
+			$features    = $definition['features'];
+			$base_groups = Cmatic_Mailerlite_Routing_Resolver::base_groups( $settings );
+			if ( 'mailerlite' === $slug && '' !== $selected ) {
+				$base_groups = array_values( array_unique( array_merge( array( $selected ), array_diff( $base_groups, array( $selected ) ) ) ) );
+			}
 			unset( $credential );
 			$provider_state               = array(
-				'connected'          => $has_key && 1 === (int) ( $settings['api-validation'] ?? 0 ),
-				'credential_present' => $has_key,
-				'lists'              => $lists,
-				'selected_list'      => $selected,
-				'selected_list_name' => self::list_name( $lists, $selected ),
-				'fields'             => self::normalize_fields( $settings, $field_limit ),
-				'total_fields'       => max( 0, (int) ( $settings['total_merge_fields'] ?? 0 ) ),
-				'mappings'           => self::normalize_mappings( $settings, $field_limit ),
-				'advanced_consent'   => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id ),
-				'consent_gate'       => 'required' === ( $settings['consent_gate'] ?? '' ) ? 'required' : 'none',
-				'consent_field'      => sanitize_text_field( (string) ( $settings['consent_field'] ?? '' ) ),
-				'subscription_mode'  => 'brevo' === $slug && 'double' === ( $settings['subscription_mode'] ?? '' ) ? 'double' : ( 'brevo' === $slug ? 'single' : 'provider_managed' ),
-				'doi_template_id'    => max( 0, (int) ( $settings['doi_template_id'] ?? 0 ) ),
-				'doi_redirect_url'   => esc_url_raw( (string) ( $settings['doi_redirect_url'] ?? '' ) ),
+				'connected'                  => $has_key && 1 === (int) ( $settings['api-validation'] ?? 0 ),
+				'credential_present'         => $has_key,
+				'lists'                      => $lists,
+				'selected_list'              => $selected,
+				'selected_list_name'         => self::list_name( $lists, $selected ),
+				'fields'                     => self::normalize_fields( $settings, $field_limit ),
+				'total_fields'               => max( 0, (int) ( $settings['total_merge_fields'] ?? 0 ) ),
+				'mappings'                   => self::normalize_mappings( $settings, $field_limit ),
+				'advanced_consent'           => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id ),
+				'consent_gate'               => 'required' === ( $settings['consent_gate'] ?? '' ) ? 'required' : 'none',
+				'consent_field'              => sanitize_text_field( (string) ( $settings['consent_field'] ?? '' ) ),
+				'subscription_mode'          => 'brevo' === $slug && 'double' === ( $settings['subscription_mode'] ?? '' ) ? 'double' : ( 'brevo' === $slug ? 'single' : 'provider_managed' ),
+				'doi_template_id'            => max( 0, (int) ( $settings['doi_template_id'] ?? 0 ) ),
+				'doi_redirect_url'           => esc_url_raw( (string) ( $settings['doi_redirect_url'] ?? '' ) ),
+				'form_tags'                  => $form_tags,
+				'routing_supported'          => ! empty( $features['multi_group_routing'] ),
+				'routing_entitled'           => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_routing', $slug, $form_id ),
+				'base_groups'                => 'mailerlite' === $slug ? $base_groups : array(),
+				'additional_groups'          => 'mailerlite' === $slug ? array_values( array_diff( $base_groups, array( $selected ) ) ) : array(),
+				'routing_rules'              => 'mailerlite' === $slug ? self::normalize_routing_rules( $settings ) : array(),
+				'status_supported'           => ! empty( $features['status_modes'] ),
+				'status_entitled'            => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_status', $slug, $form_id ),
+				'status_mode'                => self::normalize_status_mode( $settings ),
+				'resubscribe_entitled'       => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_resubscribe', $slug, $form_id ),
+				'resubscribe_force'          => ! empty( $settings['resubscribe_force'] ),
+				'consent_metadata_supported' => ! empty( $features['consent_metadata'] ),
+				'consent_metadata_entitled'  => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_consent_metadata', $slug, $form_id ),
+				'consent_metadata_enabled'   => ! empty( $settings['consent_metadata_enabled'] ),
+				'create_field_supported'     => ! empty( $features['create_field_types'] ),
+				'create_field_entitled'      => Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_create_field', $slug, $form_id ),
+				'lookup_supported'           => ! empty( $features['lookup'] ),
 			);
 			$provider_state['configured'] = self::mappings_are_visible( $provider_state )
 				&& self::state_has_email_mapping( $provider_state, $field_limit );
@@ -307,7 +445,29 @@ final class Cmatic_Lite_Esp_Panel {
 		return array(
 			'active_provider' => '' === $active_slug || Cmatic_Lite_Esp_Registry::has( $active_slug ) ? $active_slug : 'mailchimp',
 			'providers'       => $providers,
+			'form_tags'       => $form_tags,
 		);
+	}
+
+	private static function normalize_routing_rules( array $settings ): array {
+		$rules = array();
+		foreach ( (array) ( $settings['routing_rules'] ?? array() ) as $rule ) {
+			if ( ! is_array( $rule ) ) {
+				continue;
+			}
+			$rules[] = array(
+				'id'       => sanitize_text_field( (string) ( $rule['id'] ?? '' ) ),
+				'field'    => sanitize_key( (string) ( $rule['field'] ?? '' ) ),
+				'value'    => sanitize_text_field( (string) ( $rule['value'] ?? '' ) ),
+				'group_id' => sanitize_text_field( (string) ( $rule['group_id'] ?? '' ) ),
+			);
+		}
+		return $rules;
+	}
+
+	private static function normalize_status_mode( array $settings ): string {
+		$mode = (string) ( $settings['status_mode'] ?? 'legacy_provider_managed' );
+		return in_array( $mode, array( 'legacy_provider_managed', 'account', 'active', 'unconfirmed' ), true ) ? $mode : 'legacy_provider_managed';
 	}
 
 	private static function provider_settings( array $config, string $slug ): array {
@@ -442,9 +602,10 @@ final class Cmatic_Lite_Esp_Panel {
 			$slot       = 'field' . ( $offset + 3 );
 			$field      = $state['fields'][ $offset ] ?? null;
 			$has_field  = is_array( $field );
-			$remote_tag = $has_field ? (string) $field['tag'] : '';
+			$remote_tag = $has_field ? self::scalar_string( $field['tag'] ?? '' ) : '';
 			$is_email   = 'EMAIL' === strtoupper( $remote_tag );
-			$mapping    = (string) ( $state['mappings'][ $slot ] ?? '' );
+			$is_boolean = $has_field && 'boolean' === sanitize_key( self::scalar_string( $field['type'] ?? '' ) );
+			$mapping    = self::scalar_string( $state['mappings'][ $slot ] ?? '' );
 			if ( '' === $mapping && $is_email ) {
 				$mapping = self::first_email_tag( $form_tags );
 			}
@@ -457,8 +618,8 @@ final class Cmatic_Lite_Esp_Panel {
 				<?php echo $has_field ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>
 			>
 				<label for="cmatic-provider-<?php echo esc_attr( $slot ); ?>">
-					<span data-field-label><?php echo esc_html( $has_field ? (string) $field['name'] : $slot ); ?></span>
-					<span class="mce-type" data-field-type><?php echo esc_html( $has_field ? (string) $field['type'] : '' ); ?></span>
+					<span data-field-label><?php echo esc_html( $has_field ? self::scalar_string( $field['name'] ?? '' ) : $slot ); ?></span>
+					<span class="mce-type" data-field-type><?php echo esc_html( $has_field ? self::scalar_string( $field['type'] ?? '' ) : '' ); ?></span>
 					<span class="mce-required" data-required-label <?php echo $is_email ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>>
 						<?php esc_html_e( 'Required', 'chimpmatic-lite' ); ?>
 					</span>
@@ -476,9 +637,9 @@ final class Cmatic_Lite_Esp_Panel {
 						if ( ! is_array( $tag ) || empty( $tag['name'] ) ) {
 							continue;
 						}
-						$tag_value = '[' . $tag['name'] . ']';
-						$basetype  = sanitize_key( (string) ( $tag['basetype'] ?? '' ) );
-						$disabled  = $is_email && 'email' !== $basetype;
+						$tag_value = '[' . self::scalar_string( $tag['name'] ) . ']';
+						$basetype  = sanitize_key( self::scalar_string( $tag['basetype'] ?? '' ) );
+						$disabled  = ( $is_email && 'email' !== $basetype ) || ( $is_boolean && 'acceptance' !== $basetype );
 						?>
 						<option
 							value="<?php echo esc_attr( $tag_value ); ?>"
@@ -509,7 +670,7 @@ final class Cmatic_Lite_Esp_Panel {
 					'<input type="hidden" name="wpcf7-cmatic-provider[merge_fields][%1$d][%2$s]" data-provider-field="%2$s" data-provider-field-index="%1$d" value="%3$s">',
 					(int) $offset,
 					esc_attr( $property ),
-					esc_attr( (string) ( $field[ $property ] ?? '' ) )
+					esc_attr( self::scalar_string( $field[ $property ] ?? '' ) )
 				);
 			}
 		}
@@ -532,7 +693,7 @@ final class Cmatic_Lite_Esp_Panel {
 				&& ! empty( $tag['name'] )
 				&& 'email' === ( $tag['basetype'] ?? '' )
 			) {
-				return '[' . $tag['name'] . ']';
+				return '[' . self::scalar_string( $tag['name'] ) . ']';
 			}
 		}
 		return '';
@@ -546,11 +707,15 @@ final class Cmatic_Lite_Esp_Panel {
 
 	private static function state_has_email_mapping( array $state, int $field_limit ): bool {
 		foreach ( array_slice( $state['fields'] ?? array(), 0, $field_limit ) as $offset => $field ) {
-			if ( is_array( $field ) && 'EMAIL' === strtoupper( (string) ( $field['tag'] ?? '' ) ) ) {
-				return '' !== trim( (string) ( $state['mappings'][ 'field' . ( $offset + 3 ) ] ?? '' ) );
+			if ( is_array( $field ) && 'EMAIL' === strtoupper( self::scalar_string( $field['tag'] ?? '' ) ) ) {
+				return '' !== trim( self::scalar_string( $state['mappings'][ 'field' . ( $offset + 3 ) ] ?? '' ) );
 			}
 		}
 		return false;
+	}
+
+	private static function scalar_string( $value ): string {
+		return is_scalar( $value ) ? (string) $value : '';
 	}
 
 	private function __construct() {}

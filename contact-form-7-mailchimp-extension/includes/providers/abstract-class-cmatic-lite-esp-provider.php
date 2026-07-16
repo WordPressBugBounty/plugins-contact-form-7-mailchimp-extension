@@ -164,18 +164,23 @@ abstract class Cmatic_Lite_Esp_Provider implements Cmatic_Lite_Esp_Provider_Inte
 					'body'    => $decoded,
 					'error'   => '',
 					'reason'  => '',
+					'status'  => $code,
 				);
 			}
 
 			if ( $retryable && ( 429 === $code || $code >= 500 ) && self::MAX_ATTEMPTS - 1 !== $attempt ) {
-				usleep( 250000 * ( 2 ** $attempt ) );
+				$retry_after = 429 === $code ? min( 10, max( 0, (int) wp_remote_retrieve_header( $response, 'retry-after' ) ) ) : 0;
+				usleep( $retry_after > 0 ? $retry_after * 1000000 : 250000 * ( 2 ** $attempt ) );
 				continue;
 			}
 			if ( 429 === $code ) {
-				set_transient( $rate_key, 1, MINUTE_IN_SECONDS );
+				$retry_after = min( 600, max( 1, (int) wp_remote_retrieve_header( $response, 'retry-after' ) ) );
+				set_transient( $rate_key, 1, $retry_after );
 			}
 
-			return $this->failure_result( 'api_error', $this->extract_error( $decoded, $code ) );
+			$failure           = $this->failure_result( 'api_error', $this->extract_error( $decoded, $code ) );
+			$failure['status'] = $code;
+			return $failure;
 		}
 
 		return $this->failure_result( 'network_error', 'Provider request exhausted all attempts.' );

@@ -16,6 +16,10 @@ final class Cmatic_Lite_Esp_Manifest {
 			'mailchimp'  => array(
 				'destination_singular' => __( 'Audience', 'chimpmatic-lite' ),
 				'destination_plural'   => __( 'Audiences', 'chimpmatic-lite' ),
+				'person_singular'      => __( 'Contact', 'chimpmatic-lite' ),
+				'person_plural'        => __( 'Contacts', 'chimpmatic-lite' ),
+				'data_singular'        => __( 'Merge field', 'chimpmatic-lite' ),
+				'data_plural'          => __( 'Merge fields', 'chimpmatic-lite' ),
 				'uses_legacy_panel'    => true,
 				'supports_fields'      => true,
 				'auth_fields'          => array(),
@@ -28,6 +32,10 @@ final class Cmatic_Lite_Esp_Manifest {
 			'brevo'      => array(
 				'destination_singular' => __( 'List', 'chimpmatic-lite' ),
 				'destination_plural'   => __( 'Lists', 'chimpmatic-lite' ),
+				'person_singular'      => __( 'Contact', 'chimpmatic-lite' ),
+				'person_plural'        => __( 'Contacts', 'chimpmatic-lite' ),
+				'data_singular'        => __( 'Contact attribute', 'chimpmatic-lite' ),
+				'data_plural'          => __( 'Contact attributes', 'chimpmatic-lite' ),
 				'uses_legacy_panel'    => false,
 				'supports_fields'      => true,
 				'auth_fields'          => array(
@@ -49,8 +57,19 @@ final class Cmatic_Lite_Esp_Manifest {
 			'mailerlite' => array(
 				'destination_singular' => __( 'Group', 'chimpmatic-lite' ),
 				'destination_plural'   => __( 'Groups', 'chimpmatic-lite' ),
+				'person_singular'      => __( 'Subscriber', 'chimpmatic-lite' ),
+				'person_plural'        => __( 'Subscribers', 'chimpmatic-lite' ),
+				'data_singular'        => __( 'Subscriber field', 'chimpmatic-lite' ),
+				'data_plural'          => __( 'Subscriber fields', 'chimpmatic-lite' ),
 				'uses_legacy_panel'    => false,
 				'supports_fields'      => true,
+				'features'             => array(
+					'multi_group_routing' => true,
+					'status_modes'        => array( 'account', 'active', 'unconfirmed' ),
+					'consent_metadata'    => true,
+					'create_field_types'  => array( 'text', 'number', 'date' ),
+					'lookup'              => true,
+				),
 				'auth_fields'          => array(
 					array(
 						'id'           => 'api_key',
@@ -70,6 +89,10 @@ final class Cmatic_Lite_Esp_Manifest {
 			'klaviyo'    => array(
 				'destination_singular' => __( 'List', 'chimpmatic-lite' ),
 				'destination_plural'   => __( 'Lists', 'chimpmatic-lite' ),
+				'person_singular'      => __( 'Profile', 'chimpmatic-lite' ),
+				'person_plural'        => __( 'Profiles', 'chimpmatic-lite' ),
+				'data_singular'        => __( 'Profile property', 'chimpmatic-lite' ),
+				'data_plural'          => __( 'Profile properties', 'chimpmatic-lite' ),
 				'uses_legacy_panel'    => false,
 				'supports_fields'      => true,
 				'auth_fields'          => array(
@@ -91,12 +114,14 @@ final class Cmatic_Lite_Esp_Manifest {
 		);
 
 		foreach ( $definitions as $slug => $definition ) {
-			$definitions[ $slug ] = array_merge(
-				array(
-					'slug'  => $slug,
-					'label' => Cmatic_Lite_Esp_Registry::get( $slug )->get_label(),
-				),
-				$definition
+			$definitions[ $slug ] = self::normalize(
+				array_merge(
+					array(
+						'slug'  => $slug,
+						'label' => Cmatic_Lite_Esp_Registry::get( $slug )->get_label(),
+					),
+					$definition
+				)
 			);
 		}
 
@@ -114,6 +139,21 @@ final class Cmatic_Lite_Esp_Manifest {
 			$options[ $slug ] = (string) $definition['label'];
 		}
 		return $options;
+	}
+
+	private static function normalize( array $definition ): array {
+		$features               = isset( $definition['features'] ) && is_array( $definition['features'] ) ? $definition['features'] : array();
+		$definition['features'] = array_merge(
+			array(
+				'multi_group_routing' => false,
+				'status_modes'        => array(),
+				'consent_metadata'    => false,
+				'create_field_types'  => array(),
+				'lookup'              => false,
+			),
+			$features
+		);
+		return $definition;
 	}
 
 	private function __construct() {}

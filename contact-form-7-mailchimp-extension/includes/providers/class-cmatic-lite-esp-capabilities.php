@@ -38,15 +38,25 @@ final class Cmatic_Lite_Esp_Capabilities {
 	}
 
 	public static function feature_enabled( string $feature, string $provider = '', int $form_id = 0 ): bool {
+		$feature = sanitize_key( $feature );
 		$enabled = (bool) apply_filters(
 			'cmatic_lite_esp_feature_enabled',
 			false,
-			sanitize_key( $feature ),
+			$feature,
 			sanitize_key( $provider ),
 			max( 0, $form_id )
 		);
 
-		return self::pro_entitled() && 'advanced_consent' === sanitize_key( $feature ) && $enabled;
+		$paid = array(
+			'advanced_consent',
+			'mailerlite_routing',
+			'mailerlite_status',
+			'mailerlite_consent_metadata',
+			'mailerlite_create_field',
+			'mailerlite_resubscribe',
+		);
+
+		return self::pro_entitled() && in_array( $feature, $paid, true ) && $enabled;
 	}
 
 	private static function pro_entitled(): bool {

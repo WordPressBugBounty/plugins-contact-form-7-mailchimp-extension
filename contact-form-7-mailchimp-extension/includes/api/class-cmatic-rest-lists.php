@@ -197,7 +197,7 @@ final class Cmatic_Rest_Lists {
 
 			$merge_fields[] = array(
 				'tag'  => 'EMAIL',
-				'name' => 'Subscriber Email',
+				'name' => 'Contact email address',
 				'type' => 'email',
 			);
 
@@ -313,7 +313,7 @@ final class Cmatic_Rest_Lists {
 
 			$merge_fields[] = array(
 				'tag'  => 'EMAIL',
-				'name' => 'Subscriber Email',
+				'name' => 'Contact email address',
 				'type' => 'email',
 			);
 

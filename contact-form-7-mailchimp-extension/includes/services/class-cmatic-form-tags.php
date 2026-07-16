@@ -8,6 +8,8 @@
  * @license   GPL-3.0+
  */
 
+declare(strict_types=1);
+
 defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Form_Tags {
@@ -17,16 +19,35 @@ final class Cmatic_Form_Tags {
 			return array();
 		}
 
-		$mail_tags = $contact_form->collect_mail_tags();
-		$all_tags  = $contact_form->scan_form_tags();
-		$result    = array();
+		$all_tags = $contact_form->scan_form_tags();
+		$result   = array();
 
 		foreach ( $all_tags as $tag ) {
-			if ( ! empty( $tag->name ) && in_array( $tag->name, $mail_tags, true ) ) {
-				$result[] = array(
-					'name'     => $tag->name,
-					'basetype' => $tag->basetype,
+			if ( is_object( $tag ) && ! empty( $tag->name ) ) {
+				/** @var WPCF7_FormTag $tag */
+				$basetype = sanitize_key( (string) $tag->basetype );
+				$item     = array(
+					'name'             => sanitize_key( (string) $tag->name ),
+					'basetype'         => $basetype,
+					'routing_eligible' => false,
+					'choices'          => array(),
+					'required'         => 'acceptance' === $basetype && ! $tag->has_option( 'optional' ),
+					'inverted'         => 'acceptance' === $basetype && $tag->has_option( 'invert' ),
+					'content'          => sanitize_text_field( trim( (string) ( $tag->content ? $tag->content : reset( $tag->values ) ) ) ),
 				);
+
+				$dynamic = (bool) preg_grep( '/^data:/i', (array) $tag->options );
+				if ( in_array( $basetype, array( 'checkbox', 'radio', 'select' ), true ) && ! $tag->has_option( 'free_text' ) && ! $dynamic ) {
+					$item['routing_eligible'] = true;
+					foreach ( (array) $tag->values as $index => $value ) {
+						$canonical         = $tag->pipes instanceof WPCF7_Pipes ? $tag->pipes->do_pipe( (string) $value ) : (string) $value;
+						$item['choices'][] = array(
+							'label' => sanitize_text_field( (string) ( $tag->labels[ $index ] ?? $value ) ),
+							'value' => sanitize_text_field( (string) $canonical ),
+						);
+					}
+				}
+				$result[] = $item;
 			}
 		}
 

@@ -1833,7 +1833,7 @@ function chimpmaticLiteInit() {
 			});
 
 			html += '<div style="text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">';
-			html += '<a href="#" id="cmatic-new-lookup" style="font-size: 12px; color: #2271b1; text-decoration: none;">New Lookup</a>';
+			html += '<a href="#" id="cmatic-new-lookup" style="font-size: 12px; color: #2271b1; text-decoration: none;">' + (chimpmaticLite.i18n?.findAnotherContact || 'Find another contact') + '</a>';
 			html += '</div>';
 
 			return html;
@@ -1930,7 +1930,7 @@ function chimpmaticLiteInit() {
 			}
 
 			lookupBtn.disabled = true;
-			lookupBtn.textContent = 'Looking up...';
+			lookupBtn.textContent = chimpmaticLite.i18n?.findingContact || 'Finding contact...';
 			resultsContainer.innerHTML = '<div class="cmatic-lookup-summary" style="border-color: #72aee6; background: #f0f6fc;">Checking all audiences...</div>';
 			resultsContainer.classList.remove('cmatic-hidden');
 
@@ -1972,7 +1972,7 @@ function chimpmaticLiteInit() {
 				resultsContainer.innerHTML = `<div class="cmatic-lookup-summary cmatic-not-found">Error: ${esc(error.message)}</div>`;
 			} finally {
 				lookupBtn.disabled = false;
-				lookupBtn.textContent = 'Lookup';
+				lookupBtn.textContent = chimpmaticLite.i18n?.findContact || 'Find contact';
 			}
 		});
 

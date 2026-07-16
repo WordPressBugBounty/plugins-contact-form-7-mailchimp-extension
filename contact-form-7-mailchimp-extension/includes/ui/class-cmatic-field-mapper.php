@@ -49,7 +49,7 @@ final class Cmatic_Field_Mapper_UI {
 					<?php
 					printf(
 						/* translators: %d: number of fields included in Lite. */
-						esc_html__( 'Your Lite setup includes %d fields. Subscriber Email is always included.', 'chimpmatic-lite' ),
+						esc_html__( 'Your Lite setup includes %d merge fields. Contact email address is always included.', 'chimpmatic-lite' ),
 						(int) CMATIC_LITE_FIELDS
 					);
 					?>
@@ -113,7 +113,7 @@ final class Cmatic_Field_Mapper_UI {
 		if ( 'EMAIL' === $tag ) {
 			$config['required']    = true;
 			$config['type']        = 'email';
-			$config['description'] = 'MUST be an email tag <a href="' . esc_url( Cmatic_Pursuit::docs( 'mailchimp-required-email', 'email_field' ) ) . '" class="helping-field" target="_blank" title="get help with Subscriber Email:"> Learn More</a>';
+			$config['description'] = 'Map the contact email address to a Contact Form 7 email field. <a href="' . esc_url( Cmatic_Pursuit::docs( 'mailchimp-required-email', 'email_field' ) ) . '" class="helping-field" target="_blank" title="Get help with the contact email address mapping">Learn more</a>';
 		}
 
 		return $config;

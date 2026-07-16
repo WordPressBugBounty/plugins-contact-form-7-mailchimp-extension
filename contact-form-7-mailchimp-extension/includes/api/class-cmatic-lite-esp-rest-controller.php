@@ -93,6 +93,56 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				),
 			)
 		);
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/providers/fields/create',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'create_field' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
+				'args'                => self::tool_args(),
+			)
+		);
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/providers/lookup',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'lookup' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
+				'args'                => self::tool_args(),
+			)
+		);
+	}
+
+	private static function tool_args(): array {
+		return array(
+			'form_id'  => array(
+				'required'          => true,
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			),
+			'provider' => array(
+				'required'          => true,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'name'     => array(
+				'required'          => false,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'type'     => array(
+				'required'          => false,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'email'    => array(
+				'required'          => false,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_email',
+			),
+		);
 	}
 
 	public static function validate_provider( string $provider ): bool {
@@ -200,6 +250,9 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				array( 'status' => 500 )
 			);
 		}
+		if ( $key_changed && 'mailerlite' === $slug ) {
+			Cmatic_Mailerlite_Degradation_Reporter::clear( $form_id );
+		}
 
 		return rest_ensure_response(
 			array(
@@ -304,6 +357,108 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				'credential_present' => false,
 			)
 		);
+	}
+
+	public static function create_field( $request ) {
+		$form_id  = (int) $request->get_param( 'form_id' );
+		$slug     = (string) $request->get_param( 'provider' );
+		$name     = sanitize_text_field( (string) $request->get_param( 'name' ) );
+		$type     = sanitize_key( (string) $request->get_param( 'type' ) );
+		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
+		if ( 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Field_Creator_Interface || ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_create_field', $slug, $form_id ) ) {
+			return new WP_Error( 'provider_field_create_forbidden', esc_html__( 'Field creation is unavailable.', 'chimpmatic-lite' ), array( 'status' => 403 ) );
+		}
+		if ( '' === $name || strlen( $name ) > 255 || ! in_array( $type, array( 'text', 'number', 'date' ), true ) ) {
+			return new WP_Error( 'invalid_provider_field', esc_html__( 'Enter a valid field name and type.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+		}
+		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
+		if ( '' === $key ) {
+			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect MailerLite first.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+		}
+		$lock = 'cmatic_ml_field_' . substr( hash_hmac( 'sha256', get_current_user_id() . '|' . $form_id . '|' . strtolower( $name ) . '|' . $type, wp_salt( 'nonce' ) ), 0, 40 );
+		if ( ! self::acquire_lock( $lock, 60 ) ) {
+			return new WP_Error( 'provider_field_create_locked', esc_html__( 'An identical field creation is already running.', 'chimpmatic-lite' ), array( 'status' => 409 ) );
+		}
+		try {
+			$result = $provider->create_field(
+				$key,
+				array(
+					'name' => $name,
+					'type' => $type,
+				),
+				(bool) Cmatic_Options_Repository::get_option( 'debug', false )
+			);
+		} finally {
+			delete_option( $lock );
+		}
+		if ( empty( $result['success'] ) ) {
+			return new WP_Error( 'provider_field_create_failed', esc_html__( 'Creation was not confirmed. Refresh fields before trying again.', 'chimpmatic-lite' ), array( 'status' => 502 ) );
+		}
+		$data = isset( $result['body']['data'] ) && is_array( $result['body']['data'] ) ? $result['body']['data'] : (array) ( $result['body'] ?? array() );
+		return rest_ensure_response(
+			array(
+				'success' => true,
+				'field'   => array(
+					'id'   => sanitize_text_field( (string) ( $data['id'] ?? '' ) ),
+					'key'  => sanitize_text_field( (string) ( $data['key'] ?? $data['name'] ?? '' ) ),
+					'name' => sanitize_text_field( (string) ( $data['name'] ?? $name ) ),
+					'type' => sanitize_key( (string) ( $data['type'] ?? $type ) ),
+				),
+			)
+		);
+	}
+
+	public static function lookup( $request ) {
+		$form_id  = (int) $request->get_param( 'form_id' );
+		$slug     = (string) $request->get_param( 'provider' );
+		$email    = sanitize_email( (string) $request->get_param( 'email' ) );
+		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
+		if ( ! current_user_can( 'manage_options' ) || 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Lookup_Interface ) {
+			return new WP_Error( 'provider_lookup_forbidden', esc_html__( 'Subscriber lookup is unavailable.', 'chimpmatic-lite' ), array( 'status' => 403 ) );
+		}
+		if ( ! is_email( $email ) ) {
+			return new WP_Error( 'invalid_lookup_email', esc_html__( 'Enter a valid email address.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+		}
+		if ( ! self::consume_lookup_limit( $form_id, $email ) ) {
+			return new WP_Error( 'provider_lookup_limited', esc_html__( 'Too many lookups. Try again later.', 'chimpmatic-lite' ), array( 'status' => 429 ) );
+		}
+		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
+		if ( '' === $key ) {
+			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect MailerLite first.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+		}
+		$result = $provider->lookup( $key, $email );
+		if ( empty( $result['success'] ) ) {
+			return new WP_Error( 'provider_lookup_failed', esc_html__( 'MailerLite lookup failed.', 'chimpmatic-lite' ), array( 'status' => 502 ) );
+		}
+		$data     = isset( $result['data'] ) && is_array( $result['data'] ) ? $result['data'] : array();
+		$settings = self::provider_settings( $form_id, $slug );
+		$allowed  = self::mapped_field_keys( $settings );
+		$fields   = array_intersect_key( is_array( $data['fields'] ?? null ) ? $data['fields'] : array(), array_flip( $allowed ) );
+		$groups   = array();
+		foreach ( (array) ( $data['groups'] ?? array() ) as $group ) {
+			if ( is_array( $group ) ) {
+				$groups[] = array(
+					'id'   => sanitize_text_field( self::scalar_string( $group['id'] ?? '' ) ),
+					'name' => sanitize_text_field( self::scalar_string( $group['name'] ?? '' ) ),
+				);
+			}
+		}
+		$sanitized_fields = array();
+		foreach ( $fields as $field_key => $field_value ) {
+			if ( is_scalar( $field_value ) ) {
+				$sanitized_fields[ $field_key ] = sanitize_text_field( (string) $field_value );
+			}
+		}
+		$response = rest_ensure_response(
+			array(
+				'found'  => ! empty( $result['found'] ),
+				'status' => sanitize_key( (string) ( $data['status'] ?? '' ) ),
+				'groups' => $groups,
+				'fields' => $sanitized_fields,
+			)
+		);
+		$response->header( 'Cache-Control', 'no-store, private' );
+		return $response;
 	}
 
 	public static function validate_consent( $request ) {
@@ -422,11 +577,54 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		return array_merge(
 			array(
 				'list'               => '',
+				'base_groups'        => array(),
+				'routing_rules'      => array(),
+				'routing_schema'     => 1,
 				'merge_fields'       => array(),
 				'total_merge_fields' => 0,
 			),
 			self::empty_mappings( $field_limit )
 		);
+	}
+
+	private static function acquire_lock( string $name, int $ttl ): bool {
+		$expires = time() + $ttl;
+		if ( add_option( $name, $expires, '', false ) ) {
+			return true;
+		}
+		$stored  = get_option( $name, 0 );
+		$current = is_numeric( $stored ) ? (int) $stored : 0;
+		if ( $current >= time() ) {
+			return false;
+		}
+		delete_option( $name );
+		return add_option( $name, $expires, '', false );
+	}
+
+	private static function consume_lookup_limit( int $form_id, string $email ): bool {
+		$user_id     = get_current_user_id();
+		$base        = 'cmatic_ml_lookup_' . $user_id . '_' . $form_id;
+		$target      = $base . '_' . substr( hash_hmac( 'sha256', strtolower( $email ), wp_salt( 'nonce' ) ), 0, 24 );
+		$total_value = get_transient( $base );
+		$same_value  = get_transient( $target );
+		$total       = is_numeric( $total_value ) ? (int) $total_value : 0;
+		$same        = is_numeric( $same_value ) ? (int) $same_value : 0;
+		if ( $total >= 10 || $same >= 3 ) {
+			return false;
+		}
+		set_transient( $base, $total + 1, 10 * MINUTE_IN_SECONDS );
+		set_transient( $target, $same + 1, 10 * MINUTE_IN_SECONDS );
+		return true;
+	}
+
+	private static function mapped_field_keys( array $settings ): array {
+		$keys = array();
+		foreach ( (array) ( $settings['merge_fields'] ?? array() ) as $offset => $field ) {
+			if ( is_array( $field ) && isset( $field['tag'] ) && is_scalar( $field['tag'] ) && ! empty( $settings[ 'field' . ( (int) $offset + 3 ) ] ) ) {
+				$keys[] = (string) $field['tag'];
+			}
+		}
+		return $keys;
 	}
 
 	private static function empty_mappings( int $field_limit ): array {
@@ -444,18 +642,18 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			: array();
 
 		foreach ( array_slice( $old_fields, 0, $field_limit ) as $offset => $field ) {
-			if ( ! is_array( $field ) || empty( $field['tag'] ) ) {
+			if ( ! is_array( $field ) || ! isset( $field['tag'] ) || ! is_scalar( $field['tag'] ) || '' === (string) $field['tag'] ) {
 				continue;
 			}
 			$slot                             = 'field' . ( $offset + 3 );
 			$by_tag[ (string) $field['tag'] ] = sanitize_text_field(
-				(string) ( $settings[ $slot ] ?? '' )
+				self::scalar_string( $settings[ $slot ] ?? '' )
 			);
 		}
 
 		$mappings = self::empty_mappings( $field_limit );
 		foreach ( array_slice( $new_fields, 0, $field_limit ) as $offset => $field ) {
-			if ( ! is_array( $field ) || empty( $field['tag'] ) ) {
+			if ( ! is_array( $field ) || ! isset( $field['tag'] ) || ! is_scalar( $field['tag'] ) || '' === (string) $field['tag'] ) {
 				continue;
 			}
 			$slot              = 'field' . ( $offset + 3 );
@@ -490,12 +688,17 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			if (
 				is_array( $list )
 				&& isset( $list['id'] )
+				&& is_scalar( $list['id'] )
 				&& $list_id === (string) $list['id']
 			) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	private static function scalar_string( $value ): string {
+		return is_scalar( $value ) ? (string) $value : '';
 	}
 
 	private static function merge_provider_settings( int $form_id, string $slug, array $changes ): bool {
@@ -509,7 +712,17 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			? $config['providers'][ $slug ]
 			: array();
 		$config['providers'][ $slug ] = array_merge( $current, $changes );
-		return update_option( $option, $config ) || get_option( $option, array() ) === $config;
+		if ( update_option( $option, $config ) ) {
+			return true;
+		}
+
+		$stored = self::provider_settings( $form_id, $slug );
+		foreach ( $changes as $key => $value ) {
+			if ( ! array_key_exists( $key, $stored ) || maybe_serialize( $stored[ $key ] ) !== maybe_serialize( $value ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static function is_known_list( int $form_id, string $slug, string $list_id ): bool {

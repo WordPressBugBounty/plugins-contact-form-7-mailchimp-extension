@@ -146,7 +146,7 @@
 
 .cm-form-table {
 	padding-top: 20px;
-	margin-top: 20px;
+	margin-top: 18px;
 }
 
 .cm-form-table th,
@@ -1992,10 +1992,170 @@ tr.cmatic-not-pro:hover,
 	gap: 8px;
 }
 
+.cmatic-provider-actions--end {
+	justify-content: flex-end;
+	margin-top: 12px;
+}
+
+.cmatic-provider-tools-description {
+	margin: -8px 0 14px;
+}
+
+.cmatic-provider-tool-list {
+	overflow: hidden;
+	border: 1px solid #e1e6ec;
+	border-radius: 9px;
+	background: #fbfcfe;
+}
+
+.cmatic-provider-tool-row {
+	display: grid;
+	grid-template-columns: minmax(190px, 240px) minmax(280px, 1fr) auto;
+	align-items: center;
+	gap: 18px;
+	padding: 14px;
+}
+
+.cmatic-provider-tool-row + .cmatic-provider-tool-row {
+	border-top: 1px solid #e1e6ec;
+}
+
+.cmatic-provider-tool-row--lookup {
+	grid-template-columns: minmax(190px, 240px) minmax(280px, 1fr);
+}
+
+.cmatic-provider-tool-copy strong,
+.cmatic-provider-tool-copy p {
+	display: block;
+}
+
+.cmatic-provider-tool-copy strong {
+	color: #1d2327;
+}
+
+.cmatic-provider-tool-copy p,
+.cmatic-provider-tool-warning {
+	margin: 2px 0 0;
+	color: #646970;
+}
+
+.cmatic-provider-tool-control {
+	display: grid;
+	grid-template-columns: minmax(220px, 1fr) auto;
+	align-items: end;
+	gap: 8px;
+}
+
+.cmatic-provider-tool-field label,
+.cmatic-provider-tool-field input {
+	display: block;
+}
+
+.cmatic-provider-tool-field input {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+}
+
+#cmatic-provider-mailerlite-lookup-results {
+	grid-column: 1 / -1;
+}
+
+.cmatic-provider-tool-row > .cmatic-provider-actions {
+	justify-content: flex-end;
+}
+
 .cmatic-provider-mapping-grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 16px 24px;
+}
+
+.cmatic-routing-table-list:not(:empty) {
+	overflow: hidden;
+	border: 1px solid #e1e6ec;
+	border-radius: 9px;
+	background: #fbfcfe;
+}
+
+.cmatic-routing-table-header,
+.cmatic-routing-table-row {
+	display: grid;
+	grid-template-columns: 42px minmax(145px, 0.85fr) minmax(145px, 0.75fr) minmax(220px, 1fr) 34px;
+	align-items: center;
+}
+
+.cmatic-routing-table-header {
+	background: #f6f7f7;
+	border-bottom: 1px solid #e1e6ec;
+}
+
+.cmatic-routing-table-header span {
+	padding: 9px 10px;
+	color: #50575e;
+	font-weight: 600;
+}
+
+.cmatic-routing-table-row {
+	background: #fbfcfe;
+}
+
+.cmatic-routing-table-row + .cmatic-routing-table-row {
+	border-top: 1px solid #e1e6ec;
+}
+
+.cmatic-routing-rule-label {
+	padding: 10px;
+	color: #1d2327;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.cmatic-routing-table-cell {
+	padding: 10px;
+}
+
+.cmatic-routing-table-cell select {
+	display: block;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.cmatic-routing-rule-error {
+	grid-column: 2 / 5;
+	margin: 0 10px 10px;
+	color: #b32d2e;
+}
+
+.cmatic-routing-table-row [aria-invalid="true"] {
+	border-color: #d63638;
+	box-shadow: 0 0 0 1px #d63638;
+}
+
+#cmatic-provider-data .cmatic-routing-remove {
+	display: inline-flex;
+	width: 32px;
+	height: 32px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: #646970;
+	text-decoration: none;
+}
+
+#cmatic-provider-data .cmatic-routing-remove:hover {
+	color: #b32d2e;
+}
+
+#cmatic-provider-data .cmatic-routing-remove:focus {
+	color: #3858e9;
+	text-decoration: none;
+}
+
+#cmatic-provider-data .cmatic-routing-remove:disabled {
+	cursor: default;
+	opacity: .45;
 }
 
 .cmatic-provider-mapping-row label,
@@ -2324,6 +2484,114 @@ tr.cmatic-not-pro:hover,
 	background: #fbfcfe;
 }
 
+.cmatic-consent-policy-list {
+	overflow: hidden;
+	border: 1px solid #d8e0e8;
+	border-radius: 10px;
+}
+
+.cmatic-consent-policy-provider {
+	display: contents;
+}
+
+.cmatic-consent-policy-provider[hidden] {
+	display: none;
+}
+
+.cmatic-consent-policy-row {
+	display: grid;
+	grid-template-columns: minmax(170px, 220px) minmax(220px, 310px) minmax(240px, 1fr);
+	align-items: center;
+	gap: 20px;
+	min-height: 76px;
+	padding: 13px 15px;
+	background: #fff;
+}
+
+.cmatic-consent-policy-row + .cmatic-consent-policy-row {
+	border-top: 1px solid #e7ebef;
+}
+
+.cmatic-consent-policy-row:nth-child(even) {
+	background: #fbfcfd;
+}
+
+.cmatic-consent-policy-row--warning {
+	background: #fffaf0;
+}
+
+.cmatic-consent-policy-name strong,
+.cmatic-consent-policy-name span {
+	display: block;
+}
+
+.cmatic-consent-policy-name strong {
+	font-size: 13px;
+}
+
+.cmatic-consent-policy-name span,
+.cmatic-consent-policy-explanation,
+.cmatic-consent-policy-checks p,
+.cmatic-consent-policy-note {
+	color: #5d6878;
+	font-size: 12px;
+}
+
+.cmatic-consent-policy-explanation,
+.cmatic-consent-policy-checks p,
+.cmatic-consent-managed-value p,
+.cmatic-consent-policy-note {
+	margin: 0;
+}
+
+.cmatic-consent-policy-control select,
+.cmatic-consent-policy-control input[type="number"],
+.cmatic-consent-policy-control input[type="url"] {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+}
+
+.cmatic-consent-managed-value {
+	padding: 9px 10px;
+	border: 1px solid #cbd4dc;
+	border-radius: 6px;
+	background: #f8fafc;
+}
+
+.cmatic-consent-managed-value p {
+	margin-top: 3px;
+	color: #5d6878;
+	font-size: 12px;
+}
+
+.cmatic-consent-managed-value a {
+	display: inline-block;
+	margin-top: 5px;
+}
+
+.cmatic-consent-policy-checks > div + div {
+	margin-top: 10px;
+}
+
+.cmatic-consent-policy-checks label {
+	font-weight: 600;
+}
+
+.cmatic-consent-policy-checks p {
+	margin-top: 2px;
+	padding-left: 24px;
+}
+
+.cmatic-consent-policy-checks .cmatic-defaults-fields-notice {
+	margin-top: 10px;
+	padding-left: 13px;
+}
+
+.cmatic-consent-policy-note {
+	margin-top: 12px;
+}
+
 .cmatic-provider-mapping-warning {
 	margin: 8px 0 0;
 	color: #875407;
@@ -2404,6 +2672,24 @@ tr.cmatic-not-pro:hover,
 		grid-template-columns: minmax(0, 1fr);
 	}
 
+	.cmatic-provider-tool-row {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 10px;
+	}
+
+	.cmatic-provider-tool-control {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	#cmatic-provider-mailerlite-lookup-results {
+		grid-column: 1;
+	}
+
+	.cmatic-consent-policy-row {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 7px;
+	}
+
 	.cmatic-provider-choices {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -2430,6 +2716,44 @@ tr.cmatic-not-pro:hover,
 	.cmatic-provider-actions .button {
 		width: 100%;
 		max-width: none;
+	}
+
+	.cmatic-routing-table-header {
+		display: none;
+	}
+
+	.cmatic-routing-table-row {
+		grid-template-columns: 42px minmax(0, 1fr) 34px;
+		align-items: start;
+		padding: 10px 0;
+	}
+
+	.cmatic-routing-table-row .cmatic-routing-rule-label {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.cmatic-routing-table-cell {
+		grid-column: 2;
+		padding: 4px 10px;
+	}
+
+	.cmatic-routing-table-cell::before {
+		display: block;
+		margin-bottom: 4px;
+		color: #50575e;
+		font-weight: 600;
+		content: attr(data-routing-column-label);
+	}
+
+	.cmatic-routing-remove {
+		grid-column: 3;
+		grid-row: 1;
+	}
+
+	.cmatic-routing-rule-error {
+		grid-column: 2;
+		margin-top: 5px;
 	}
 
 	.cmatic-header__status {

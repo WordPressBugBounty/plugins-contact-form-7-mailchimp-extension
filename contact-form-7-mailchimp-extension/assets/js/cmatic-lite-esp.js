@@ -33,6 +33,7 @@
 		const message = document.getElementById('cmatic-provider-message');
 		const progress = document.getElementById('cmatic-provider-progress');
 		const progressDestination = document.getElementById('cmatic-provider-progress-destination');
+		const progressMappings = document.getElementById('cmatic-provider-progress-mappings');
 		const completion = document.getElementById('cmatic-provider-completion');
 		const completionOutcome = document.getElementById('cmatic-provider-completion-outcome');
 		const completionMeta = document.getElementById('cmatic-provider-completion-meta');
@@ -45,6 +46,7 @@
 		const cancelCredentialButton = document.getElementById('cmatic-provider-cancel-credential');
 		const connectedSummary = document.getElementById('cmatic-provider-connected-summary');
 		const connectedTitle = document.getElementById('cmatic-provider-connected-title');
+		const credentialStorage = document.getElementById('cmatic-provider-credential-storage');
 		const refreshButton = document.getElementById('cmatic-provider-refresh');
 		const replaceCredentialButton = document.getElementById('cmatic-provider-replace-credential');
 		const disconnectButton = document.getElementById('cmatic-provider-disconnect');
@@ -64,6 +66,8 @@
 		const mappingsHeading = document.getElementById('cmatic-provider-mappings-heading');
 		const mappingDescription = document.getElementById('cmatic-provider-mapping-description');
 		const fieldLimit = document.getElementById('cmatic-provider-field-limit');
+		const fieldLimitCopy = document.getElementById('cmatic-provider-field-limit-copy');
+		const fieldLimitLinkCopy = document.getElementById('cmatic-provider-field-limit-link-copy');
 		const saveRow = document.getElementById('cmatic-provider-save-row');
 		const saveStatus = document.getElementById('cmatic-provider-save-status');
 		const saveButton = document.getElementById('cmatic-provider-save');
@@ -71,6 +75,8 @@
 		const consentDescription = document.getElementById('cmatic-provider-consent-description');
 		const consentControls = document.getElementById('cmatic-provider-consent-controls');
 		const consentGate = document.getElementById('cmatic-provider-consent-gate');
+		const consentGateTitle = document.getElementById('cmatic-provider-consent-gate-title');
+		const consentGateExplanation = document.getElementById('cmatic-provider-consent-gate-explanation');
 		const consentFieldRow = document.getElementById('cmatic-provider-consent-field-row');
 		const consentField = document.getElementById('cmatic-provider-consent-field');
 		const brevoOptin = document.getElementById('cmatic-provider-brevo-optin');
@@ -85,9 +91,44 @@
 		const managedOptinTitle = document.getElementById('cmatic-provider-managed-optin-title');
 		const managedOptinCopy = document.getElementById('cmatic-provider-managed-optin-copy');
 		const consentDocs = document.getElementById('cmatic-provider-consent-docs');
+		const providerOptinTitle = document.getElementById('cmatic-provider-optin-title');
+		const providerOptinExplanation = document.getElementById('cmatic-provider-optin-explanation');
+		const mailerliteRouting = document.getElementById('cmatic-mailerlite-routing');
+		const mailerliteGroups = document.getElementById('cmatic-provider-mailerlite-groups');
+		const routingRuleList = document.getElementById('cmatic-routing-rule-list');
+		const routingAddRule = document.getElementById('cmatic-routing-add-rule');
+		const routingNotice = document.getElementById('cmatic-routing-notice');
+		const mailerliteOptions = document.getElementById('cmatic-provider-mailerlite-options');
+		const mailerliteStatus = document.getElementById('cmatic-provider-mailerlite-status');
+		const mailerliteResubscribe = document.getElementById('cmatic-provider-mailerlite-resubscribe');
+		const mailerliteResubscribeForce = document.getElementById('cmatic-provider-mailerlite-resubscribe-force');
+		const mailerliteConsentMetadata = document.getElementById('cmatic-provider-mailerlite-consent-metadata-enabled');
+		const mailerliteStatusNotice = document.getElementById('cmatic-provider-mailerlite-status-notice');
+		const fieldCreator = document.getElementById('cmatic-provider-mailerlite-create-field');
+		const fieldCreatorName = document.getElementById('cmatic-provider-mailerlite-field-name');
+		const fieldCreatorType = document.getElementById('cmatic-provider-mailerlite-field-type');
+		const fieldCreatorButton = document.getElementById('cmatic-provider-mailerlite-field-create');
+		const fieldCreatorNotice = document.getElementById('cmatic-provider-mailerlite-field-notice');
+		const lookup = document.getElementById('cmatic-provider-mailerlite-lookup');
+		const lookupEmail = document.getElementById('cmatic-provider-mailerlite-lookup-email');
+		const lookupButton = document.getElementById('cmatic-provider-mailerlite-lookup-submit');
+		const lookupResults = document.getElementById('cmatic-provider-mailerlite-lookup-results');
+		const testingNotice = document.getElementById('cmatic-provider-testing-notice');
+		let routingSequence = 0;
+		let routingValidationVisible = false;
+		let fieldCreating = false;
 
 		function i18n(key, fallback) {
 			return String((chimpmaticLiteEsp.i18n || {})[key] || fallback || '');
+		}
+
+		function term(meta, key, fallback) {
+			return String((meta || {})[key] || fallback || '');
+		}
+
+		function requestFailed() {
+			const meta = definition(state.activeProvider);
+			return format(i18n('requestFailed', '%s could not complete the request. Try again.'), meta.label);
 		}
 
 		function format(template, ...values) {
@@ -119,6 +160,22 @@
 					,subscription_mode: slug === 'brevo' ? 'single' : 'provider_managed'
 					,doi_template_id: 0
 					,doi_redirect_url: ''
+					,base_groups: []
+					,additional_groups: []
+					,routing_rules: []
+					,routing_supported: false
+					,routing_entitled: false
+					,status_mode: 'legacy_provider_managed'
+					,status_supported: false
+					,status_entitled: false
+					,resubscribe_force: false
+					,resubscribe_entitled: false
+					,consent_metadata_enabled: false
+					,consent_metadata_supported: false
+					,consent_metadata_entitled: false
+					,create_field_supported: false
+					,create_field_entitled: false
+					,lookup_supported: false
 				};
 			}
 			const current = state.providers[slug];
@@ -128,7 +185,291 @@
 			if (typeof current.replacing === 'undefined') current.replacing = false;
 			if (typeof current.lists_loading === 'undefined') current.lists_loading = false;
 			if (typeof current.fields_loading === 'undefined') current.fields_loading = false;
+			if (!Array.isArray(current.base_groups)) current.base_groups = current.selected_list ? [String(current.selected_list)] : [];
+			if (!Array.isArray(current.additional_groups)) current.additional_groups = [];
+			if (!Array.isArray(current.routing_rules)) current.routing_rules = [];
 			return current;
+		}
+
+		function configurationSnapshot(source) {
+			const current = source || {};
+			const mappings = {};
+			Object.keys(current.mappings || {}).sort().forEach(function(key) {
+				mappings[key] = String(current.mappings[key] || '');
+			});
+			return {
+				selected_list: String(current.selected_list || ''),
+				mappings: mappings,
+				consent_gate: current.consent_gate === 'required' ? 'required' : 'none',
+				consent_field: String(current.consent_field || ''),
+				subscription_mode: String(current.subscription_mode || ''),
+				doi_template_id: Number(current.doi_template_id || 0),
+				doi_redirect_url: String(current.doi_redirect_url || ''),
+				doi_verification_token: String(current.doi_verification_token || ''),
+				additional_groups: (current.additional_groups || []).map(String),
+				routing_rules: (current.routing_rules || []).map(function(rule) {
+					return {
+						id: String(rule.id || ''),
+						field: String(rule.field || ''),
+						value: String(rule.value || ''),
+						group_id: String(rule.group_id || '')
+					};
+				}),
+				status_mode: String(current.status_mode || 'legacy_provider_managed'),
+				resubscribe_force: Boolean(current.resubscribe_force),
+				consent_metadata_enabled: Boolean(current.consent_metadata_enabled)
+			};
+		}
+
+		function updateDirty(slug) {
+			const current = providerState(slug);
+			const baseline = initialProviders[slug] || {};
+			current.dirty = JSON.stringify(configurationSnapshot(current)) !== JSON.stringify(configurationSnapshot(baseline));
+			if (!current.dirty) current.configured = Boolean(baseline.configured);
+			return current.dirty;
+		}
+
+		function createRoutingRuleId() {
+			if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+			routingSequence++;
+			const seed = (Date.now().toString(16) + routingSequence.toString(16) + Math.random().toString(16).slice(2)).padEnd(32, '0').slice(0, 32);
+			return seed.slice(0, 8) + '-' + seed.slice(8, 12) + '-4' + seed.slice(13, 16) + '-8' + seed.slice(17, 20) + '-' + seed.slice(20, 32);
+		}
+
+		function routingTags() {
+			return (chimpmaticLiteEspState.form_tags || []).filter(function(tag) {
+				return Boolean(tag && tag.routing_eligible && Array.isArray(tag.choices) && tag.choices.length);
+			});
+		}
+
+		function appendOption(select, value, label, selected) {
+			const option = document.createElement('option');
+			option.value = String(value || '');
+			option.textContent = String(label || value || '');
+			option.selected = Boolean(selected);
+			select.append(option);
+		}
+
+		function routingValidation(current) {
+			const errors = new Map();
+			const seen = new Map();
+			const validFields = new Map(routingTags().map(function(tag) {
+				return [String(tag.name), new Set((tag.choices || []).map(function(choice) { return String(choice.value); }))];
+			}));
+			const validGroups = new Set(sortedLists(current).map(function(list) { return String(list.id); }));
+
+			(current.routing_rules || []).forEach(function(rule) {
+				const id = String(rule.id || '');
+				const field = String(rule.field || '');
+				const value = String(rule.value || '');
+				const group = String(rule.group_id || '');
+				if (!field || !value || !group) {
+					errors.set(id, i18n('routingIncomplete', 'Choose a field, an answer, and a destination group.'));
+					return;
+				}
+				if (!validFields.has(field) || !validFields.get(field).has(value) || !validGroups.has(group)) {
+					errors.set(id, i18n('routingInvalid', 'This rule contains an unavailable field, answer, or group.'));
+					return;
+				}
+				const key = JSON.stringify([field, value, group]);
+				if (seen.has(key)) {
+					errors.set(id, i18n('routingDuplicate', 'This rule duplicates another rule.'));
+					errors.set(seen.get(key), i18n('routingDuplicate', 'This rule duplicates another rule.'));
+					return;
+				}
+				seen.set(key, id);
+			});
+
+			return errors;
+		}
+
+		function renderRouting(current) {
+			const active = state.activeProvider === 'mailerlite' && current.routing_supported;
+			mailerliteRouting.hidden = !active;
+			if (!active) return;
+			const premiumSaved = (current.additional_groups || []).length > 0 || (current.routing_rules || []).length > 0;
+			const locked = !current.routing_entitled;
+			routingAddRule.disabled = locked || !routingTags().length;
+			routingNotice.hidden = !locked;
+			routingNotice.textContent = premiumSaved
+				? i18n('routingSavedInactive', 'MailerLite group rules are saved but inactive. Subscribers are added only to the group marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.')
+				: i18n('routingRequiresPro', 'Additional MailerLite groups and answer-based rules require Chimpmatic Pro.');
+
+			const validation = routingValidation(current);
+			const fragment = document.createDocumentFragment();
+			const routingRules = current.routing_rules || [];
+			const tableHeader = document.createElement('div');
+			tableHeader.className = 'cmatic-routing-table-header';
+			tableHeader.setAttribute('aria-hidden', 'true');
+			[
+				'#',
+				i18n('whenThisField', 'When this field'),
+				i18n('isThisValue', 'is this value'),
+				i18n('addSubscriberTo', 'add subscriber to'),
+				''
+			].forEach(function(label) {
+				const heading = document.createElement('span');
+				heading.textContent = label;
+				tableHeader.append(heading);
+			});
+			if (routingRules.length) {
+				fragment.append(tableHeader);
+			}
+			routingRules.forEach(function(rule, index) {
+				const row = document.createElement('div');
+				const ruleLabel = document.createElement('strong');
+				const fieldCell = document.createElement('div');
+				const fieldLabel = document.createElement('label');
+				const field = document.createElement('select');
+				const valueCell = document.createElement('div');
+				const valueLabel = document.createElement('label');
+				const value = document.createElement('select');
+				const groupCell = document.createElement('div');
+				const groupLabel = document.createElement('label');
+				const group = document.createElement('select');
+				const remove = document.createElement('button');
+				const removeIcon = document.createElement('span');
+				const removeText = document.createElement('span');
+				const hiddenId = document.createElement('input');
+				const error = document.createElement('p');
+				const prefix = 'cmatic-routing-' + index;
+				row.className = 'cmatic-routing-table-row';
+				row.dataset.routingRule = String(rule.id || '');
+				ruleLabel.className = 'cmatic-routing-rule-label';
+				ruleLabel.textContent = String(index + 1).padStart(2, '0');
+				fieldCell.className = 'cmatic-routing-table-cell';
+				fieldCell.dataset.routingColumnLabel = i18n('whenThisField', 'When this field');
+				field.id = prefix + '-field';
+				field.name = 'wpcf7-cmatic-provider[routing_rules][' + index + '][field]';
+				field.dataset.routingField = '';
+				fieldLabel.htmlFor = field.id;
+				fieldLabel.className = 'screen-reader-text';
+				fieldLabel.textContent = i18n('whenThisField', 'When this field');
+				appendOption(field, '', i18n('chooseField', 'Choose a field'), false);
+				routingTags().forEach(function(tag) { appendOption(field, tag.name, '[' + tag.name + ']', String(tag.name) === String(rule.field)); });
+				valueCell.className = 'cmatic-routing-table-cell';
+				valueCell.dataset.routingColumnLabel = i18n('isThisValue', 'is this value');
+				value.id = prefix + '-value';
+				value.name = 'wpcf7-cmatic-provider[routing_rules][' + index + '][value]';
+				value.dataset.routingValue = '';
+				valueLabel.htmlFor = value.id;
+				valueLabel.className = 'screen-reader-text';
+				valueLabel.textContent = i18n('isThisValue', 'is this value');
+				appendOption(value, '', i18n('chooseValue', 'Choose a value'), false);
+				const tag = routingTags().find(function(item) { return String(item.name) === String(rule.field); });
+				(tag ? tag.choices : []).forEach(function(choice) { appendOption(value, choice.value, choice.label, String(choice.value) === String(rule.value)); });
+				groupCell.className = 'cmatic-routing-table-cell';
+				groupCell.dataset.routingColumnLabel = i18n('addSubscriberTo', 'add subscriber to');
+				group.id = prefix + '-group';
+				group.name = 'wpcf7-cmatic-provider[routing_rules][' + index + '][group_id]';
+				group.dataset.routingGroup = '';
+				groupLabel.htmlFor = group.id;
+				groupLabel.className = 'screen-reader-text';
+				groupLabel.textContent = i18n('addSubscriberTo', 'add subscriber to');
+				appendOption(group, '', i18n('chooseGroup', 'Choose a group'), false);
+				sortedLists(current).forEach(function(list) { appendOption(group, list.id, list.name, String(list.id) === String(rule.group_id)); });
+				[field, value, group].forEach(function(control) { control.disabled = locked; });
+				hiddenId.type = 'hidden';
+				hiddenId.name = 'wpcf7-cmatic-provider[routing_rules][' + index + '][id]';
+				hiddenId.value = String(rule.id || '');
+				remove.type = 'button';
+				remove.className = 'button-link cmatic-routing-remove';
+				remove.dataset.routingRemove = '';
+				remove.disabled = locked;
+				remove.title = i18n('removeRule', 'Remove rule');
+				removeIcon.className = 'dashicons dashicons-no-alt';
+				removeIcon.setAttribute('aria-hidden', 'true');
+				removeText.className = 'screen-reader-text';
+				removeText.textContent = format(i18n('removeRuleNumber', 'Remove rule %d'), index + 1);
+				remove.append(removeIcon, removeText);
+				fieldCell.append(fieldLabel, field);
+				valueCell.append(valueLabel, value);
+				groupCell.append(groupLabel, group);
+				error.className = 'cmatic-routing-rule-error';
+				error.id = prefix + '-error';
+				error.setAttribute('role', 'alert');
+				error.hidden = !routingValidationVisible || !validation.has(String(rule.id || ''));
+				error.textContent = validation.get(String(rule.id || '')) || '';
+				[field, value, group].forEach(function(control) {
+					if (!error.hidden) {
+						control.setAttribute('aria-invalid', 'true');
+						control.setAttribute('aria-describedby', error.id);
+					} else {
+						control.removeAttribute('aria-invalid');
+						control.removeAttribute('aria-describedby');
+					}
+				});
+				row.append(hiddenId, ruleLabel, fieldCell, valueCell, groupCell, remove, error);
+				fragment.append(row);
+			});
+			routingRuleList.replaceChildren(fragment);
+		}
+
+		function renderMailerLiteGroups(current) {
+			const selected = new Set((current.base_groups || [current.selected_list]).map(String));
+			const premiumSaved = selected.size > 1 || (current.routing_rules || []).length > 0;
+			const locked = !current.routing_entitled;
+			const fragment = document.createDocumentFragment();
+			sortedLists(current).forEach(function(list, index) {
+				const id = String(list.id || '');
+				const row = document.createElement('div');
+				const groupLabel = document.createElement('label');
+				const group = document.createElement('input');
+				const primaryLabel = document.createElement('label');
+				const primary = document.createElement('input');
+				row.className = 'cmatic-provider-mapping-row';
+				row.dataset.mailerliteGroup = id;
+				group.type = 'checkbox';
+				group.id = 'cmatic-mailerlite-group-' + index;
+				group.name = 'wpcf7-cmatic-provider[base_groups][]';
+				group.value = id;
+				group.checked = selected.has(id);
+				group.disabled = locked;
+				group.dataset.mailerliteGroupSelected = '';
+				groupLabel.htmlFor = group.id;
+				groupLabel.append(group, document.createTextNode(' ' + String(list.name || id)));
+				primary.type = 'radio';
+				primary.id = 'cmatic-mailerlite-primary-' + index;
+				primary.name = 'wpcf7-cmatic-provider[primary_group]';
+				primary.value = id;
+				primary.checked = id === String(current.selected_list || '');
+				primary.disabled = locked && premiumSaved;
+				primary.dataset.mailerliteGroupPrimary = '';
+				primary.setAttribute('aria-label', format(
+					i18n('useGroupWithoutPro', 'Use %s when Chimpmatic Pro is inactive'),
+					String(list.name || id)
+				));
+				primaryLabel.htmlFor = primary.id;
+				primaryLabel.append(primary, document.createTextNode(' ' + i18n('useWhenProInactive', 'Use when Pro is inactive')));
+				row.append(groupLabel, primaryLabel);
+				fragment.append(row);
+			});
+			mailerliteGroups.replaceChildren(fragment);
+		}
+
+		function renderMailerLiteOptions(current) {
+			const active = state.activeProvider === 'mailerlite';
+			mailerliteOptions.hidden = !active;
+			fieldCreator.hidden = !active || !current.create_field_supported || !current.connected;
+			lookup.hidden = !active || !current.lookup_supported || !current.connected;
+			if (!active) return;
+			mailerliteStatus.value = String(current.status_mode || 'legacy_provider_managed');
+			mailerliteStatus.disabled = !current.status_entitled;
+			mailerliteResubscribe.hidden = mailerliteStatus.value !== 'active';
+			mailerliteResubscribeForce.checked = Boolean(current.resubscribe_force);
+			mailerliteResubscribeForce.disabled = !current.status_entitled || !current.resubscribe_entitled;
+			mailerliteConsentMetadata.checked = Boolean(current.consent_metadata_enabled);
+			mailerliteConsentMetadata.disabled = !current.consent_metadata_entitled;
+			const degraded = (!current.status_entitled && current.status_mode !== 'legacy_provider_managed') || (!current.resubscribe_entitled && current.resubscribe_force) || (!current.consent_metadata_entitled && current.consent_metadata_enabled);
+			mailerliteStatusNotice.hidden = !degraded;
+			mailerliteStatusNotice.textContent = i18n('proOptionsInactive', 'Saved MailerLite Pro settings are inactive. Subscribers continue with the current Active behavior; renew Pro to restore the saved settings.');
+			fieldCreatorName.disabled = !current.create_field_entitled;
+			fieldCreatorType.querySelectorAll('input[type="radio"]').forEach(function(input) {
+				input.disabled = !current.create_field_entitled;
+			});
+			fieldCreatorButton.disabled = !current.create_field_entitled || fieldCreating;
+			fieldCreatorNotice.hidden = Boolean(current.create_field_entitled);
+			fieldCreatorNotice.textContent = i18n('fieldCreationRequiresPro', 'Creating MailerLite subscriber fields requires Chimpmatic Pro.');
 		}
 
 		function showMessage(value, tone) {
@@ -246,7 +587,7 @@
 				email: ['email'],
 				phone: ['tel'],
 				text: ['text', 'textarea'],
-				boolean: []
+				boolean: ['acceptance']
 			};
 			return (types[String(providerType || '').toLowerCase()] || []).includes(formType);
 		}
@@ -329,7 +670,8 @@
 						option.disabled = false;
 						return;
 					}
-					option.disabled = isEmail && option.dataset.basetype !== 'email';
+					option.disabled = (isEmail && option.dataset.basetype !== 'email')
+						|| (String(field.type || '').toLowerCase() === 'boolean' && option.dataset.basetype !== 'acceptance');
 				});
 
 				let mapping = currentValue;
@@ -374,6 +716,13 @@
 			const slug = state.activeProvider;
 			const consentMeta = meta.consent || {};
 			const advanced = Boolean(current.advanced_consent);
+			consentGateTitle.textContent = format(i18n('sendToProvider', 'Send to %s'), meta.label);
+			consentGateExplanation.textContent = format(
+				i18n('consentGateExplanation', 'Choose whether every valid form submission is sent to %s or only submissions with affirmative consent.'),
+				meta.label
+			);
+			providerOptinTitle.textContent = format(i18n('confirmationInProvider', 'Confirmation in %s'), meta.label);
+			providerOptinExplanation.textContent = format(i18n('confirmationExplanation', 'Controls whether %s requires confirmation after the form is submitted.'), meta.label);
 			consentDescription.textContent = advanced
 				? String(consentMeta.description || '')
 				: i18n('consentRequiresPro', 'Advanced consent controls are available with an active Chimpmatic Pro license.');
@@ -409,6 +758,7 @@
 				managedOptinCopy.textContent = i18n('klaviyoOptin', 'The selected Klaviyo list controls whether confirmation is required.');
 			}
 			consentDocs.href = String(consentMeta.docs_url || '#');
+			consentDocs.textContent = format(i18n('openConfirmationSettings', 'Open %s confirmation settings'), meta.label);
 		}
 
 		function renderProgress(meta, current) {
@@ -416,15 +766,19 @@
 			completion.hidden = !complete;
 			progress.hidden = complete;
 			if (complete) {
+				const baseGroupNames = (current.base_groups || [current.selected_list]).map(function(groupId) {
+					const group = (current.lists || []).find(function(list) { return String(list.id) === String(groupId); });
+					return group ? String(group.name) : String(groupId);
+				}).filter(Boolean);
 				completionOutcome.textContent = format(
-					i18n('setupOutcome', 'New submissions from this form will be added to %1$s in %2$s.'),
-					current.selected_list_name || current.selected_list,
+					i18n('setupOutcome', 'New %1$s from this form will be added to %2$s in %3$s.'),
+					term(meta, 'person_plural', 'contacts').toLowerCase(),
+					baseGroupNames.join(', ') || current.selected_list_name || current.selected_list,
 					meta.label
 				);
-				completionMeta.textContent = format(
-					i18n('mappedCount', '%1$d fields mapped · Saved'),
-					mappedCount(current)
-				);
+				completionMeta.textContent = state.activeProvider === 'mailerlite'
+					? format(i18n('mailerLiteSummary', 'Always-used groups: %1$d · Answer-based rules: %2$d · Subscriber fields mapped: %3$d · Saved'), baseGroupNames.length, (current.routing_rules || []).length, mappedCount(current))
+					: format(i18n('mappedCount', '%1$d fields mapped · Saved'), mappedCount(current));
 				return;
 			}
 
@@ -432,6 +786,7 @@
 				i18n('chooseDestination', 'Choose %s'),
 				String(meta.destination_singular || '').toLowerCase()
 			);
+			progressMappings.textContent = format(i18n('mapData', 'Map %s'), term(meta, 'data_plural', 'fields').toLowerCase());
 			const items = Array.from(progress.children);
 			const destinationDone = Boolean(current.selected_list && current.fields && current.fields.length);
 			const statuses = [current.connected, destinationDone, false];
@@ -460,9 +815,10 @@
 					? format(i18n('updateProvider', 'Update %s connection'), meta.label)
 					: format(i18n('connectProvider', 'Connect %s'), meta.label);
 				credentialsDescription.textContent = format(
-					i18n('connectDescription', 'Connect %1$s to choose a %2$s and map its fields.'),
+					i18n('connectDescription', 'Connect %1$s to choose a %2$s and map its %3$s.'),
 					meta.label,
-					String(meta.destination_singular || '').toLowerCase()
+					String(meta.destination_singular || '').toLowerCase(),
+					term(meta, 'data_plural', 'fields').toLowerCase()
 				);
 				connectButton.textContent = current.replacing
 					? i18n('updateConnection', 'Update connection')
@@ -478,6 +834,10 @@
 			}
 
 			connectedTitle.textContent = format(i18n('connected', '%s connected'), meta.label);
+			credentialStorage.textContent = format(
+				i18n('credentialStored', '%s stored securely'),
+				String(((meta.auth_fields || [])[0] || {}).label || i18n('credential', 'Credential'))
+			);
 			refreshButton.textContent = current.lists_loading || current.refreshing
 				? format(i18n('loadingDestinations', 'Loading %s...'), String(meta.destination_plural || '').toLowerCase())
 				: format(i18n('refreshDestinations', 'Refresh %s'), String(meta.destination_plural || '').toLowerCase());
@@ -488,14 +848,14 @@
 		}
 
 		function renderDestination(meta, current) {
-			destinationHeading.textContent = format(
-				i18n('chooseDestination', 'Choose a %s'),
-				String(meta.destination_singular || '').toLowerCase()
-			);
+			destinationHeading.textContent = state.activeProvider === 'mailerlite'
+				? i18n('groupsForEverySubscriber', 'Groups for every subscriber')
+				: format(i18n('chooseDestination', 'Choose a %s'), String(meta.destination_singular || '').toLowerCase());
 			destinationLabel.textContent = meta.label + ' ' + String(meta.destination_singular || '').toLowerCase();
 			if (!current.connected || current.lists_loading) {
 				destinationLocked.hidden = false;
 				destinationRow.hidden = true;
+				mailerliteGroups.hidden = true;
 				destinationDescription.textContent = '';
 				destinationLocked.querySelector('p').textContent = current.lists_loading
 					? format(i18n('loadingDestinationsFrom', 'Loading %1$s from %2$s...'), String(meta.destination_plural || '').toLowerCase(), meta.label)
@@ -504,9 +864,18 @@
 			}
 
 			destinationLocked.hidden = true;
-			destinationRow.hidden = false;
 			renderDestinations(meta, current);
+			const isMailerLite = state.activeProvider === 'mailerlite';
+			destinationRow.hidden = isMailerLite;
+			destinationSelect.disabled = isMailerLite;
+			mailerliteGroups.hidden = !isMailerLite;
+			if (isMailerLite) renderMailerLiteGroups(current);
+			renderRouting(current);
 			const listCount = (current.lists || []).length;
+			if (isMailerLite) {
+				destinationDescription.textContent = i18n('mailerLiteGroupsHelp', 'Every subscriber successfully sent to MailerLite is added to each selected group. Mark one selected group “Use when Pro is inactive.”');
+				return;
+			}
 			if (1 === listCount && current.selected_list) {
 				destinationDescription.textContent = format(
 					i18n('onlyDestination', '%1$s was selected because it is your only %2$s %3$s.'),
@@ -530,9 +899,27 @@
 
 		function renderMappingStage(meta, current) {
 			const visible = Boolean(current.connected && current.selected_list && current.fields && current.fields.length);
-			mappingsHeading.textContent = format(i18n('mapProviderFields', 'Map %s fields'), meta.label);
+			mappingsHeading.textContent = format(
+				i18n('mapProviderFields', 'Map %1$s %2$s'),
+				meta.label,
+				term(meta, 'data_plural', 'fields').toLowerCase()
+			);
 			mappingDescription.textContent = format(
-				i18n('mappedFields', 'Match each %s field to a Contact Form 7 field. Subscriber Email is required.'),
+				i18n('mappedFields', 'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.'),
+				meta.label,
+				term(meta, 'data_singular', 'field').toLowerCase()
+			);
+			const dataPlural = term(meta, 'data_plural', 'fields').toLowerCase();
+			const dataSingular = term(meta, 'data_singular', 'field').toLowerCase();
+			fieldLimitCopy.textContent = fieldLimit.dataset.proActive === '1'
+				? format(i18n('proDataLimit', 'Up to %1$d %2$s are available with your active Chimpmatic Pro license.'), Number(fieldLimit.dataset.currentLimit || 0), dataPlural)
+				: format(i18n('liteDataLimit', 'Your Lite setup includes %1$d %2$s. Email address is always included.'), Number(fieldLimit.dataset.liteLimit || 0), dataPlural);
+			if (fieldLimitLinkCopy) {
+				fieldLimitLinkCopy.textContent = format(i18n('unlockData', 'Unlock every available %s and advanced features with Chimpmatic Pro'), dataSingular);
+			}
+			testingNotice.textContent = format(
+				i18n('testingWarning', 'Real submission: may create or update a %1$s in %2$s and trigger confirmation emails or automations.'),
+				term(meta, 'person_singular', 'contact').toLowerCase(),
 				meta.label
 			);
 			mappingsGrid.hidden = !visible;
@@ -541,11 +928,16 @@
 			if (!visible) {
 				mappingsLocked.querySelector('p').textContent = current.lists_loading
 					? format(i18n('waitForDestinations', 'Wait while %s load.'), String(meta.destination_plural || '').toLowerCase())
-					: format(i18n('chooseToLoadFields', 'Choose a %s to load its fields.'), String(meta.destination_singular || '').toLowerCase());
+					: format(
+						i18n('chooseToLoadFields', 'Choose a %1$s to load its %2$s.'),
+						String(meta.destination_singular || '').toLowerCase(),
+						term(meta, 'data_plural', 'fields').toLowerCase()
+					);
 				return;
 			}
 
 			renderMappings(current);
+			renderMailerLiteOptions(current);
 			const complete = state.activeProvider === state.savedProvider && current.configured && !current.dirty;
 			if (current.dirty) {
 				saveStatus.textContent = i18n('unsavedChanges', 'Unsaved changes');
@@ -592,6 +984,8 @@
 			renderDestination(meta, current);
 			renderMappingStage(meta, current);
 			renderConsent(meta, current);
+			renderRouting(current);
+			renderMailerLiteOptions(current);
 		}
 
 		function abortRequests() {
@@ -619,7 +1013,9 @@
 				const data = await response.json().catch(function() {
 					return {};
 				});
-				if (!response.ok) throw new Error(data.message || i18n('requestFailed', 'Provider request failed.'));
+				if (!response.ok) {
+					throw new Error(data.message || requestFailed());
+				}
 				return data;
 			} finally {
 				if (controllers.get(channel) === controller) controllers.delete(channel);
@@ -634,6 +1030,12 @@
 			current.fields = Array.isArray(baseline.fields) ? JSON.parse(JSON.stringify(baseline.fields)) : [];
 			current.total_fields = Number(baseline.total_fields || 0);
 			current.mappings = baseline.mappings ? JSON.parse(JSON.stringify(baseline.mappings)) : {};
+			current.base_groups = Array.isArray(baseline.base_groups) ? JSON.parse(JSON.stringify(baseline.base_groups)) : [];
+			current.additional_groups = Array.isArray(baseline.additional_groups) ? JSON.parse(JSON.stringify(baseline.additional_groups)) : [];
+			current.routing_rules = Array.isArray(baseline.routing_rules) ? JSON.parse(JSON.stringify(baseline.routing_rules)) : [];
+			current.status_mode = String(baseline.status_mode || 'legacy_provider_managed');
+			current.resubscribe_force = Boolean(baseline.resubscribe_force);
+			current.consent_metadata_enabled = Boolean(baseline.consent_metadata_enabled);
 			current.configured = Boolean(baseline.configured);
 			current.dirty = false;
 		}
@@ -648,6 +1050,8 @@
 				discardDraft(previousSlug);
 			}
 			abortRequests();
+			lookupEmail.value = '';
+			lookupResults.replaceChildren();
 			generation++;
 			state.activeProvider = nextSlug;
 			render();
@@ -694,8 +1098,12 @@
 					current.fields = [];
 					current.total_fields = 0;
 					current.mappings = {};
+					current.base_groups = [];
+					current.additional_groups = [];
+					current.routing_rules = [];
 					current.configured = false;
-					current.dirty = true;
+					current.dirty = false;
+					initialProviders[slug] = JSON.parse(JSON.stringify(current));
 				}
 				current.replacing = false;
 				current.busy = false;
@@ -705,9 +1113,18 @@
 					await loadFields(String(lists[0].id), true);
 					return;
 				}
+				if (current.selected_list && lists.some(function(list) { return String(list.id) === String(current.selected_list); })) {
+					await loadFields(String(current.selected_list), true);
+					return;
+				}
 				render();
 				showMessage(
-					format(i18n('connectedDestinationsReady', '%1$s connected. %2$d destinations are ready.'), definition(slug).label, lists.length),
+					format(
+						i18n('connectedDestinationsReady', '%1$s connected. %2$d %3$s ready.'),
+						definition(slug).label,
+						lists.length,
+						term(definition(slug), 'destination_plural', 'destinations').toLowerCase()
+					),
 					'success'
 				);
 			} catch (error) {
@@ -715,12 +1132,12 @@
 				current.lists_loading = false;
 				if (error.name !== 'AbortError') {
 					render();
-					showMessage(error.message || i18n('requestFailed', 'Provider request failed.'), 'error');
+					showMessage(error.message || requestFailed(), 'error');
 				}
 			}
 		}
 
-		async function loadFields(listId, automatic) {
+		async function loadFields(listId, automatic, focusFieldKey) {
 			const slug = state.activeProvider;
 			const current = providerState(slug);
 			const meta = definition(slug);
@@ -730,25 +1147,33 @@
 				fields: current.fields,
 				total_fields: current.total_fields,
 				mappings: current.mappings
+				,base_groups: current.base_groups
+				,additional_groups: current.additional_groups
 			};
 			current.selected_list = listId;
 			const selected = (current.lists || []).find(function(list) {
 				return String(list.id) === String(listId);
 			});
 			current.selected_list_name = selected ? String(selected.name) : '';
+			current.additional_groups = (current.additional_groups || []).filter(function(groupId) { return String(groupId) !== String(listId); });
+			current.base_groups = listId ? [String(listId), ...current.additional_groups.map(String)] : [];
 			current.fields_loading = Boolean(listId);
 			current.fields = [];
 			render();
 			if (!listId) {
 				current.total_fields = 0;
 				current.mappings = {};
-				current.dirty = true;
+				updateDirty(slug);
 				return;
 			}
 
 			abortRequests();
 			const token = ++generation;
-			showMessage(format(i18n('loadingProviderFields', 'Loading %s fields...'), meta.label), '');
+			showMessage(format(
+				i18n('loadingProviderFields', 'Loading %1$s %2$s...'),
+				meta.label,
+				term(meta, 'data_plural', 'fields').toLowerCase()
+			), '');
 			try {
 				const data = await request('fields', 'fields', {
 					form_id: Number(root.dataset.formId),
@@ -761,12 +1186,26 @@
 				current.mappings = data.mappings || {};
 				current.fields_loading = false;
 				current.configured = false;
-				current.dirty = true;
+				updateDirty(slug);
 				render();
+				if (focusFieldKey) {
+					const row = Array.from(root.querySelectorAll('.cmatic-provider-mapping-row')).find(function(item) { return String(item.dataset.remoteTag || '') === String(focusFieldKey); });
+					const select = row ? row.querySelector('[data-mapping-slot]') : null;
+					if (select) {
+						row.scrollIntoView({ block: 'nearest' });
+						select.focus();
+					} else {
+						showMessage(i18n('fieldRefreshRequired', 'Subscriber field created; refresh MailerLite subscriber fields before mapping it.'), 'error');
+					}
+				}
 				showMessage(
 					automatic
 						? format(i18n('onlyDestinationSelected', '%1$s connected. %2$s was selected automatically.'), meta.label, current.selected_list_name)
-						: format(i18n('providerFieldsReady', '%s fields are ready.'), meta.label),
+						: format(
+							i18n('providerFieldsReady', '%1$s %2$s are ready.'),
+							meta.label,
+							term(meta, 'data_plural', 'fields').toLowerCase()
+						),
 					'success'
 				);
 			} catch (error) {
@@ -775,10 +1214,12 @@
 				current.fields = previous.fields;
 				current.total_fields = previous.total_fields;
 				current.mappings = previous.mappings;
+				current.base_groups = previous.base_groups;
+				current.additional_groups = previous.additional_groups;
 				current.fields_loading = false;
 				if (error.name !== 'AbortError') {
 					render();
-					showMessage(error.message || i18n('requestFailed', 'Provider request failed.'), 'error');
+					showMessage(error.message || requestFailed(), 'error');
 				}
 			}
 		}
@@ -803,7 +1244,7 @@
 				current.dirty = state.savedProvider === slug;
 				render();
 			} catch (error) {
-				if (error.name !== 'AbortError') showMessage(error.message || i18n('requestFailed', 'Provider request failed.'), 'error');
+				if (error.name !== 'AbortError') showMessage(error.message || requestFailed(), 'error');
 			}
 		}
 
@@ -876,24 +1317,63 @@
 			loadFields(destinationSelect.value, false);
 		});
 
+		routingAddRule.addEventListener('click', function() {
+			const current = providerState(state.activeProvider);
+			if (!routingTags().length || !sortedLists(current).length) return;
+			current.routing_rules.push({
+				id: createRoutingRuleId(),
+				field: '',
+				value: '',
+				group_id: ''
+			});
+			routingValidationVisible = false;
+			current.configured = false;
+			updateDirty(state.activeProvider);
+			render();
+			const rows = routingRuleList.querySelectorAll('[data-routing-rule]');
+			const last = rows[rows.length - 1];
+			if (last) last.querySelector('[data-routing-field]')?.focus();
+		});
+
+		mailerliteStatus.addEventListener('change', function() {
+			const current = providerState(state.activeProvider);
+			current.status_mode = mailerliteStatus.value;
+			if (current.status_mode !== 'active') current.resubscribe_force = false;
+			updateDirty(state.activeProvider);
+			render();
+			mailerliteStatus.focus();
+		});
+		mailerliteResubscribeForce.addEventListener('change', function() {
+			const current = providerState(state.activeProvider);
+			current.resubscribe_force = mailerliteResubscribeForce.checked;
+			updateDirty(state.activeProvider);
+			render();
+		});
+		mailerliteConsentMetadata.addEventListener('change', function() {
+			const current = providerState(state.activeProvider);
+			current.consent_metadata_enabled = mailerliteConsentMetadata.checked;
+			updateDirty(state.activeProvider);
+			render();
+		});
+
 		consentGate.addEventListener('change', function() {
 			const current = providerState(state.activeProvider);
 			current.consent_gate = consentGate.value === 'required' ? 'required' : 'none';
 			current.consent_field = current.consent_gate === 'required' ? String(consentField.value || '') : '';
-			current.dirty = true;
+			updateDirty(state.activeProvider);
 			render();
 		});
 		consentField.addEventListener('change', function() {
 			const current = providerState(state.activeProvider);
 			current.consent_field = String(consentField.value || '');
-			current.dirty = true;
+			updateDirty(state.activeProvider);
 			render();
 		});
 		subscriptionMode.addEventListener('change', function() {
 			const current = providerState(state.activeProvider);
 			current.subscription_mode = subscriptionMode.value === 'double' ? 'double' : 'single';
 			current.doi_verification_token = '';
-			current.dirty = true;
+			updateDirty(state.activeProvider);
 			render();
 		});
 		[doiTemplate, doiRedirect].forEach(function(input) {
@@ -902,7 +1382,7 @@
 				current.doi_template_id = Number(doiTemplate.value || 0);
 				current.doi_redirect_url = String(doiRedirect.value || '');
 				current.doi_verification_token = '';
-				current.dirty = true;
+				updateDirty(state.activeProvider);
 				render();
 			});
 		});
@@ -932,15 +1412,146 @@
 		});
 
 		root.addEventListener('change', function(event) {
+			const groupControl = event.target.closest('[data-mailerlite-group-selected], [data-mailerlite-group-primary]');
+			if (groupControl) {
+				const current = providerState(state.activeProvider);
+				const row = groupControl.closest('[data-mailerlite-group]');
+				const groupId = String(row?.dataset.mailerliteGroup || '');
+				const checkedGroups = Array.from(mailerliteGroups.querySelectorAll('[data-mailerlite-group-selected]:checked')).map(function(input) { return input.value; });
+				let primary = String(current.selected_list || '');
+				if (groupControl.matches('[data-mailerlite-group-primary]')) {
+					primary = groupId;
+					if (!checkedGroups.includes(primary)) checkedGroups.push(primary);
+				} else if (!checkedGroups.includes(primary)) {
+					primary = String(checkedGroups[0] || '');
+				}
+				if (!primary) {
+					groupControl.checked = true;
+					return;
+				}
+				current.additional_groups = checkedGroups.filter(function(id) { return String(id) !== primary; });
+				current.base_groups = [primary, ...current.additional_groups];
+				current.configured = false;
+				if (primary !== String(current.selected_list || '')) {
+					loadFields(primary, false);
+					return;
+				}
+				updateDirty(state.activeProvider);
+				render();
+				const replacement = mailerliteGroups.querySelector('[data-mailerlite-group="' + CSS.escape(groupId) + '"] ' + (groupControl.matches('[data-mailerlite-group-primary]') ? '[data-mailerlite-group-primary]' : '[data-mailerlite-group-selected]'));
+				if (replacement) replacement.focus();
+				return;
+			}
+			const routingControl = event.target.closest('[data-routing-field], [data-routing-value], [data-routing-group]');
+			if (routingControl) {
+				const row = routingControl.closest('[data-routing-rule]');
+				const current = providerState(state.activeProvider);
+				const rule = (current.routing_rules || []).find(function(item) { return String(item.id) === String(row.dataset.routingRule); });
+				if (!rule) return;
+				if (routingControl.matches('[data-routing-field]')) {
+					rule.field = routingControl.value;
+					rule.value = '';
+				} else if (routingControl.matches('[data-routing-value]')) {
+					rule.value = routingControl.value;
+				} else {
+					rule.group_id = routingControl.value;
+				}
+				current.configured = false;
+				updateDirty(state.activeProvider);
+				render();
+				const replacement = routingRuleList.querySelector('[data-routing-rule="' + CSS.escape(String(rule.id)) + '"] ' + (routingControl.matches('[data-routing-field]') ? '[data-routing-field]' : routingControl.matches('[data-routing-value]') ? '[data-routing-value]' : '[data-routing-group]'));
+				if (replacement) replacement.focus();
+				return;
+			}
 			const select = event.target.closest('[data-mapping-slot]');
 			if (!select || !root.contains(select)) return;
 			const current = providerState(state.activeProvider);
 			current.mappings = current.mappings || {};
 			current.mappings[select.dataset.mappingSlot] = select.value;
 			current.configured = false;
-			current.dirty = true;
+			updateDirty(state.activeProvider);
 			render();
 			document.getElementById(select.id)?.focus();
+		});
+
+		root.addEventListener('click', function(event) {
+			const remove = event.target.closest('[data-routing-remove]');
+			if (!remove) return;
+			const row = remove.closest('[data-routing-rule]');
+			const current = providerState(state.activeProvider);
+			current.routing_rules = (current.routing_rules || []).filter(function(rule) { return String(rule.id) !== String(row.dataset.routingRule); });
+			current.configured = false;
+			updateDirty(state.activeProvider);
+			render();
+			routingAddRule.focus();
+		});
+
+		fieldCreatorButton.addEventListener('click', async function() {
+			if (fieldCreating || !fieldCreatorName.value.trim()) return;
+			fieldCreating = true;
+			let finalMessage = '';
+			let finalTone = '';
+			const current = providerState(state.activeProvider);
+			setBusy(fieldCreatorButton, true, i18n('creating', 'Creating...'));
+			try {
+				const data = await request('field-create', 'fields/create', {
+					form_id: Number(root.dataset.formId),
+					provider: 'mailerlite',
+					name: fieldCreatorName.value.trim(),
+					type: fieldCreatorType.querySelector('input[type="radio"]:checked')?.value || 'text'
+				});
+				const key = String((data.field || {}).key || '');
+				fieldCreatorName.value = '';
+				await loadFields(String(current.selected_list || ''), false, key);
+				finalMessage = i18n('fieldCreated', 'MailerLite subscriber field created. Choose its Contact Form 7 source and save.');
+				finalTone = 'success';
+			} catch (error) {
+				if (error.name !== 'AbortError') {
+					finalMessage = error.message || i18n('fieldCreateUnconfirmed', 'Field creation was not confirmed. Refresh MailerLite subscriber fields before retrying.');
+					finalTone = 'error';
+				}
+			} finally {
+				fieldCreating = false;
+				setBusy(fieldCreatorButton, false, i18n('createField', 'Create field'));
+				render();
+				if (finalMessage) showMessage(finalMessage, finalTone);
+			}
+		});
+
+		lookupButton.addEventListener('click', async function() {
+			const email = lookupEmail.value.trim();
+			if (!email) return;
+			setBusy(lookupButton, true, i18n('findingSubscriber', 'Finding subscriber...'));
+			lookupResults.replaceChildren();
+			try {
+				const data = await request('lookup', 'lookup', { form_id: Number(root.dataset.formId), provider: 'mailerlite', email: email });
+				const summary = document.createElement('p');
+				summary.className = 'cmatic-lookup-summary';
+				summary.textContent = data.found
+					? format(i18n('subscriberFound', 'Subscriber found · %s'), String(data.status || i18n('statusUnavailable', 'status unavailable')))
+					: i18n('noSubscriberFound', 'No subscriber found.');
+				lookupResults.append(summary);
+				if (data.found) {
+					const card = document.createElement('div');
+					card.className = 'cmatic-result-card';
+					const groups = document.createElement('p');
+					groups.textContent = format(
+						i18n('groupsLabel', 'Groups: %s'),
+						(data.groups || []).map(function(group) { return String(group.name || group.id || ''); }).filter(Boolean).join(', ')
+					);
+					card.append(groups);
+					Object.entries(data.fields || {}).forEach(function(entry) {
+						const item = document.createElement('p');
+						item.textContent = String(entry[0]) + ': ' + String(entry[1]);
+						card.append(item);
+					});
+					lookupResults.append(card);
+				}
+			} catch (error) {
+				if (error.name !== 'AbortError') lookupResults.textContent = error.message || i18n('lookupFailed', 'MailerLite could not find the subscriber. Try again.');
+			} finally {
+				setBusy(lookupButton, false, i18n('findSubscriber', 'Find subscriber'));
+			}
 		});
 
 		if (parentForm) {
@@ -949,12 +1560,17 @@
 				const current = providerState(state.activeProvider);
 				if (!current.connected || !current.selected_list || !current.fields.length) {
 					event.preventDefault();
-					showMessage(i18n('missingDestination', 'Connect a provider and choose a destination before saving.'), 'error');
+					const meta = definition(state.activeProvider);
+					showMessage(format(
+						i18n('missingDestination', 'Connect %1$s and choose a %2$s before saving.'),
+						meta.label,
+						String(meta.destination_singular || '').toLowerCase()
+					), 'error');
 					return;
 				}
 				if (!requiredEmailMapped()) {
 					event.preventDefault();
-					showMessage(i18n('missingEmailMapping', 'Select a Contact Form 7 field for Subscriber Email.'), 'error');
+					showMessage(i18n('missingEmailMapping', 'Select a Contact Form 7 field for the required email address.'), 'error');
 					const emailRow = root.querySelector('[data-required="1"]:not([hidden])');
 					const emailSelect = emailRow ? emailRow.querySelector('[data-mapping-slot]') : null;
 					if (emailSelect) emailSelect.focus();
@@ -964,6 +1580,18 @@
 					event.preventDefault();
 					showMessage(i18n('consentIncomplete', 'Complete the consent and opt-in settings before saving.'), 'error');
 					return;
+				}
+				if ('mailerlite' === state.activeProvider && current.routing_entitled) {
+					const validation = routingValidation(current);
+					if (validation.size) {
+						event.preventDefault();
+						routingValidationVisible = true;
+						render();
+						showMessage(i18n('routingFixBeforeSave', 'Complete or remove the highlighted routing rules before saving.'), 'error');
+						const firstInvalid = routingRuleList.querySelector('[aria-invalid="true"]');
+						if (firstInvalid) firstInvalid.focus();
+						return;
+					}
 				}
 				setBusy(saveButton, true, i18n('saving', 'Saving...'));
 			});

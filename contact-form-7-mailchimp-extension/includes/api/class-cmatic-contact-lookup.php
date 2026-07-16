@@ -300,8 +300,8 @@ class Cmatic_Contact_Lookup {
 		?>
 		<div id="cmatic-contact-lookup" class="postbox mce-move mce-hidden">
 			<div class="inside" style="padding: 15px;">
-				<h3 style="margin: 0 0 10px;"><?php esc_html_e( 'Contact Lookup', 'chimpmatic-lite' ); ?></h3>
-				<p><?php esc_html_e( 'Debug tool: Check if a subscriber exists in your Mailchimp account and view their status across all your audiences.', 'chimpmatic-lite' ); ?></p>
+				<h3 style="margin: 0 0 10px;"><?php esc_html_e( 'Find a Mailchimp contact', 'chimpmatic-lite' ); ?></h3>
+				<p><?php esc_html_e( 'Check whether a contact exists in Mailchimp and view their status in each audience.', 'chimpmatic-lite' ); ?></p>
 
 				<div style="margin: 15px 0;">
 					<input type="email"
@@ -310,7 +310,7 @@ class Cmatic_Contact_Lookup {
 						data-form-id="<?php echo esc_attr( $args['form_id'] ); ?>"
 						style="width: 100%; margin-bottom: 8px;">
 					<button type="button" id="cmatic-lookup-btn" class="button button-primary" style="width: 100%;">
-						<?php esc_html_e( 'Lookup', 'chimpmatic-lite' ); ?>
+						<?php esc_html_e( 'Find contact', 'chimpmatic-lite' ); ?>
 					</button>
 				</div>
 

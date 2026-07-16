@@ -150,7 +150,7 @@ class Cmatic_Api_Panel {
 		<div class="cmatic-field-group cmatic-oauth-state">
 			<div class="cmatic-mailchimp-connect-intro">
 				<h2 id="cmatic-mailchimp-connect-heading"><?php echo esc_html__( 'Connect Mailchimp', 'chimpmatic-lite' ); ?></h2>
-				<p><?php echo esc_html__( 'Connect Mailchimp to choose an audience and map its fields.', 'chimpmatic-lite' ); ?></p>
+				<p><?php echo esc_html__( 'Connect Mailchimp to choose an audience and map its merge fields.', 'chimpmatic-lite' ); ?></p>
 			</div>
 			<div class="cmatic-connect-options" aria-label="<?php echo esc_attr__( 'Mailchimp connection options', 'chimpmatic-lite' ); ?>">
 				<div class="cmatic-auth-choice-wrap cmatic-oauth-connect-wrap">

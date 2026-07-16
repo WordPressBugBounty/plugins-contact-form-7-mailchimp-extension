@@ -4,25 +4,30 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.80.00
+Stable tag: 0.9.81.03
 Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Connect Contact Form 7 to Mailchimp, Brevo, MailerLite, or Klaviyo. Choose a provider per form, select a destination, and map subscriber fields.
+Contact Form 7 integration for Mailchimp, Brevo, MailerLite, and Klaviyo. Send form leads to email marketing lists and audiences.
 
 == Description ==
 
-**ChimpMatic Lite connects Contact Form 7 to Mailchimp, Brevo, MailerLite, and Klaviyo.** Send form submissions to the email marketing provider and destination you choose, without replacing Contact Form 7 or adding a heavyweight automation platform.
+**ChimpMatic Lite is a Mailchimp integration for Contact Form 7 that also connects forms to Brevo, MailerLite, and Klaviyo.** Send form submissions to email marketing lists, audiences, or groups without replacing Contact Form 7 or adding a separate automation platform.
 
-Select a provider for each form, connect your account, choose an audience, list, or group, and map Contact Form 7 fields to subscriber fields. Existing Mailchimp forms remain compatible and continue using their saved settings after upgrading.
+Choose a provider for each form, connect the account, select a destination, and map Contact Form 7 fields to subscriber fields. Existing Mailchimp forms keep their saved audience, field mappings, credentials, and opt-in settings after upgrading.
 
-= Four Email Marketing Integrations, One Familiar Workflow =
+= Contact Form 7 Email Marketing Integrations =
 
-* **Mailchimp for Contact Form 7** - Connect with one-click OAuth or an API key, select an audience, map merge fields, and choose single or double opt-in. [Read the Mailchimp setup guide](https://chimpmatic.com/integrations/mailchimp/).
-* **Brevo for Contact Form 7** - Connect with a Brevo API key, select a list, map contact attributes, and choose direct subscription or a Brevo confirmation email. [Read the Brevo setup guide](https://chimpmatic.com/integrations/brevo/).
-* **MailerLite for Contact Form 7** - Connect with a MailerLite API token, select a group, and map subscriber fields. Double opt-in follows your MailerLite account setting. [Read the MailerLite setup guide](https://chimpmatic.com/integrations/mailerlite/).
-* **Klaviyo for Contact Form 7** - Connect with a Klaviyo private API key, select a list, and map profile properties. Confirmation behavior follows the selected Klaviyo list. [Read the Klaviyo setup guide](https://chimpmatic.com/integrations/klaviyo/).
+Choose one provider independently for each Contact Form 7 form. Each integration sends submitted subscriber data directly to the audience, list, or group selected in that form's settings.
+
+**Mailchimp integration for Contact Form 7** - Connect through one-click OAuth or an API key, choose an audience, map merge fields, and select single or double opt-in. [Read the Mailchimp setup guide](https://chimpmatic.com/integrations/mailchimp/).
+
+**Brevo integration for Contact Form 7** - Connect with a Brevo API key, choose a list, map contact attributes, and select direct subscription or a Brevo confirmation email. [Read the Brevo setup guide](https://chimpmatic.com/integrations/brevo/).
+
+**MailerLite integration for Contact Form 7** - Connect with a MailerLite API token, choose a group, and map subscriber fields. Double opt-in follows the MailerLite account setting. [Read the MailerLite setup guide](https://chimpmatic.com/integrations/mailerlite/).
+
+**Klaviyo integration for Contact Form 7** - Connect with a Klaviyo private API key, choose a list, and map profile properties. Confirmation behavior follows the selected Klaviyo list. [Read the Klaviyo setup guide](https://chimpmatic.com/integrations/klaviyo/).
 
 = Free Features =
 
@@ -83,9 +88,23 @@ Mailchimp supports OAuth or an API key. Brevo uses an API key, MailerLite uses a
 
 = Which email marketing providers does ChimpMatic Lite support? =
 
-Version 0.9.80.00 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
+Version 0.9.81.03 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
 
-[Read more about supported email marketing integrations](https://chimpmatic.com/integrations/).
+= How do I connect Mailchimp to Contact Form 7? =
+
+Open the ChimpMatic tab in the Contact Form 7 editor, select Mailchimp, connect with OAuth or an API key, choose an audience, and map the form's email field. You can then configure consent and single or double opt-in. [Follow the Mailchimp setup guide](https://chimpmatic.com/integrations/mailchimp/).
+
+= How do I connect Brevo to Contact Form 7? =
+
+Open the ChimpMatic tab, select Brevo, enter a Brevo API key, choose a list, and map the form fields to Brevo contact attributes. You can subscribe the contact directly or use a Brevo confirmation email. [Follow the Brevo setup guide](https://chimpmatic.com/integrations/brevo/).
+
+= Can Contact Form 7 send subscribers to MailerLite? =
+
+Yes. Select MailerLite in the ChimpMatic tab, connect with an API token, choose a group, and map the Contact Form 7 email field and subscriber fields. MailerLite applies the account's API double-opt-in setting. [Follow the MailerLite setup guide](https://chimpmatic.com/integrations/mailerlite/).
+
+= Can Contact Form 7 send leads to Klaviyo? =
+
+Yes. Select Klaviyo in the ChimpMatic tab, connect with a private API key, choose a list, and map Contact Form 7 fields to Klaviyo profile properties. Consent behavior follows the selected Klaviyo list. [Follow the Klaviyo setup guide](https://chimpmatic.com/integrations/klaviyo/).
 
 = Will my existing Mailchimp forms keep working? =
 
@@ -93,17 +112,9 @@ Yes. Existing configurations default to Mailchimp and retain their saved audienc
 
 [Read more about the Contact Form 7 Mailchimp integration](https://chimpmatic.com/integrations/mailchimp/).
 
-= Can I connect without an API key? =
-
-Mailchimp supports one-click OAuth. Brevo requires an API key, MailerLite requires an API token, and Klaviyo requires a private API key.
-
-[Read more about connecting each provider and finding its API credentials](https://chimpmatic.com/integrations/).
-
 = Can different forms use different providers? =
 
 Yes. A newsletter form can send to MailerLite while a lead form sends to Brevo, for example. Every form stores its own provider, credentials, destination, mappings, and opt-in configuration.
-
-[Read more about configuring providers per Contact Form 7 form](https://chimpmatic.com/integrations/).
 
 = Does ChimpMatic support double opt-in? =
 
@@ -128,133 +139,18 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 
 == Upgrade Notice ==
 
-= 0.9.80.00 =
-Adds per-form integrations for Brevo, MailerLite, and Klaviyo alongside Mailchimp. Existing Mailchimp configurations remain compatible.
+= 0.9.81.03 =
+Improved MailerLite support and an updated listing. Existing Mailchimp configurations remain compatible.
 
 = 0.9.78.07 =
 Security release: fixes a stored cross-site scripting vulnerability in the Contact Lookup tool (CVE-2026-15000). All users should update.
 
-= 0.9.78.06 =
-One-click Mailchimp connection, a smarter audience panel, and reliability fixes for checkbox fields and special mail-tags.
-
 == Changelog ==
 
-= 0.9.80.00 =
+= 0.9.81.03 =
 
-[Version 0.9.80.00 release notes](https://chimpmatic.com/changelog#0.9.80.00)
+Improved MailerLite support and refreshed the plugin listing. Existing Mailchimp configurations remain compatible.
 
-= 0.9.78.07 =
+[Version 0.9.81.03 release notes](https://chimpmatic.com/changelog#0.9.81.03)
 
-[Version 0.9.78.07 release notes](https://chimpmatic.com/changelog#0.9.78.07)
-
-= 0.9.78.06 =
-
-[Version 0.9.78.06 release notes](https://chimpmatic.com/changelog#0.9.78.06)
-
-= 0.9.78.05 =
-
-[Version 0.9.78.05 release notes](https://chimpmatic.com/changelog#0.9.78.05)
-
-= 0.9.78.04 =
-
-[Version 0.9.78.04 release notes](https://chimpmatic.com/changelog#0.9.78.04)
-
-= 0.9.78.02 =
-
-[Version 0.9.78.02 release notes](https://chimpmatic.com/changelog#0.9.78.02)
-
-= 0.9.75 =
-
-[Version 0.9.75 release notes](https://chimpmatic.com/changelog#0.9.75)
-
-= 0.9.73 =
-
-[Version 0.9.73 release notes](https://chimpmatic.com/changelog#0.9.73)
-
-= 0.9.22 =
-
-[Version 0.9.22 release notes](https://chimpmatic.com/changelog#0.9.22)
-
-= 0.8.01 =
-
-[Version 0.8.01 release notes](https://chimpmatic.com/changelog#0.8.01)
-
-= 0.7.50 =
-
-[Version 0.7.50 release notes](https://chimpmatic.com/changelog#0.7.50)
-
-= 0.7.01 =
-
-[Version 0.7.01 release notes](https://chimpmatic.com/changelog#0.7.01)
-
-= 0.6.10 =
-
-[Version 0.6.10 release notes](https://chimpmatic.com/changelog#0.6.10)
-
-= 0.5.64 =
-
-[Version 0.5.64 release notes](https://chimpmatic.com/changelog#0.5.64)
-
-= 0.5.01 =
-
-[Version 0.5.01 release notes](https://chimpmatic.com/changelog#0.5.01)
-
-= 0.4.60 =
-
-[Version 0.4.60 release notes](https://chimpmatic.com/changelog#0.4.60)
-
-= 0.4.43 =
-
-[Version 0.4.43 release notes](https://chimpmatic.com/changelog#0.4.43)
-
-= 0.4.01 =
-
-[Version 0.4.01 release notes](https://chimpmatic.com/changelog#0.4.01)
-
-= 0.3.50 =
-
-[Version 0.3.50 release notes](https://chimpmatic.com/changelog#0.3.50)
-
-= 0.3.40 =
-
-[Version 0.3.40 release notes](https://chimpmatic.com/changelog#0.3.40)
-
-= 0.3.20 =
-
-[Version 0.3.20 release notes](https://chimpmatic.com/changelog#0.3.20)
-
-= 0.3.10 =
-
-[Version 0.3.10 release notes](https://chimpmatic.com/changelog#0.3.10)
-
-= 0.3.01 =
-
-[Version 0.3.01 release notes](https://chimpmatic.com/changelog#0.3.01)
-
-= 0.2.30 =
-
-[Version 0.2.30 release notes](https://chimpmatic.com/changelog#0.2.30)
-
-= 0.2.20 =
-
-[Version 0.2.20 release notes](https://chimpmatic.com/changelog#0.2.20)
-
-= 0.2.15 =
-
-[Version 0.2.15 release notes](https://chimpmatic.com/changelog#0.2.15)
-
-= 0.2.10 =
-
-[Version 0.2.10 release notes](https://chimpmatic.com/changelog#0.2.10)
-
-= 0.2.5 =
-
-[Version 0.2.5 release notes](https://chimpmatic.com/changelog#0.2.5)
-
-= 0.1.5 =
-
-[Version 0.1.5 release notes](https://chimpmatic.com/changelog#0.1.5)
-
-= 0.1.2 =
-
-[Version 0.1.2 release notes](https://chimpmatic.com/changelog#0.1.2)
+[View the complete ChimpMatic changelog](https://chimpmatic.com/changelog)

@@ -42,6 +42,8 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/interfaces/interface-cmatic-logger.php';
 		require_once $this->dir . 'includes/interfaces/interface-cmatic-api-client.php';
 		require_once $this->dir . 'includes/interfaces/interface-cmatic-lite-esp-provider.php';
+		require_once $this->dir . 'includes/interfaces/interface-cmatic-lite-esp-field-creator.php';
+		require_once $this->dir . 'includes/interfaces/interface-cmatic-lite-esp-lookup.php';
 
 		require_once $this->dir . 'includes/core/class-cmatic-container.php';
 
@@ -88,10 +90,17 @@ final class Cmatic_Plugin {
 			'providers/class-cmatic-lite-esp-registry.php',
 			'providers/class-cmatic-lite-esp-manifest.php',
 			'services/submission/class-cmatic-email-extractor.php',
+			'services/submission/class-cmatic-mailerlite-routing-resolver.php',
+			'services/submission/class-cmatic-mailerlite-runtime-policy.php',
+			'services/submission/class-cmatic-consent-decision.php',
+			'services/submission/class-cmatic-request-ip.php',
+			'services/submission/class-cmatic-mailerlite-field-normalizer.php',
 			'services/submission/class-cmatic-status-resolver.php',
 			'services/submission/class-cmatic-merge-vars-builder.php',
 			'services/submission/class-cmatic-response-handler.php',
 			'services/submission/class-cmatic-mailchimp-subscriber.php',
+			'services/class-cmatic-mailerlite-degradation-reporter.php',
+			'services/submission/class-cmatic-mailerlite-submission-pipeline.php',
 			'services/class-cmatic-submission-handler.php',
 			'api/class-cmatic-rest-lists.php',
 			'api/class-cmatic-rest-settings.php',
@@ -102,6 +111,7 @@ final class Cmatic_Plugin {
 			'admin/class-cmatic-deactivation-survey.php',
 			'admin/class-cmatic-asset-loader.php',
 			'admin/class-cmatic-admin-panel.php',
+			'admin/class-cmatic-lite-esp-degrade-notice.php',
 			'api/class-cmatic-log-viewer.php',
 			'api/class-cmatic-contact-lookup.php',
 			'api/class-cmatic-rest-oauth.php',
@@ -155,6 +165,7 @@ final class Cmatic_Plugin {
 
 		Cmatic_CF7_Tags::init();
 		Cmatic_Admin_Panel::init();
+		Cmatic_Lite_Esp_Degrade_Notice::init();
 		Cmatic_Submission_Handler::init();
 		Cmatic_Banners::init();
 		Cmatic_Form_Classes::init();

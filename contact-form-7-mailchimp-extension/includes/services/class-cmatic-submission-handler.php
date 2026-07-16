@@ -59,7 +59,8 @@ final class Cmatic_Submission_Handler {
 
 		$list_value = $cf7_mch['list'] ?? '';
 		if ( is_array( $list_value ) ) {
-			$list_value = (string) ( reset( $list_value ) ?: '' );
+			$first_list = reset( $list_value );
+			$list_value = (string) ( false === $first_list ? '' : $first_list );
 		}
 		$list_id = Cmatic_Email_Extractor::replace_tags( $list_value, $posted_data );
 		$status  = Cmatic_Status_Resolver::resolve( $cf7_mch, $posted_data, $logger );
@@ -99,8 +100,21 @@ final class Cmatic_Submission_Handler {
 		}
 		$posted_data = $submission->get_posted_data();
 		$logger      = new Cmatic_File_Logger( 'api-events-' . $slug, (bool) Cmatic_Options_Repository::get_option( 'debug', false ) );
-		$advanced    = Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id );
-		$runtime     = $settings;
+		if ( 'mailerlite' === $slug ) {
+			$pipeline = new Cmatic_Mailerlite_Submission_Pipeline( Cmatic_Lite_Esp_Registry::get( $slug ) );
+			$pipeline->process(
+				$form_id,
+				$settings,
+				$posted_data,
+				Cmatic_Form_Tags::get_tags_with_types( $contact_form ),
+				$api_key,
+				Cmatic_Lite_Esp_Capabilities::field_limit( $slug, $form_id ),
+				$logger
+			);
+			return;
+		}
+		$advanced = Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id );
+		$runtime  = $settings;
 		if ( ! $advanced ) {
 			foreach ( array( 'consent_gate', 'consent_field', 'subscription_mode', 'doi_template_id', 'doi_redirect_url', 'doi_verified' ) as $premium_key ) {
 				unset( $runtime[ $premium_key ] );

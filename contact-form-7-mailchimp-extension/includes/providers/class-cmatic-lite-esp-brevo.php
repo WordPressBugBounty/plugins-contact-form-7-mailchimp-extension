@@ -67,7 +67,7 @@ final class Cmatic_Lite_Esp_Brevo extends Cmatic_Lite_Esp_Provider {
 		$fields = array(
 			array(
 				'tag'           => 'EMAIL',
-				'name'          => __( 'Subscriber Email', 'chimpmatic-lite' ),
+				'name'          => __( 'Contact email address', 'chimpmatic-lite' ),
 				'type'          => 'email',
 				'display_order' => 0,
 			),

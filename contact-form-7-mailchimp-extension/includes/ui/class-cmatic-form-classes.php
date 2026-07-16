@@ -46,12 +46,12 @@ class Cmatic_Form_Classes {
 
 		if ( defined( 'SPARTAN_MCE_VERSION' ) ) {
 			$version   = str_replace( '.', '', SPARTAN_MCE_VERSION );
-			$classes[] = 'cmatic-v' . $version;
+			$classes[] = 'cmatic-' . $version;
 		}
 
 		if ( defined( 'CMATIC_VERSION' ) ) {
 			$pro_version = str_replace( '.', '', CMATIC_VERSION );
-			$classes[]   = 'cmatic-pro-v' . $pro_version;
+			$classes[]   = 'cmatic-pro-' . $pro_version;
 		}
 
 		if ( $contact_form ) {

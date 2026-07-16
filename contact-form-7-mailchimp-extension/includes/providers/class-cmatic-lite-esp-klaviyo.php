@@ -78,7 +78,7 @@ final class Cmatic_Lite_Esp_Klaviyo extends Cmatic_Lite_Esp_Provider {
 		return array(
 			array(
 				'tag'           => 'EMAIL',
-				'name'          => __( 'Subscriber Email', 'chimpmatic-lite' ),
+				'name'          => __( 'Profile email address', 'chimpmatic-lite' ),
 				'type'          => 'email',
 				'display_order' => 0,
 			),
