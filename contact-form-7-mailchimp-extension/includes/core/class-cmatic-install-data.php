@@ -32,7 +32,7 @@ class Cmatic_Install_Data {
 			$changed         = true;
 		}
 
-		if ( empty( $data['install']['id'] ) ) {
+		if ( ! self::valid_install_id( isset( $data['install']['id'] ) ? $data['install']['id'] : '' ) ) {
 			list( $data['install']['id'], $regenerated ) = $this->recover_or_generate_id();
 			$changed                                     = true;
 		}
@@ -61,7 +61,7 @@ class Cmatic_Install_Data {
 
 	public function get_install_id() {
 		$install_id = $this->options->get( 'install.id', '' );
-		if ( ! empty( $install_id ) ) {
+		if ( self::valid_install_id( $install_id ) ) {
 			if ( get_option( self::INSTALL_ID_OPTION, '' ) === '' ) {
 				update_option( self::INSTALL_ID_OPTION, $install_id, 'no' );
 			}
@@ -102,12 +102,12 @@ class Cmatic_Install_Data {
 	 */
 	private function recover_or_generate_id(): array {
 		$standalone = get_option( self::INSTALL_ID_OPTION, '' );
-		if ( ! empty( $standalone ) ) {
+		if ( self::valid_install_id( $standalone ) ) {
 			return array( $standalone, false );
 		}
 
 		$raw = get_option( 'cmatic', array() );
-		if ( is_array( $raw ) && ! empty( $raw['install']['id'] ) ) {
+		if ( is_array( $raw ) && self::valid_install_id( isset( $raw['install']['id'] ) ? $raw['install']['id'] : '' ) ) {
 			update_option( self::INSTALL_ID_OPTION, $raw['install']['id'], 'no' );
 			return array( $raw['install']['id'], false );
 		}
@@ -116,13 +116,11 @@ class Cmatic_Install_Data {
 	}
 
 	private function generate_install_id(): string {
-		$new_id = bin2hex( random_bytes( 6 ) );
+		return bin2hex( random_bytes( 16 ) );
+	}
 
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( '[Chimpmatic] install_id generated: ' . $new_id ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-		}
-
-		return $new_id;
+	private static function valid_install_id( $install_id ): bool {
+		return is_string( $install_id ) && 1 === preg_match( '/^(?:[a-f0-9]{12}|[a-f0-9]{32})$/', $install_id );
 	}
 
 	private function determine_quest( $data ) {

@@ -557,7 +557,7 @@ function chimpmaticLiteInit() {
 	}
 
 	function initToggleAutoSave() {
-		const globalFields = ['debug', 'backlink', 'auto_update', 'telemetry'];
+		const globalFields = ['debug', 'backlink', 'auto_update', 'signls_sharing'];
 		const toggles = document.querySelectorAll('.cmatic-toggle input[data-field]');
 		if (toggles.length === 0) return;
 
@@ -585,7 +585,8 @@ function chimpmaticLiteInit() {
 					const data = await response.json();
 					if (wrapper) wrapper.classList.remove('is-saving');
 					if (data.success) {
-						this.defaultChecked = this.checked;
+						this.checked = enabled;
+						this.defaultChecked = enabled;
 					} else {
 						this.checked = !enabled;
 					}

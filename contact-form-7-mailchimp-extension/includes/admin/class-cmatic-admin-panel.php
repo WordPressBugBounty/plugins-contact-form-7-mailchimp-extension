@@ -24,6 +24,7 @@ final class Cmatic_Admin_Panel {
 
 	public static function init(): void {
 		add_filter( 'wpcf7_editor_panels', array( __CLASS__, 'register_panel' ) );
+		add_filter( 'wpcf7_editor_panels', array( __CLASS__, 'append_lite_settings_to_pro_panel' ), 20 );
 		add_action( 'wpcf7_after_save', array( __CLASS__, 'capture_settings' ), 1 );
 		add_action( 'wpcf7_after_save', array( __CLASS__, 'save_settings' ), 10 );
 		add_action( 'wpcf7_after_save', array( __CLASS__, 'save_provider_settings' ), 12 );
@@ -50,6 +51,30 @@ final class Cmatic_Admin_Panel {
 		);
 
 		return $panels;
+	}
+
+	public static function append_lite_settings_to_pro_panel( array $panels ): array {
+		if (
+			! class_exists( 'Cmatic_Pro_Esp_Bridge' )
+			|| ! Cmatic_Pro_Esp_Bridge::is_compatible()
+			|| ! isset( $panels[ self::PANEL_KEY ]['callback'] )
+			|| 'wpcf7_chimp_add_mailchimp' !== $panels[ self::PANEL_KEY ]['callback']
+		) {
+			return $panels;
+		}
+
+		$panels[ self::PANEL_KEY ]['callback'] = array( __CLASS__, 'render_pro_panel_with_lite_settings' );
+
+		return $panels;
+	}
+
+	public static function render_pro_panel_with_lite_settings( $contact_form ): void {
+		if ( ! function_exists( 'wpcf7_chimp_add_mailchimp' ) ) {
+			return;
+		}
+
+		wpcf7_chimp_add_mailchimp( $contact_form );
+		Cmatic_Advanced_Settings::render_signls_section();
 	}
 
 	public static function render_panel( $contact_form ): void {

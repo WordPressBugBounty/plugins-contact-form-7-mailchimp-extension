@@ -20,30 +20,30 @@ final class Cmatic_Rest_Settings {
 
 	/** @var array Allowed GLOBAL settings configuration (toggles in Advanced Settings panel). */
 	protected static $allowed_settings = array(
-		'debug'       => array(
+		'debug'          => array(
 			'type' => 'cmatic',
 			'path' => 'debug',
 		),
-		'backlink'    => array(
+		'backlink'       => array(
 			'type' => 'cmatic',
 			'path' => 'backlink',
 		),
-		'auto_update' => array(
+		'auto_update'    => array(
 			'type' => 'cmatic',
 			'path' => 'auto_update',
 		),
-		'telemetry'   => array(
-			'type' => 'cmatic',
-			'path' => 'telemetry.enabled',
+		'signls_sharing' => array(
+			'type' => 'signls',
+			'path' => 'signls.consent_status',
 		),
 	);
 
 	/** @var array Field labels for user messages. */
 	protected static $field_labels = array(
-		'debug'       => 'Debug Logger',
-		'backlink'    => 'Developer Backlink',
-		'auto_update' => 'Auto Update',
-		'telemetry'   => 'Usage Statistics',
+		'debug'          => 'Debug Logger',
+		'backlink'       => 'Developer Backlink',
+		'auto_update'    => 'Auto Update',
+		'signls_sharing' => 'Product Insights Sharing',
 	);
 
 	public static function init() {
@@ -90,7 +90,7 @@ final class Cmatic_Rest_Settings {
 						'type'              => 'string',
 						'default'           => 'news',
 						'sanitize_callback' => 'sanitize_text_field',
-						'enum'              => array( 'news', 'upgrade', 'license_banner' ),
+						'enum'              => array( 'news', 'upgrade', 'license_banner', 'signls_consent' ),
 					),
 					'state'     => array(
 						'required'          => false,
@@ -138,11 +138,13 @@ final class Cmatic_Rest_Settings {
 
 		$field_config = self::$allowed_settings[ $field ];
 
-		if ( 'telemetry' === $field ) {
-			self::handle_telemetry_toggle( $enabled );
+		if ( 'signls_sharing' === $field ) {
+			if ( ! self::handle_signls_toggle( (bool) $enabled ) ) {
+				return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'chimpmatic-lite' ), array( 'status' => 500 ) );
+			}
+		} else {
+			Cmatic_Options_Repository::set_option( $field_config['path'], $enabled ? 1 : 0 );
 		}
-
-		Cmatic_Options_Repository::set_option( $field_config['path'], $enabled ? 1 : 0 );
 
 		$label = self::$field_labels[ $field ] ?? ucfirst( str_replace( '_', ' ', $field ) );
 
@@ -158,6 +160,32 @@ final class Cmatic_Rest_Settings {
 					: sprintf( __( '%s disabled.', 'chimpmatic-lite' ), $label ),
 			)
 		);
+	}
+
+	private static function handle_signls_toggle( bool $enabled ): bool {
+		$data = Cmatic_Options_Repository::get_all_options();
+		if ( ! isset( $data['signls'] ) || ! is_array( $data['signls'] ) ) {
+			$data['signls'] = array();
+		}
+		$now                                       = time();
+		$data['signls']['consent_status']          = $enabled ? 'enabled' : 'disabled';
+		$data['signls']['consent_version']         = 1;
+		$data['signls']['consent_last_changed_at'] = $now;
+		$data['signls']['consent_source']          = 'admin_settings_rest';
+		$data['signls']['notice_version']          = Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION;
+		if ( $enabled && empty( $data['signls']['consent_first_enabled_at'] ) ) {
+			$data['signls']['consent_first_enabled_at'] = $now;
+		}
+		$saved = Cmatic_Options_Repository::instance()->save( $data );
+		if ( ! $saved && get_option( 'cmatic', array() ) !== $data ) {
+			return false;
+		}
+		if ( $enabled ) {
+			\Signls\Sdk\V1\Runtime::enable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION );
+		} else {
+			\Signls\Sdk\V1\Runtime::disable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION );
+		}
+		return true;
 	}
 
 	protected static function handle_telemetry_toggle( $enabled ) {
@@ -193,6 +221,14 @@ final class Cmatic_Rest_Settings {
 		$notice_id = $request->get_param( 'notice_id' );
 
 		switch ( $notice_id ) {
+			case 'signls_consent':
+				$result = Cmatic_Lite_Signls_Consent_Notice::dismiss( (string) $request->get_param( 'state' ) );
+				if ( false === $result ) {
+					return new WP_Error( 'bad_state', esc_html__( 'Unknown notice version.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+				}
+				$message = __( 'Sharing notice dismissed.', 'chimpmatic-lite' );
+				break;
+
 			case 'license_banner':
 				$result = class_exists( 'Cmatic_License_Banner' )
 					? Cmatic_License_Banner::handle_dismiss( (string) $request->get_param( 'state' ) )

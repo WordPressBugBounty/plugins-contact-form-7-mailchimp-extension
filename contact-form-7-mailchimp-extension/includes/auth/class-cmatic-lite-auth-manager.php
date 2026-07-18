@@ -123,17 +123,18 @@ class Cmatic_Lite_Auth_Manager {
 	/**
 	 * Resolve the credential for a form.
 	 *
+	 * A manually entered key always wins over a stored OAuth envelope: every
+	 * OAuth connect clears cf7_mch['api'], so a non-empty manual key can only
+	 * exist because the user entered it AFTER the last OAuth connect. A stale
+	 * envelope must never shadow it (a revoked envelope key caused submission
+	 * 401s while the UI still reported the form as connected).
+	 *
 	 * @param int    $form_id     Form ID.
 	 * @param string $fallback    Optional explicit API key (from REST param).
 	 * @param array  $cf7_mch     Optional pre-loaded config (avoids duplicate get_option).
 	 * @return string API key or empty string.
 	 */
 	public function resolve_api_key( $form_id, $fallback = '', $cf7_mch = null ) {
-		$credentials = $this->get_credentials( $form_id );
-		if ( $credentials ) {
-			return $credentials->get_api_key();
-		}
-
 		if ( ! empty( $fallback ) ) {
 			return $fallback;
 		}
@@ -142,7 +143,16 @@ class Cmatic_Lite_Auth_Manager {
 			$cf7_mch = get_option( 'cf7_mch_' . $form_id, array() );
 		}
 
-		return ! empty( $cf7_mch['api'] ) ? $cf7_mch['api'] : '';
+		if ( ! empty( $cf7_mch['api'] ) ) {
+			return $cf7_mch['api'];
+		}
+
+		$credentials = $this->get_credentials( $form_id );
+		if ( $credentials ) {
+			return $credentials->get_api_key();
+		}
+
+		return '';
 	}
 
 	public static function restore_all_api_keys() {

@@ -64,6 +64,13 @@ final class Cmatic_Lite_Esp_Credentials {
 		return $plaintext;
 	}
 
+	public static function has( int $form_id, string $provider ): bool {
+		$credential = self::get( $form_id, $provider );
+		$present    = '' !== $credential;
+		unset( $credential );
+		return $present;
+	}
+
 	public static function delete( int $form_id, string $provider ): bool {
 		return delete_option( self::option_name( $form_id, $provider ) );
 	}

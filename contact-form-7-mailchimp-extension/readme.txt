@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.81.03
+Stable tag: 0.9.81.04
 Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -58,6 +58,12 @@ ChimpMatic is independently developed and is not affiliated with or endorsed by 
 
 [Read how each external service is used, what data is sent, and review provider terms and privacy policies](https://chimpmatic.com/external-services/).
 
+ChimpMatic Lite also offers an optional, unchecked “Help Us Improve” setting. Only after an administrator enables it, the plugin sends pseudonymous aggregate product signals to `https://signls.dev` so we can understand compatibility, provider adoption, feature use, setup friction, and reliability. The data includes a stable pseudonymous plugin install ID; a random device ID that rotates when the site origin changes; ChimpMatic Lite, WordPress, PHP, and Contact Form 7 versions; multisite state; aggregate configured and active form counts; provider authentication preference counts (OAuth, API key, or no credential); destination and mapping counts; fixed feature counts; aggregate operation success/failure classes; and whether ChimpMatic Pro is installed, active, its version, and a bounded license-state category.
+
+Signls sharing never includes contact data, credentials, license keys, form IDs, field names or values, list/group/audience identifiers, account identifiers, raw errors, IP addresses, user agents, or your site URL. Active installations send at most once daily; installations without relevant activity send at most once weekly. Detailed delivery receipts are retained for 90 days, first-observation daily aggregates are retained permanently for trend analysis, and the stable pseudonymous install identity is retained to measure long-term product adoption. You can disable sharing at any time in Help Us Improve; disabling cancels future delivery and clears the local delivery credential without sending an opt-out event.
+
+Signls service terms: [Terms and Conditions](https://chimpmatic.com/terms-and-conditions) · [Privacy Policy](https://chimpmatic.com/privacy).
+
 = Requirements =
 
 1. WordPress 6.4 or higher.
@@ -88,7 +94,7 @@ Mailchimp supports OAuth or an API key. Brevo uses an API key, MailerLite uses a
 
 = Which email marketing providers does ChimpMatic Lite support? =
 
-Version 0.9.81.03 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
+Version 0.9.81.04 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
 
 = How do I connect Mailchimp to Contact Form 7? =
 
@@ -139,6 +145,9 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 
 == Upgrade Notice ==
 
+= 0.9.81.04 =
+Adds optional product-insights sharing that remains off until an administrator enables it. Existing provider integrations are unchanged.
+
 = 0.9.81.03 =
 Improved MailerLite support and an updated listing. Existing Mailchimp configurations remain compatible.
 
@@ -146,6 +155,12 @@ Improved MailerLite support and an updated listing. Existing Mailchimp configura
 Security release: fixes a stored cross-site scripting vulnerability in the Contact Lookup tool (CVE-2026-15000). All users should update.
 
 == Changelog ==
+
+= 0.9.81.04 =
+
+Added optional, explicit-consent product-insights sharing with privacy-safe aggregate signals and reliable daily or weekly delivery. It does not send contact data, credentials, site URLs, IP addresses, or user agents.
+
+[Version 0.9.81.04 release notes](https://chimpmatic.com/changelog#0.9.81.04)
 
 = 0.9.81.03 =
 

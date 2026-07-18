@@ -183,7 +183,9 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/ui/class-cmatic-notification-center.php';
 		require_once $this->dir . 'includes/ui/class-cmatic-admin-bar-menu.php';
 
-		require_once $this->dir . 'includes/signals/autoload.php';
+		require_once $this->dir . 'includes/admin/class-cmatic-lite-signls-privacy.php';
+		require_once $this->dir . 'includes/admin/class-cmatic-lite-signls-consent-notice.php';
+		require_once $this->dir . 'includes/signls/loader.php';
 	}
 
 	private function initialize_late_components(): void {
@@ -193,10 +195,20 @@ final class Cmatic_Plugin {
 		Cmatic_Notification_Center::get();
 		Cmatic_Admin_Bar_Menu::instance();
 
-		Cmatic\Metrics\Bootstrap::init(
+		Cmatic_Lite_Signls_Privacy::init();
+		Cmatic_Lite_Signls_Consent_Notice::init();
+		Signls_Sdk_Loader::register(
 			array(
-				'plugin_basename' => $this->basename,
-				'endpoint_url'    => 'https://signls.dev/wp-json/chimpmatic/v1/telemetry',
+				'product_slug'      => 'contact-form-7-mailchimp-extension',
+				'main_file'         => $this->file,
+				'sdk_path'          => $this->dir . 'includes/signls',
+				'sdk_version'       => '1.0.0',
+				'adapter_file'      => $this->dir . 'includes/services/class-cmatic-lite-signls-adapter.php',
+				'adapter_class'     => 'Cmatic_Lite_Signls_Adapter',
+				'consent_reader'    => array( 'Cmatic_Lite_Signls_Privacy', 'consent_status' ),
+				'install_id_reader' => static function (): string {
+					return ( new Cmatic_Lite_Signls_Adapter() )->install_id();
+				},
 			)
 		);
 	}
