@@ -63,7 +63,6 @@ class Cmatic_Api_Panel {
 					data-has-key="1"
 				/>
 			</div>
-			<small class="description"><?php esc_html_e( 'Stored credentials stay hidden. Paste a new key to replace this one.', 'chimpmatic-lite' ); ?></small>
 
 			<input
 				id="chm_activalist"
@@ -71,6 +70,8 @@ class Cmatic_Api_Panel {
 				value="<?php echo esc_attr( $btn_value ); ?>"
 				class="<?php echo esc_attr( $btn_class ); ?>"
 			/>
+
+			<small class="description"><?php esc_html_e( 'Stored credentials stay hidden. Paste a new key to replace this one.', 'chimpmatic-lite' ); ?></small>
 
 			<small class="description need-api">
 				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'chimpmatic-lite' ); ?>">

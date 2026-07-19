@@ -197,7 +197,7 @@ final class Cmatic_Plugin {
 
 		Cmatic_Lite_Signls_Privacy::init();
 		Cmatic_Lite_Signls_Consent_Notice::init();
-		Signls_Sdk_Loader::register(
+		$signls_registered = Signls_Sdk_Loader::register(
 			array(
 				'product_slug'      => 'contact-form-7-mailchimp-extension',
 				'main_file'         => $this->file,
@@ -211,5 +211,12 @@ final class Cmatic_Plugin {
 				},
 			)
 		);
+		if ( $signls_registered ) {
+			if ( did_action( 'plugins_loaded' ) ) {
+				Cmatic_Lite_Signls_Privacy::sync_sdk_consent();
+			} else {
+				add_action( 'plugins_loaded', array( 'Cmatic_Lite_Signls_Privacy', 'sync_sdk_consent' ), PHP_INT_MAX );
+			}
+		}
 	}
 }

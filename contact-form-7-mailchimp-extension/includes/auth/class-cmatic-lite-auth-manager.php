@@ -123,11 +123,9 @@ class Cmatic_Lite_Auth_Manager {
 	/**
 	 * Resolve the credential for a form.
 	 *
-	 * A manually entered key always wins over a stored OAuth envelope: every
-	 * OAuth connect clears cf7_mch['api'], so a non-empty manual key can only
-	 * exist because the user entered it AFTER the last OAuth connect. A stale
-	 * envelope must never shadow it (a revoked envelope key caused submission
-	 * 401s while the UI still reported the form as connected).
+	 * Precedence: explicit key, then the stored manual key, then the OAuth
+	 * envelope. Every OAuth connect clears cf7_mch['api'], so a non-empty
+	 * manual key always postdates the last connect and must win.
 	 *
 	 * @param int    $form_id     Form ID.
 	 * @param string $fallback    Optional explicit API key (from REST param).

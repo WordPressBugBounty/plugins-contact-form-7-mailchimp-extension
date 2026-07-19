@@ -20,19 +20,19 @@ final class Cmatic_Rest_Settings {
 
 	/** @var array Allowed GLOBAL settings configuration (toggles in Advanced Settings panel). */
 	protected static $allowed_settings = array(
-		'debug'          => array(
+		'debug'       => array(
 			'type' => 'cmatic',
 			'path' => 'debug',
 		),
-		'backlink'       => array(
+		'backlink'    => array(
 			'type' => 'cmatic',
 			'path' => 'backlink',
 		),
-		'auto_update'    => array(
+		'auto_update' => array(
 			'type' => 'cmatic',
 			'path' => 'auto_update',
 		),
-		'signls_sharing' => array(
+		'telemetry'   => array(
 			'type' => 'signls',
 			'path' => 'signls.consent_status',
 		),
@@ -40,10 +40,10 @@ final class Cmatic_Rest_Settings {
 
 	/** @var array Field labels for user messages. */
 	protected static $field_labels = array(
-		'debug'          => 'Debug Logger',
-		'backlink'       => 'Developer Backlink',
-		'auto_update'    => 'Auto Update',
-		'signls_sharing' => 'Product Insights Sharing',
+		'debug'       => 'Debug Logger',
+		'backlink'    => 'Developer Backlink',
+		'auto_update' => 'Auto Update',
+		'telemetry'   => 'Help Us Improve',
 	);
 
 	public static function init() {
@@ -138,7 +138,7 @@ final class Cmatic_Rest_Settings {
 
 		$field_config = self::$allowed_settings[ $field ];
 
-		if ( 'signls_sharing' === $field ) {
+		if ( 'telemetry' === $field ) {
 			if ( ! self::handle_signls_toggle( (bool) $enabled ) ) {
 				return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'chimpmatic-lite' ), array( 'status' => 500 ) );
 			}
@@ -167,7 +167,11 @@ final class Cmatic_Rest_Settings {
 		if ( ! isset( $data['signls'] ) || ! is_array( $data['signls'] ) ) {
 			$data['signls'] = array();
 		}
+		if ( ! isset( $data['telemetry'] ) || ! is_array( $data['telemetry'] ) ) {
+			$data['telemetry'] = array();
+		}
 		$now                                       = time();
+		$data['telemetry']['enabled']              = $enabled;
 		$data['signls']['consent_status']          = $enabled ? 'enabled' : 'disabled';
 		$data['signls']['consent_version']         = 1;
 		$data['signls']['consent_last_changed_at'] = $now;
@@ -189,22 +193,16 @@ final class Cmatic_Rest_Settings {
 	}
 
 	protected static function handle_telemetry_toggle( $enabled ) {
-		if ( class_exists( 'Cmatic\\Metrics\\Core\\Storage' ) && class_exists( 'Cmatic\\Metrics\\Core\\Tracker' ) ) {
-			$storage_enabled = \Cmatic\Metrics\Core\Storage::is_enabled();
-			if ( ! $enabled && $storage_enabled ) {
-				\Cmatic\Metrics\Core\Tracker::on_opt_out();
-			}
-			if ( $enabled && ! $storage_enabled ) {
-				\Cmatic\Metrics\Core\Tracker::on_re_enable();
-			}
-		}
+		return self::handle_signls_toggle( (bool) $enabled );
 	}
 
 	public static function toggle_telemetry( $request ) {
 		$enabled = $request->get_param( 'enabled' );
 
-		self::handle_telemetry_toggle( $enabled );
-		Cmatic_Options_Repository::set_option( 'telemetry.enabled', $enabled );
+		$saved = self::handle_telemetry_toggle( $enabled );
+		if ( ! $saved ) {
+			return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'chimpmatic-lite' ), array( 'status' => 500 ) );
+		}
 
 		return rest_ensure_response(
 			array(

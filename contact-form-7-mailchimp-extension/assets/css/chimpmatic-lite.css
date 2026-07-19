@@ -1527,6 +1527,14 @@ a.helping-field:hover .red-icon::before {
 	font-weight: normal;
 }
 
+/* Privacy link beside the toggle label matches the label's size/weight
+   (the shared a.helping-field is 13px/700 for the API-key link's arrows). */
+.cmatic-toggle-label + a.helping-field {
+	font-size: 12px;
+	font-weight: normal;
+	padding-right: 4px;
+}
+
 .cmatic-toggle-row {
 	display: flex;
 	align-items: center;

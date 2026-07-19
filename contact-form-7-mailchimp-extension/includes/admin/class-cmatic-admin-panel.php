@@ -73,8 +73,37 @@ final class Cmatic_Admin_Panel {
 			return;
 		}
 
+		ob_start();
 		wpcf7_chimp_add_mailchimp( $contact_form );
-		Cmatic_Advanced_Settings::render_signls_section();
+		$panel = (string) ob_get_clean();
+
+		echo self::inject_help_us_improve_row( $panel ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The trusted Pro callback already escaped its panel; Lite only inserts its own escaped row.
+	}
+
+	private static function inject_help_us_improve_row( string $panel ): string {
+		if ( false !== strpos( $panel, 'id="cmatic-telemetry-enabled"' ) ) {
+			return $panel;
+		}
+
+		$advanced_start = strpos( $panel, 'id="cme-container"' );
+		$tbody_start    = false === $advanced_start ? false : strpos( $panel, '<tbody>', $advanced_start );
+		$tbody_end      = false === $tbody_start ? false : strpos( $panel, '</tbody>', $tbody_start );
+		if ( false === $advanced_start || false === $tbody_start || false === $tbody_end ) {
+			return $panel;
+		}
+
+		ob_start();
+		Cmatic_Advanced_Settings::render_help_us_improve_row();
+		$row = (string) ob_get_clean();
+
+		$advanced_body = substr( $panel, $tbody_start, $tbody_end - $tbody_start );
+		$license       = strpos( $advanced_body, '<th scope="row">License Reset</th>' );
+		$insert_at     = false === $license ? $tbody_end : strrpos( substr( $panel, 0, $tbody_start + $license ), '<tr>' );
+		if ( false === $insert_at ) {
+			$insert_at = $tbody_end;
+		}
+
+		return substr( $panel, 0, $insert_at ) . $row . substr( $panel, $insert_at );
 	}
 
 	public static function render_panel( $contact_form ): void {

@@ -1,10 +1,10 @@
 # signls-sdk-manifest-v1
 sdk_version=1.0.0
 canonical_repository=ssh://git@mb2016.local:2222/rnzo/signls-sdk.git
-canonical_commit=ef6c1fbf42382575ac2be3b8b7c0e681ef081b9c
+canonical_commit=c42b055016536409fd9e30ab4c4bfc4bfd553bbd
 public_mirror=https://github.com/signls-sdk/wordpress
 license=GPL-3.0-or-later
-3fa8e262f2be5ea847d160f6fe5dc33eb9088014cc7f5de11e5b2013a6dd00f5  LICENSE
+c75e5f21e26098fcf67f427623d3763345201378eca508b61956a14b3004c526  LICENSE
 25b717124eb97c3e3d76cc9cdf36e3ef2ff0780e058fdcf05bbbdf33b17e8435  SOURCE.md
 3b229a89ef385487526beaf3f246454847c0f32f8cc5e3f8ee675a598dc81f47  loader.php
 24b25f051643be1a81953df6e6bd5c420ef335f229165c69cfc043c61933935c  sdk.php

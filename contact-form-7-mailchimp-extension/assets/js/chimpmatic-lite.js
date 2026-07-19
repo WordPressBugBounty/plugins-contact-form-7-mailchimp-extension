@@ -557,7 +557,7 @@ function chimpmaticLiteInit() {
 	}
 
 	function initToggleAutoSave() {
-		const globalFields = ['debug', 'backlink', 'auto_update', 'signls_sharing'];
+		const globalFields = ['debug', 'backlink', 'auto_update', 'telemetry'];
 		const toggles = document.querySelectorAll('.cmatic-toggle input[data-field]');
 		if (toggles.length === 0) return;
 
