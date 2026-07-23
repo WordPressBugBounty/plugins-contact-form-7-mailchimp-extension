@@ -50,7 +50,6 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/services/class-cmatic-options-repository.php';
 		require_once $this->dir . 'includes/services/class-cmatic-pro-status.php';
 		require_once $this->dir . 'includes/services/class-cmatic-redirect.php';
-		require_once $this->dir . 'includes/services/class-cmatic-lifecycle-signal.php';
 		require_once $this->dir . 'includes/core/class-cmatic-install-data.php';
 		require_once $this->dir . 'includes/core/class-cmatic-migration.php';
 		require_once $this->dir . 'includes/core/class-cmatic-activator.php';
@@ -184,8 +183,16 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/ui/class-cmatic-admin-bar-menu.php';
 
 		require_once $this->dir . 'includes/admin/class-cmatic-lite-signls-privacy.php';
-		require_once $this->dir . 'includes/admin/class-cmatic-lite-signls-consent-notice.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-contract.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-snapshot.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-failure-reason.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-site-collector.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-inventory-collector.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-performance-collector.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-product-collector.php';
+		require_once $this->dir . 'includes/services/signls/class-cmatic-lite-signls-forms-collector.php';
 		require_once $this->dir . 'includes/signls/loader.php';
+		require_once $this->dir . 'includes/services/class-cmatic-lite-service-context.php';
 	}
 
 	private function initialize_late_components(): void {
@@ -196,13 +203,12 @@ final class Cmatic_Plugin {
 		Cmatic_Admin_Bar_Menu::instance();
 
 		Cmatic_Lite_Signls_Privacy::init();
-		Cmatic_Lite_Signls_Consent_Notice::init();
 		$signls_registered = Signls_Sdk_Loader::register(
 			array(
 				'product_slug'      => 'contact-form-7-mailchimp-extension',
 				'main_file'         => $this->file,
 				'sdk_path'          => $this->dir . 'includes/signls',
-				'sdk_version'       => '1.0.0',
+				'sdk_version'       => '1.1.0',
 				'adapter_file'      => $this->dir . 'includes/services/class-cmatic-lite-signls-adapter.php',
 				'adapter_class'     => 'Cmatic_Lite_Signls_Adapter',
 				'consent_reader'    => array( 'Cmatic_Lite_Signls_Privacy', 'consent_status' ),

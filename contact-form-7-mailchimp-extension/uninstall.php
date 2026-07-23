@@ -30,7 +30,22 @@ delete_option( 'signls_sdk_v1_' . $cmatic_signls_product_hash );
 delete_metadata( 'user', 0, 'cmatic_signls_consent_notice_dismissed', '', true );
 
 global $wpdb;
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}signls_signal_counters WHERE product_hash=%s", $cmatic_signls_product_hash ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Product-scoped shared SDK cleanup; the table belongs to all SDK consumers.
+foreach ( array( 'signls_signal_reason_counters', 'signls_signal_daily_counters', 'signls_signal_counters' ) as $cmatic_signls_table_suffix ) {
+	$cmatic_signls_table = $wpdb->prefix . $cmatic_signls_table_suffix;
+	if ( $cmatic_signls_table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $cmatic_signls_table ) ) ) ) {
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$cmatic_signls_table} WHERE product_hash=%s", $cmatic_signls_product_hash ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Closed SDK-owned table list and product-scoped prepared deletion.
+	}
+}
+$cmatic_signls_other_products = (int) $wpdb->get_var(
+	$wpdb->prepare(
+		"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s",
+		$wpdb->esc_like( 'signls_sdk_v1_' ) . '%'
+	)
+);
+if ( 0 === $cmatic_signls_other_products ) {
+	delete_option( 'signls_sdk_site_id' );
+	delete_option( 'signls_sdk_site_origin' );
+}
 $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'cf7_mch_%' ) );
 $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'cmatic_auth_%' ) );
 $wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'cmatic_provider_auth_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Required uninstall cleanup.

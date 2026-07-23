@@ -57,6 +57,15 @@ final class StateStore {
 		return $this->replace( $state );
 	}
 
+	public function reconcile_sequence( int $expected_sequence ): bool {
+		$state                               = $this->all();
+		$state['last_acknowledged_sequence'] = max( 0, $expected_sequence - 1 );
+		foreach ( array( 'pending_sequence', 'pending_body', 'pending_body_hash', 'pending_sdk_version', 'pending_product_version', 'failure_class', 'next_retry_at' ) as $key ) {
+			unset( $state[ $key ] );
+		}
+		return $this->replace( $state );
+	}
+
 	public function delete(): bool {
 		return delete_option( $this->option_name );
 	}

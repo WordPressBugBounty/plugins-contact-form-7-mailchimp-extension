@@ -178,6 +178,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$key          = '' !== $submitted ? $submitted : $previous_key;
 
 		if ( '' === $key ) {
+			self::record_transition( $slug, 'connect', false, 'configuration', 'Provider credential is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_provider_key',
 				esc_html__( 'Enter a provider credential first.', 'chimpmatic-lite' ),
@@ -189,6 +190,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$logging    = (bool) Cmatic_Options_Repository::get_option( 'debug', false );
 		$validation = $provider->validate_key( $key, $logging );
 		if ( 1 !== (int) ( $validation['api-validation'] ?? 0 ) ) {
+			self::record_transition( $slug, 'connect', false, 'auth', $validation, 'revoked_credential' );
 			return new WP_Error(
 				'invalid_provider_key',
 				esc_html__( 'The provider rejected this credential.', 'chimpmatic-lite' ),
@@ -198,6 +200,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 
 		$lists = $provider->get_lists( $key, $logging );
 		if ( ! empty( $lists['_cmatic_error'] ) ) {
+			self::record_transition( $slug, 'connect', false, 'remote_rejected', $lists['_cmatic_error'], 'remote_rejected' );
 			return new WP_Error(
 				'provider_lists_failed',
 				esc_html__( 'The credential is valid, but provider destinations could not be loaded.', 'chimpmatic-lite' ),
@@ -227,6 +230,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$credential_replaced = false;
 		if ( $key_changed ) {
 			if ( ! Cmatic_Lite_Esp_Credentials::save( $form_id, $slug, $submitted ) ) {
+				self::record_transition( $slug, 'connect', false, 'configuration', 'Credential persistence failed.', 'configuration' );
 				return new WP_Error(
 					'credential_save_failed',
 					esc_html__( 'Could not encrypt provider credentials.', 'chimpmatic-lite' ),
@@ -244,6 +248,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 					Cmatic_Lite_Esp_Credentials::save( $form_id, $slug, $previous_key );
 				}
 			}
+			self::record_transition( $slug, 'connect', false, 'configuration', 'Provider settings persistence failed.', 'configuration' );
 			return new WP_Error(
 				'provider_settings_save_failed',
 				esc_html__( 'The provider connected, but its settings could not be saved.', 'chimpmatic-lite' ),
@@ -253,6 +258,10 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		if ( $key_changed && 'mailerlite' === $slug ) {
 			Cmatic_Mailerlite_Degradation_Reporter::clear( $form_id );
 		}
+		if ( ! Cmatic_Options_Repository::get_option( 'api.first_connected' ) ) {
+			Cmatic_Options_Repository::set_option( 'api.first_connected', time() );
+		}
+		self::record_transition( $slug, 'connect', true, 'unknown', '', 'unknown' );
 
 		return rest_ensure_response(
 			array(
@@ -273,6 +282,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$field_limit = Cmatic_Lite_Esp_Capabilities::field_limit( $slug, $form_id );
 
 		if ( '' === $list_id ) {
+			self::record_transition( $slug, 'refresh_schema', true, 'unknown', '', 'unknown' );
 			return rest_ensure_response(
 				array(
 					'success'            => true,
@@ -286,6 +296,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		}
 
 		if ( ! self::is_known_list( $form_id, $slug, $list_id ) ) {
+			self::record_transition( $slug, 'refresh_schema', false, 'validation', 'Destination is missing or no longer known.', 'deleted_destination' );
 			return new WP_Error(
 				'invalid_provider_list',
 				esc_html__( 'Select a destination returned by the connected provider.', 'chimpmatic-lite' ),
@@ -295,6 +306,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 
 		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		if ( '' === $key ) {
+			self::record_transition( $slug, 'refresh_schema', false, 'configuration', 'Provider credential is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_provider_key',
 				esc_html__( 'Connect this provider first.', 'chimpmatic-lite' ),
@@ -309,6 +321,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			(bool) Cmatic_Options_Repository::get_option( 'debug', false )
 		);
 		if ( ! empty( $result['_cmatic_error'] ) ) {
+			self::record_transition( $slug, 'refresh_schema', false, 'remote_rejected', $result['_cmatic_error'], 'remote_rejected' );
 			return new WP_Error(
 				'provider_fields_failed',
 				esc_html__( 'Provider fields could not be loaded; existing mappings were preserved.', 'chimpmatic-lite' ),
@@ -320,6 +333,10 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$fields   = is_array( $fields ) ? $fields : array();
 		$capped   = array_slice( $fields, 0, $field_limit );
 		$mappings = self::reconcile_mappings( $settings, $capped, $field_limit );
+		if ( ! Cmatic_Options_Repository::get_option( 'api.audience_selected' ) ) {
+			Cmatic_Options_Repository::set_option( 'api.audience_selected', time() );
+		}
+		self::record_transition( $slug, 'refresh_schema', true, 'unknown', '', 'unknown' );
 		return rest_ensure_response(
 			array(
 				'success'            => true,
@@ -342,12 +359,14 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			if ( '' !== $previous_key ) {
 				Cmatic_Lite_Esp_Credentials::save( $form_id, $slug, $previous_key );
 			}
+			self::record_transition( $slug, 'disconnect', false, 'configuration', 'Provider settings persistence failed.', 'configuration' );
 			return new WP_Error(
 				'provider_settings_save_failed',
 				esc_html__( 'The provider could not be disconnected.', 'chimpmatic-lite' ),
 				array( 'status' => 500 )
 			);
 		}
+		self::record_transition( $slug, 'disconnect', true, 'unknown', '', 'unknown' );
 
 		return rest_ensure_response(
 			array(
@@ -731,6 +750,49 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			? $settings['lisdata']['lists']
 			: array();
 		return self::list_exists( $lists, $list_id );
+	}
+
+	private static function record_transition( string $provider, string $operation, bool $success, string $failure_class, $value, string $fallback ): void {
+		try {
+			$reason        = class_exists( 'Cmatic_Lite_Signls_Failure_Reason' )
+				? Cmatic_Lite_Signls_Failure_Reason::from_value( $value, $fallback )
+				: array(
+					'code'   => $fallback,
+					'sample' => '',
+				);
+			$failure_class = $success ? 'unknown' : self::failure_class_for_reason( $reason['code'], $failure_class );
+			$recorded      = \Signls\Sdk\V1\CounterStore::record_outcome(
+				'contact-form-7-mailchimp-extension',
+				$provider,
+				$operation,
+				$success,
+				$failure_class,
+				$success ? '' : $reason['code'],
+				$success ? '' : $reason['sample']
+			);
+			if ( $recorded ) {
+				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+			}
+		} catch ( Throwable $error ) {
+			// Signals must never change a provider REST result.
+			return;
+		}
+	}
+
+	private static function failure_class_for_reason( string $reason_code, string $fallback ): string {
+		$map = array(
+			'dns'                => 'transport_dns',
+			'tls'                => 'transport_tls',
+			'timeout'            => 'transport_timeout',
+			'rate_limit'         => 'http_429',
+			'http_4xx'           => 'http_4xx',
+			'http_5xx'           => 'http_5xx',
+			'revoked_credential' => 'auth',
+			'permission'         => 'auth',
+			'configuration'      => 'configuration',
+			'validation'         => 'validation',
+		);
+		return isset( $map[ $reason_code ] ) ? $map[ $reason_code ] : $fallback;
 	}
 
 	private function __construct() {}

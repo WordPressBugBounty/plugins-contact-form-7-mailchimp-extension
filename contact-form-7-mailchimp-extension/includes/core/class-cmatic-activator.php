@@ -24,18 +24,15 @@ class Cmatic_Activator {
 
 	private $redirect;
 
-	private $lifecycle_signal;
-
 	private $version;
 
 	public function __construct( $version ) {
-		$this->version          = $version;
-		$this->options          = Cmatic_Options_Repository::instance();
-		$this->install_data     = new Cmatic_Install_Data( $this->options );
-		$this->migration        = new Cmatic_Migration( $this->options, $version );
-		$this->pro_status       = new Cmatic_Pro_Status( $this->options );
-		$this->redirect         = new Cmatic_Redirect( $this->options );
-		$this->lifecycle_signal = new Cmatic_Lifecycle_Signal();
+		$this->version      = $version;
+		$this->options      = Cmatic_Options_Repository::instance();
+		$this->install_data = new Cmatic_Install_Data( $this->options );
+		$this->migration    = new Cmatic_Migration( $this->options, $version );
+		$this->pro_status   = new Cmatic_Pro_Status( $this->options );
+		$this->redirect     = new Cmatic_Redirect( $this->options );
 	}
 
 	public function activate() {
@@ -43,6 +40,8 @@ class Cmatic_Activator {
 	}
 
 	public function ensure_initialized() {
+		$this->record_upgrade();
+
 		if ( get_option( self::INITIALIZED_FLAG ) ) {
 			$install_id = $this->options->get( 'install.id' );
 			if ( ! empty( $install_id ) ) {
@@ -61,11 +60,9 @@ class Cmatic_Activator {
 
 		$this->pro_status->update();
 
-		$this->record_activation();
+		$this->record_upgrade();
 
-		if ( $is_normal_activation ) {
-			$this->lifecycle_signal->send_activation();
-		}
+		$this->record_activation();
 
 		if ( $is_normal_activation ) {
 			$this->redirect->schedule();
@@ -79,12 +76,74 @@ class Cmatic_Activator {
 	}
 
 	private function record_activation() {
-		$activations   = $this->options->get( 'lifecycle.activations', array() );
-		$activations   = is_array( $activations ) ? $activations : array();
-		$activations[] = time();
+		$activations = $this->append_timestamp( 'lifecycle.activations', time() );
 
-		$this->options->set( 'lifecycle.activations', $activations );
-		$this->options->set( 'lifecycle.is_reactivation', count( $activations ) > 1 );
+		$this->options->set( 'lifecycle.is_reactivation', $activations['reported_total'] > 1 );
+		$this->relevant_change();
+	}
+
+	private function record_upgrade(): void {
+		$current  = (string) $this->version;
+		$previous = (string) $this->options->get( 'lifecycle.current_version', '' );
+		if ( '' === $previous ) {
+			$this->options->set( 'lifecycle.current_version', $current );
+			return;
+		}
+		if ( $current === $previous ) {
+			return;
+		}
+
+		$this->append_timestamp( 'lifecycle.upgrades', time() );
+		$history   = $this->options->get( 'lifecycle.version_history', array() );
+		$history   = is_array( $history ) ? $history : array();
+		$history[] = array(
+			'from'      => $previous,
+			'to'        => $current,
+			'timestamp' => time(),
+		);
+		$this->options->set( 'lifecycle.version_history', array_slice( $history, -256 ) );
+		$this->options->set( 'lifecycle.previous_version', $previous );
+		$this->options->set( 'lifecycle.current_version', $current );
+		$this->relevant_change();
+	}
+
+	private function append_timestamp( string $key, int $timestamp ): array {
+		$source   = $this->options->get( $key, array() );
+		$items    = is_array( $source ) && isset( $source['items'] ) && is_array( $source['items'] ) ? $source['items'] : ( is_array( $source ) ? $source : array() );
+		$reported = is_array( $source ) && isset( $source['reported_total'] ) && is_scalar( $source['reported_total'] ) ? (int) $source['reported_total'] : count( $items );
+		$total    = max( count( $items ), $reported );
+		$items[]  = $timestamp;
+		$items    = array_values(
+			array_filter(
+				array_map(
+					static function ( $value ): int {
+						return is_scalar( $value ) ? (int) $value : 0;
+					},
+					$items
+				)
+			)
+		);
+		sort( $items, SORT_NUMERIC );
+		++$total;
+		$items = array_slice( $items, -256 );
+		$value = array(
+			'items'          => $items,
+			'reported_total' => $total,
+			'truncated'      => $total > count( $items ),
+		);
+		$this->options->set( $key, $value );
+		return $value;
+	}
+
+	private function relevant_change(): void {
+		try {
+			if ( class_exists( '\\Signls\\Sdk\\V1\\Runtime' ) ) {
+				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+			}
+		} catch ( Throwable $error ) {
+			// Signals must never change the activation result.
+			return;
+		}
 	}
 
 	public function get_redirect() {
@@ -136,7 +195,7 @@ class Cmatic_Activator {
 
 		Cmatic_Cron::unschedule();
 
-		$this->lifecycle_signal->send_deactivation();
+		$this->relevant_change();
 
 		delete_option( self::INITIALIZED_FLAG );
 

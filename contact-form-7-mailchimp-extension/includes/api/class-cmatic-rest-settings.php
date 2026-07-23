@@ -173,10 +173,9 @@ final class Cmatic_Rest_Settings {
 		$now                                       = time();
 		$data['telemetry']['enabled']              = $enabled;
 		$data['signls']['consent_status']          = $enabled ? 'enabled' : 'disabled';
-		$data['signls']['consent_version']         = 1;
+		$data['signls']['consent_version']         = Cmatic_Lite_Signls_Privacy::CONSENT_VERSION;
 		$data['signls']['consent_last_changed_at'] = $now;
 		$data['signls']['consent_source']          = 'admin_settings_rest';
-		$data['signls']['notice_version']          = Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION;
 		if ( $enabled && empty( $data['signls']['consent_first_enabled_at'] ) ) {
 			$data['signls']['consent_first_enabled_at'] = $now;
 		}
@@ -185,9 +184,9 @@ final class Cmatic_Rest_Settings {
 			return false;
 		}
 		if ( $enabled ) {
-			\Signls\Sdk\V1\Runtime::enable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION );
+			\Signls\Sdk\V1\Runtime::enable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
 		} else {
-			\Signls\Sdk\V1\Runtime::disable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION );
+			\Signls\Sdk\V1\Runtime::disable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
 		}
 		return true;
 	}
@@ -220,11 +219,9 @@ final class Cmatic_Rest_Settings {
 
 		switch ( $notice_id ) {
 			case 'signls_consent':
-				$result = Cmatic_Lite_Signls_Consent_Notice::dismiss( (string) $request->get_param( 'state' ) );
-				if ( false === $result ) {
-					return new WP_Error( 'bad_state', esc_html__( 'Unknown notice version.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
-				}
-				$message = __( 'Sharing notice dismissed.', 'chimpmatic-lite' );
+				// Compatibility for an already-open pre-removal admin page. The retired notice
+				// disappears on navigation; its stale dismissal request intentionally has no side effects.
+				$message = __( 'Sharing notice retired.', 'chimpmatic-lite' );
 				break;
 
 			case 'license_banner':

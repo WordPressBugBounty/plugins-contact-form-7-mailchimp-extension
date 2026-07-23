@@ -186,11 +186,6 @@ final class Cmatic_Admin_Panel {
 			return;
 		}
 
-		if ( class_exists( 'Cmatic\\Metrics\\Core\\Sync' ) && class_exists( 'Cmatic\\Metrics\\Core\\Collector' ) ) {
-			$payload = \Cmatic\Metrics\Core\Collector::collect( 'form_saved' );
-			\Cmatic\Metrics\Core\Sync::send( $payload );
-		}
-
 		$option_name  = 'cf7_mch_' . $form_id;
 		$old_settings = get_option( $option_name, array() );
 		$old_settings = is_array( $old_settings ) ? $old_settings : array();
@@ -222,6 +217,11 @@ final class Cmatic_Admin_Panel {
 		$updated_settings = array_merge( $old_settings, $sanitized );
 
 		update_option( $option_name, self::mirror_legacy_mappings( $updated_settings ) );
+
+		try {
+			\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+		} catch ( \Throwable $exception ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Signal bookkeeping must never alter the Contact Form 7 save result.
+		}
 	}
 
 

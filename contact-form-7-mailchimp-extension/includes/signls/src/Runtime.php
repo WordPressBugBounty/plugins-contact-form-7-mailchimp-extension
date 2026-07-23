@@ -14,6 +14,8 @@ final class Runtime {
 
 	private static $products = array();
 
+	private static $site_identity;
+
 	public static function boot( array $descriptor ): bool {
 		try {
 			$adapter = self::adapter( $descriptor );
@@ -25,11 +27,14 @@ final class Runtime {
 				return true;
 			}
 
-			$state     = new StateStore( $product );
-			$consent   = new Consent( $state );
-			$identity  = new Identity( $state );
+			$state    = new StateStore( $product );
+			$consent  = new Consent( $state );
+			$identity = new Identity( $state );
+			if ( ! self::$site_identity instanceof SiteIdentity ) {
+				self::$site_identity = new SiteIdentity();
+			}
 			$scheduler = new Scheduler( $product, $state );
-			$transport = new Transport( $state, $identity );
+			$transport = new Transport( $state, $identity, self::$site_identity );
 			$scheduler->register();
 
 			self::$products[ $product ] = array(
@@ -37,6 +42,7 @@ final class Runtime {
 				'state'     => $state,
 				'consent'   => $consent,
 				'identity'  => $identity,
+				'site'      => self::$site_identity,
 				'scheduler' => $scheduler,
 				'transport' => $transport,
 			);

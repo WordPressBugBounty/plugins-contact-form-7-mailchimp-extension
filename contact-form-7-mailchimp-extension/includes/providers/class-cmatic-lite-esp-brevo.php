@@ -132,7 +132,12 @@ final class Cmatic_Lite_Esp_Brevo extends Cmatic_Lite_Esp_Provider {
 			return $this->failure_result( 'configuration_error', 'Brevo does not support the requested status in this integration.' );
 		}
 		unset( $merge_vars['EMAIL'] );
-		$mode = sanitize_key( (string) ( $options['subscription_mode'] ?? 'single' ) );
+		$prepared = $this->prepare_multiple_choice_attributes( $api_key, $email, $merge_vars );
+		if ( ! $prepared['success'] ) {
+			return $prepared;
+		}
+		$merge_vars = $prepared['merge_vars'];
+		$mode       = sanitize_key( (string) ( $options['subscription_mode'] ?? 'single' ) );
 		if ( 'pending' === $status ) {
 			if (
 				'double' !== $mode
@@ -169,5 +174,58 @@ final class Cmatic_Lite_Esp_Brevo extends Cmatic_Lite_Esp_Provider {
 			)
 		);
 		return $this->subscription_result( $response, $email, $merge_vars );
+	}
+
+	private function prepare_multiple_choice_attributes( string $api_key, string $email, array $merge_vars ): array {
+		$array_tags = array_filter( $merge_vars, 'is_array' );
+		if ( empty( $array_tags ) ) {
+			return array(
+				'success'    => true,
+				'merge_vars' => $merge_vars,
+			);
+		}
+
+		$response = $this->request(
+			$api_key,
+			'GET',
+			'/contacts/' . rawurlencode( strtolower( $email ) ) . '?identifierType=email_id',
+			array(),
+			false
+		);
+		if ( ! $response['success'] ) {
+			if ( 404 === ( $response['status'] ?? 0 ) ) {
+				return array(
+					'success'    => true,
+					'merge_vars' => $merge_vars,
+				);
+			}
+			return $response;
+		}
+
+		if ( ! isset( $response['body']['attributes'] ) || ! is_array( $response['body']['attributes'] ) ) {
+			return $this->failure_result( 'api_error', 'Brevo returned invalid contact attributes.' );
+		}
+		$attributes = $response['body']['attributes'];
+
+		foreach ( $array_tags as $tag => $new_values ) {
+			if ( ! array_key_exists( $tag, $attributes ) ) {
+				continue;
+			}
+			$existing_values = $attributes[ $tag ];
+			if ( ! is_array( $existing_values ) || count( $existing_values ) !== count( array_filter( $existing_values, 'is_string' ) ) ) {
+				return $this->failure_result( 'api_error', 'Brevo returned an invalid multiple-choice attribute.' );
+			}
+			foreach ( $new_values as $new_value ) {
+				if ( ! in_array( $new_value, $existing_values, true ) ) {
+					$existing_values[] = $new_value;
+				}
+			}
+			$merge_vars[ $tag ] = array_values( $existing_values );
+		}
+
+		return array(
+			'success'    => true,
+			'merge_vars' => $merge_vars,
+		);
 	}
 }

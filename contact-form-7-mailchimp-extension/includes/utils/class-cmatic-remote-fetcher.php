@@ -23,6 +23,7 @@ class CMatic_Remote_Fetcher {
 		'retry_count_key' => 'cmatic_retry_count',
 		'cron_hook'       => 'cmatic_fetch_retry',
 		'timeout'         => 15,
+		'headers'         => array(),
 		'fallback_data'   => array(),
 		'parser_callback' => null,
 	);
@@ -72,13 +73,16 @@ class CMatic_Remote_Fetcher {
 			return false;
 		}
 
-		$response = wp_remote_get(
-			$this->config['url'],
-			array(
-				'timeout'    => $this->config['timeout'],
-				'user-agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . home_url(),
-			)
+		$args    = array(
+			'timeout'    => $this->config['timeout'],
+			'user-agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . home_url(),
 		);
+		$headers = $this->request_headers();
+		if ( ! empty( $headers ) ) {
+			$args['headers'] = $headers;
+		}
+
+		$response = wp_remote_get( $this->config['url'], $args );
 
 		if ( is_wp_error( $response ) ) {
 			return false;
@@ -95,6 +99,29 @@ class CMatic_Remote_Fetcher {
 		}
 
 		return $this->parse_content( $body );
+	}
+
+	private function request_headers() {
+		$headers = $this->config['headers'];
+		if ( ! is_array( $headers ) || count( $headers ) > 16 ) {
+			return array();
+		}
+
+		$sanitized = array();
+		foreach ( $headers as $name => $value ) {
+			if ( ! is_string( $name )
+				|| 1 !== preg_match( '/^[A-Za-z0-9-]{1,64}$/', $name )
+				|| ( ! is_string( $value ) && ! is_int( $value ) ) ) {
+				return array();
+			}
+			$value = (string) $value;
+			if ( strlen( $value ) > 128 || false !== strpos( $value, "\r" ) || false !== strpos( $value, "\n" ) ) {
+				return array();
+			}
+			$sanitized[ $name ] = $value;
+		}
+
+		return $sanitized;
 	}
 
 	private function parse_content( $content ) {

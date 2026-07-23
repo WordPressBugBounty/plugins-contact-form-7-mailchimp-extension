@@ -14,13 +14,18 @@ final class Transport {
 
 	private const DEFAULT_ENDPOINT = 'https://signls.dev';
 
+	private const SDK_VERSION = '1.1.1';
+
 	private $state;
 
 	private $identity;
 
-	public function __construct( StateStore $state, Identity $identity ) {
-		$this->state    = $state;
-		$this->identity = $identity;
+	private $site_identity;
+
+	public function __construct( StateStore $state, Identity $identity, SiteIdentity $site_identity ) {
+		$this->state         = $state;
+		$this->identity      = $identity;
+		$this->site_identity = $site_identity;
 	}
 
 	public function deliver( ProductAdapterInterface $adapter, array $payload ): array {
@@ -28,16 +33,16 @@ final class Transport {
 		$this->state->set( 'last_attempt_started_at', $started );
 
 		if ( '' === (string) $this->state->get( 'credential_id', '' ) ) {
-			$enrollment = $this->enroll( $adapter );
+			$enrollment = $this->enroll( $adapter, false );
 			if ( ! $enrollment['ok'] ) {
 				return $this->finish( $enrollment );
 			}
 		}
 
-		$result = $this->snapshot( $adapter, $payload, false );
+		$result = $this->snapshot( $adapter, $payload, false, false );
 		if ( 'stale_timestamp' === $result['class'] && isset( $result['server_time'] ) ) {
 			$this->state->set( 'clock_offset', (int) $result['server_time'] - time() );
-			$result = $this->snapshot( $adapter, $payload, true );
+			$result = $this->snapshot( $adapter, $payload, true, false );
 		}
 		return $this->finish( $result );
 	}
@@ -47,16 +52,29 @@ final class Transport {
 		return $delays[ min( max( 0, $attempt ), count( $delays ) - 1 ) ];
 	}
 
-	private function enroll( ProductAdapterInterface $adapter ): array {
-		$body     = array(
+	private function enroll( ProductAdapterInterface $adapter, bool $clock_retry ): array {
+		$body    = array(
 			'schema_version' => 1,
-			'sdk_version'    => '1.0.0',
+			'sdk_version'    => self::SDK_VERSION,
 			'product'        => $adapter->product_slug(),
 			'install_id'     => $adapter->install_id(),
 			'device_id'      => $this->identity->device_id(),
-			'timestamp'      => time(),
+			'timestamp'      => time() + (int) $this->state->get( 'clock_offset', 0 ),
 		);
-		$response = $this->post( '/signals/v2/enroll', wp_json_encode( $body ), array() );
+		$encoded = wp_json_encode( $body );
+		if ( ! is_string( $encoded ) ) {
+			return array(
+				'ok'        => false,
+				'class'     => 'invalid_payload',
+				'status'    => 0,
+				'permanent' => true,
+			);
+		}
+		$response = $this->post( '/signals/v2/enroll', $encoded, array() );
+		if ( 'stale_timestamp' === $response['class'] && ! $clock_retry && isset( $response['data']['server_time'] ) ) {
+			$this->state->set( 'clock_offset', (int) $response['data']['server_time'] - time() );
+			return $this->enroll( $adapter, true );
+		}
 		if ( ! $response['ok'] ) {
 			return $response;
 		}
@@ -87,31 +105,39 @@ final class Transport {
 		);
 	}
 
-	private function snapshot( ProductAdapterInterface $adapter, array $payload, bool $clock_retry ): array {
-		$pending = (string) $this->state->get( 'pending_body', '' );
-		if ( '' !== $pending && ( '1.0.0' !== (string) $this->state->get( 'pending_sdk_version', '' ) || $adapter->product_version() !== (string) $this->state->get( 'pending_product_version', '' ) ) ) {
+	private function snapshot( ProductAdapterInterface $adapter, array $payload, bool $clock_retry, bool $sequence_retry ): array {
+		$contract       = $adapter->contract();
+		$schema_version = isset( $contract['snapshot_schema_version'] ) ? (int) $contract['snapshot_schema_version'] : 1;
+		$schema_version = 2 === $schema_version ? 2 : 1;
+		$profile        = 2 === $schema_version && isset( $contract['observation_profile'] ) ? Sanitizer::slug( $contract['observation_profile'], 48 ) : '';
+		$pending        = (string) $this->state->get( 'pending_body', '' );
+		if ( '' !== $pending && ( self::SDK_VERSION !== (string) $this->state->get( 'pending_sdk_version', '' ) || $adapter->product_version() !== (string) $this->state->get( 'pending_product_version', '' ) ) ) {
 			$this->state->delete_keys( array( 'pending_sequence', 'pending_body', 'pending_body_hash', 'pending_sdk_version', 'pending_product_version' ) );
 			$pending = '';
 		}
 		if ( '' === $pending ) {
 			$sequence = max( 1, (int) $this->state->get( 'last_acknowledged_sequence', 0 ) + 1 );
 			$body     = array(
-				'schema_version' => 1,
-				'sdk_version'    => '1.0.0',
+				'schema_version' => $schema_version,
+				'sdk_version'    => self::SDK_VERSION,
 				'product'        => $adapter->product_slug(),
 				'device_id'      => $this->identity->device_id(),
 				'install_id'     => $adapter->install_id(),
-				'sequence'       => $sequence,
-				'observed_at'    => time(),
-				'payload'        => $payload,
 			);
-			$pending  = (string) wp_json_encode( $body );
+			if ( 2 === $schema_version ) {
+				$body['site_id']             = $this->site_identity->site_id();
+				$body['observation_profile'] = $profile;
+			}
+			$body['sequence']    = $sequence;
+			$body['observed_at'] = time();
+			$body['payload']     = $payload;
+			$pending             = (string) wp_json_encode( $body );
 			$this->state->set_many(
 				array(
 					'pending_sequence'        => $sequence,
 					'pending_body'            => $pending,
 					'pending_body_hash'       => hash( 'sha256', $pending ),
-					'pending_sdk_version'     => '1.0.0',
+					'pending_sdk_version'     => self::SDK_VERSION,
 					'pending_product_version' => $adapter->product_version(),
 				)
 			);
@@ -169,6 +195,14 @@ final class Transport {
 		if ( 'stale_timestamp' === $response['class'] && ! $clock_retry && isset( $response['data']['server_time'] ) ) {
 			$response['server_time'] = (int) $response['data']['server_time'];
 		}
+		if ( 'sequence_conflict' === $response['class'] ) {
+			$response['permanent'] = false;
+			$expected              = isset( $response['data']['expected_sequence'] ) && is_int( $response['data']['expected_sequence'] ) ? $response['data']['expected_sequence'] : 0;
+			if ( ! $sequence_retry && $expected > 0 ) {
+				$this->state->reconcile_sequence( $expected );
+				return $this->snapshot( $adapter, $payload, $clock_retry, true );
+			}
+		}
 		return $response;
 	}
 
@@ -196,9 +230,11 @@ final class Transport {
 		);
 
 		if ( is_wp_error( $response ) ) {
+			$error_code = $response->get_error_code();
+			$error_code = is_scalar( $error_code ) ? substr( (string) $error_code, 0, 191 ) : '';
 			return array(
 				'ok'        => false,
-				'class'     => self::transport_class( $response->get_error_code() ),
+				'class'     => self::transport_class( $error_code ),
 				'status'    => 0,
 				'permanent' => false,
 			);

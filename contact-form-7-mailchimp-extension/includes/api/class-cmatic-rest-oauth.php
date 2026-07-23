@@ -138,17 +138,20 @@ final class Cmatic_Rest_OAuth {
 
 		$secret = wp_generate_password( 32, false );
 		set_transient( 'cmatic_oauth_secret_' . $form_id, $secret, HOUR_IN_SECONDS );
+		$start_body = array(
+			'domain' => site_url(),
+			'secret' => $secret,
+		);
+		$context    = Cmatic_Lite_Service_Context::payload( 'oauth_admin_connect' );
+		if ( ! empty( $context ) ) {
+			$start_body['context'] = $context;
+		}
 
 		$response = wp_safe_remote_post(
 			Cmatic_Lite_Auth_Manager::OAUTH_GATEWAY . '/api/start',
 			array(
 				'headers' => array( 'Content-Type' => 'application/json' ),
-				'body'    => wp_json_encode(
-					array(
-						'domain' => site_url(),
-						'secret' => $secret,
-					)
-				),
+				'body'    => wp_json_encode( $start_body ),
 				'timeout' => 15,
 			)
 		);

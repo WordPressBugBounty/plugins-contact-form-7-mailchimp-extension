@@ -587,7 +587,8 @@
 				email: ['email'],
 				phone: ['tel'],
 				text: ['text', 'textarea'],
-				boolean: ['acceptance']
+				boolean: ['acceptance'],
+				'multiple-choice': ['select', 'radio', 'checkbox']
 			};
 			return (types[String(providerType || '').toLowerCase()] || []).includes(formType);
 		}
@@ -595,6 +596,7 @@
 		function mappingWarning(field, select) {
 			const previous = select.parentElement.querySelector('.cmatic-provider-mapping-warning');
 			if (previous) previous.remove();
+			select.removeAttribute('aria-describedby');
 			if (!select.value) return;
 			const option = select.options[select.selectedIndex];
 			const formType = option ? String(option.dataset.basetype || '') : '';

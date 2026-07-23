@@ -11,6 +11,7 @@
 defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Lite_Signls_Privacy {
+	public const CONSENT_VERSION = 2;
 
 	private const PRODUCT_SLUG = 'contact-form-7-mailchimp-extension';
 
@@ -23,22 +24,25 @@ final class Cmatic_Lite_Signls_Privacy {
 	public static function consent_status(): string {
 		$data   = Cmatic_Options_Repository::get_all_options();
 		$status = isset( $data['signls']['consent_status'] ) ? (string) $data['signls']['consent_status'] : '';
-		if ( in_array( $status, array( 'unset', 'enabled', 'disabled' ), true ) ) {
+		if ( in_array( $status, array( 'enabled', 'disabled' ), true ) ) {
+			if ( (int) ( $data['signls']['consent_version'] ?? 0 ) < self::CONSENT_VERSION ) {
+				$data['signls']['consent_version'] = self::CONSENT_VERSION;
+				Cmatic_Options_Repository::instance()->save( $data );
+			}
 			return $status;
 		}
 
 		$legacy = isset( $data['telemetry']['enabled'] ) ? $data['telemetry']['enabled'] : null;
-		$status = false === $legacy || 0 === $legacy || '0' === $legacy ? 'disabled' : 'enabled';
+		$status = 'unset' === $status ? 'enabled' : ( false === $legacy || 0 === $legacy || '0' === $legacy ? 'disabled' : 'enabled' );
 		$source = 'disabled' === $status ? 'legacy_disabled' : self::DEFAULT_SOURCE;
 		$now    = time();
 		if ( ! isset( $data['signls'] ) || ! is_array( $data['signls'] ) ) {
 			$data['signls'] = array();
 		}
 		$data['signls']['consent_status']          = $status;
-		$data['signls']['consent_version']         = 1;
+		$data['signls']['consent_version']         = self::CONSENT_VERSION;
 		$data['signls']['consent_last_changed_at'] = $now;
 		$data['signls']['consent_source']          = $source;
-		$data['signls']['notice_version']          = Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION;
 		$data['signls']['migrated_at']             = $now;
 		if ( 'enabled' === $status ) {
 			$data['signls']['consent_first_enabled_at'] = $now;
@@ -60,7 +64,7 @@ final class Cmatic_Lite_Signls_Privacy {
 		\Signls\Sdk\V1\Runtime::enable(
 			self::PRODUCT_SLUG,
 			self::DEFAULT_SOURCE,
-			Cmatic_Lite_Signls_Consent_Notice::NOTICE_VERSION
+			self::CONSENT_VERSION
 		);
 	}
 
@@ -68,10 +72,11 @@ final class Cmatic_Lite_Signls_Privacy {
 		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
 			return;
 		}
-		$content  = '<p>' . esc_html__( 'ChimpMatic Lite sends pseudonymous aggregate product signals to Signls while “Help Us Improve” is enabled. This managed-network build initializes the setting as enabled; an administrator can turn it off or on at any time.', 'chimpmatic-lite' ) . '</p>';
-		$content .= '<p>' . esc_html__( 'The data includes a stable pseudonymous plugin install ID, a device ID that rotates when the site origin changes, plugin/WordPress/PHP/Contact Form 7 versions, multisite state, aggregate configured and active form counts, provider authentication preference counts, destination and mapping counts, enabled feature counts, aggregate success/failure classes, and whether the ChimpMatic Pro add-on is installed, active, and licensed. It does not include contact data, credentials, license keys, form IDs, names, destination identifiers, raw errors, IP addresses, user agents, or the site URL.', 'chimpmatic-lite' ) . '</p>';
-		$content .= '<p>' . esc_html__( 'Active installations send at most once daily and quiet installations at most once weekly. Delivery receipts are retained for 90 days; daily aggregate summaries are retained for product analysis; the stable install identity is retained to measure long-term product adoption. Disabling sharing stops future delivery and clears the local delivery credential without sending an opt-out event. Sharing can be enabled or disabled again without restriction.', 'chimpmatic-lite' ) . '</p>';
-		$content .= '<p><a href="https://chimpmatic.com/terms-and-conditions">' . esc_html__( 'Terms and Conditions', 'chimpmatic-lite' ) . '</a> · <a href="https://chimpmatic.com/privacy">' . esc_html__( 'Privacy Policy', 'chimpmatic-lite' ) . '</a></p>';
+		$content  = '<p>' . esc_html__( 'While “Help Us Improve” is enabled, ChimpMatic Lite sends a bounded, signed product snapshot to Signls at https://signls.dev/wp-json/chimpmatic/v1/telemetry so we can measure setup completion, compatibility, feature use, reliability, upgrades and long-term adoption. This build preserves its established initial setting; an administrator can turn sharing off or on repeatedly at any time.', 'chimpmatic-lite' ) . '</p>';
+		$content .= '<p>' . esc_html__( 'The snapshot includes random pseudonymous site, installation and rotating device identities; the current site URL and one snapshot user agent; WordPress, PHP, database, server, theme, Contact Form 7 and ChimpMatic versions and configuration facts; a maximum of 500 plugin inventory rows with names, versions, authors and active state; 16 fixed competitor indicators; aggregate provider/authentication, destination, mapping, feature, lifecycle, submission, performance and scrubbed failure facts; and bounded Contact Form 7 configuration labels (up to 100 forms, 50 form-detail rows and 30 field/mapping rows per detailed form). Totals and truncation flags report omitted rows.', 'chimpmatic-lite' ) . '</p>';
+		$content .= '<p>' . esc_html__( 'The snapshot excludes contact details, submitted form values, credentials, API or license keys, OAuth secrets, cookies, authorization headers, raw provider responses, raw administrator email, commerce records, raw IP addresses, arbitrary settings, request bodies and file contents. Server address and hostname are exported only as SHA-256 hashes; failure samples are scrubbed and limited to 50 characters.', 'chimpmatic-lite' ) . '</p>';
+		$content .= '<p>' . esc_html__( 'Active installations send at most daily and quiet installations at most weekly, with a coalesced refresh after relevant changes. Delivery receipts are retained for 90 days, current typed facts are replaced by newer observations, and daily aggregates plus pseudonymous adoption/lifecycle identity are retained for long-term product analysis. Turning sharing off immediately clears scheduled delivery, pending payloads and the local delivery credential without sending an opt-out event; turning it on later resumes under the same disclosed contract.', 'chimpmatic-lite' ) . '</p>';
+		$content .= '<p><a href="https://github.com/signls-dev/signls/blob/main/reference/wordpress-signls-sdk-v2.md">' . esc_html__( 'Complete public field matrix, bounds and retention', 'chimpmatic-lite' ) . '</a> · <a href="https://chimpmatic.com/terms-and-conditions">' . esc_html__( 'Terms and Conditions', 'chimpmatic-lite' ) . '</a> · <a href="https://chimpmatic.com/privacy">' . esc_html__( 'Privacy Policy', 'chimpmatic-lite' ) . '</a></p>';
 		wp_add_privacy_policy_content( 'ChimpMatic Lite', wp_kses_post( $content ) );
 	}
 

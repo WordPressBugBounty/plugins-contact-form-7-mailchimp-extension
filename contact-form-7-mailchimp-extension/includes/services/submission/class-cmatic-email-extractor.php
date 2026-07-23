@@ -33,10 +33,23 @@ class Cmatic_Email_Extractor {
 	}
 
 	public static function replace_tags( string $subject, array $posted_data ): string {
+		$value = self::replace_tag_values( $subject, $posted_data );
+		return is_array( $value ) ? implode( ', ', $value ) : (string) $value;
+	}
+
+	public static function replace_tag_values( string $subject, array $posted_data ) {
 		if ( preg_match( self::TAG_PATTERN, $subject, $matches ) > 0 ) {
 			if ( isset( $posted_data[ $matches[1] ] ) ) {
 				$submitted = $posted_data[ $matches[1] ];
-				return is_array( $submitted ) ? implode( ', ', $submitted ) : $submitted;
+				if ( is_array( $submitted ) ) {
+					return array_values(
+						array_map(
+							'strval',
+							array_filter( $submitted, 'is_scalar' )
+						)
+					);
+				}
+				return is_scalar( $submitted ) ? (string) $submitted : '';
 			}
 			$mail_tag = class_exists( 'WPCF7_MailTag' )
 				? new WPCF7_MailTag( sprintf( '[%s]', $matches[1] ), $matches[1], '' )

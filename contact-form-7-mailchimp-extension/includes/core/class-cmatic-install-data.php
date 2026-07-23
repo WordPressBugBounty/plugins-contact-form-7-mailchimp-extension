@@ -106,10 +106,12 @@ class Cmatic_Install_Data {
 			return array( $standalone, false );
 		}
 
-		$raw = get_option( 'cmatic', array() );
-		if ( is_array( $raw ) && self::valid_install_id( isset( $raw['install']['id'] ) ? $raw['install']['id'] : '' ) ) {
-			update_option( self::INSTALL_ID_OPTION, $raw['install']['id'], 'no' );
-			return array( $raw['install']['id'], false );
+		$raw     = get_option( 'cmatic', array() );
+		$install = is_array( $raw ) && isset( $raw['install'] ) && is_array( $raw['install'] ) ? $raw['install'] : array();
+		$legacy  = isset( $install['id'] ) && is_string( $install['id'] ) ? $install['id'] : '';
+		if ( self::valid_install_id( $legacy ) ) {
+			update_option( self::INSTALL_ID_OPTION, $legacy, 'no' );
+			return array( $legacy, false );
 		}
 
 		return array( $this->generate_install_id(), true );

@@ -62,6 +62,7 @@ final class Cmatic_Pursuit {
 				'url'            => 'https://api.chimpmatic.com/promo',
 				'cache_key'      => 'cmatic_pricing_data',
 				'cache_duration' => DAY_IN_SECONDS,
+				'headers'        => Cmatic_Lite_Service_Context::headers( 'promo_pricing_refresh' ),
 				'fallback_data'  => array(
 					'regular_price'    => 39,
 					'sale_price'       => 29.25,

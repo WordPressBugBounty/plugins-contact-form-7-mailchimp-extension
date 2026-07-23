@@ -145,6 +145,7 @@ final class Cmatic_Rest_Lists {
 		}
 
 		if ( empty( $api_key ) ) {
+			self::record_transition( 'connect', false, 'configuration', 'API key is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_api_key',
 				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'chimpmatic-lite' ),
@@ -257,6 +258,13 @@ final class Cmatic_Rest_Lists {
 				Cmatic_Options_Repository::set_option( 'lisdata', $lists_result['lisdata'] );
 				Cmatic_Options_Repository::set_option( 'lisdata_updated', time() );
 			}
+			self::record_transition(
+				'connect',
+				1 === (int) $api_valid,
+				1 === (int) $api_valid ? 'unknown' : 'auth',
+				1 === (int) $api_valid ? '' : $validation_result,
+				1 === (int) $api_valid ? 'unknown' : 'revoked_credential'
+			);
 
 			return rest_ensure_response(
 				array(
@@ -269,6 +277,7 @@ final class Cmatic_Rest_Lists {
 			);
 
 		} catch ( Exception $e ) {
+			self::record_transition( 'connect', false, 'remote_rejected', $e, 'remote_rejected' );
 			$logger = new Cmatic_File_Logger( 'REST-API-Error', true );
 			$logger->log( 'ERROR', 'REST API list loading failed.', $e->getMessage() );
 
@@ -297,6 +306,7 @@ final class Cmatic_Rest_Lists {
 		}
 
 		if ( empty( $api_key ) ) {
+			self::record_transition( 'refresh_schema', false, 'configuration', 'API key is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_api_key',
 				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'chimpmatic-lite' ),
@@ -365,10 +375,7 @@ final class Cmatic_Rest_Lists {
 				Cmatic_Options_Repository::set_option( 'api.audience_selected', time() );
 			}
 
-			if ( class_exists( 'Cmatic\\Metrics\\Core\\Sync' ) && class_exists( 'Cmatic\\Metrics\\Core\\Collector' ) ) {
-				$payload = \Cmatic\Metrics\Core\Collector::collect( 'list_selected' );
-				\Cmatic\Metrics\Core\Sync::send_async( $payload );
-			}
+			self::record_transition( 'refresh_schema', true, 'unknown', '', 'unknown' );
 
 			$audience_name = '';
 			if ( isset( $cf7_mch['lisdata']['lists'] ) && is_array( $cf7_mch['lisdata']['lists'] ) ) {
@@ -391,6 +398,7 @@ final class Cmatic_Rest_Lists {
 			);
 
 		} catch ( Exception $e ) {
+			self::record_transition( 'refresh_schema', false, 'remote_rejected', $e, 'remote_rejected' );
 			return new WP_Error(
 				'api_request_failed',
 				esc_html__( 'Failed to load merge fields. Check debug log for details.', 'chimpmatic-lite' ),
@@ -422,6 +430,49 @@ final class Cmatic_Rest_Lists {
 				'credential_present' => $credential_present,
 			)
 		);
+	}
+
+	private static function record_transition( string $operation, bool $success, string $failure_class, $value, string $fallback ): void {
+		try {
+			$reason        = class_exists( 'Cmatic_Lite_Signls_Failure_Reason' )
+				? Cmatic_Lite_Signls_Failure_Reason::from_value( $value, $fallback )
+				: array(
+					'code'   => $fallback,
+					'sample' => '',
+				);
+			$failure_class = $success ? 'unknown' : self::failure_class_for_reason( $reason['code'], $failure_class );
+			$recorded      = \Signls\Sdk\V1\CounterStore::record_outcome(
+				'contact-form-7-mailchimp-extension',
+				'mailchimp',
+				$operation,
+				$success,
+				$failure_class,
+				$success ? '' : $reason['code'],
+				$success ? '' : $reason['sample']
+			);
+			if ( $recorded ) {
+				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+			}
+		} catch ( Throwable $error ) {
+			// Signals must never change a REST result.
+			return;
+		}
+	}
+
+	private static function failure_class_for_reason( string $reason_code, string $fallback ): string {
+		$map = array(
+			'dns'                => 'transport_dns',
+			'tls'                => 'transport_tls',
+			'timeout'            => 'transport_timeout',
+			'rate_limit'         => 'http_429',
+			'http_4xx'           => 'http_4xx',
+			'http_5xx'           => 'http_5xx',
+			'revoked_credential' => 'auth',
+			'permission'         => 'auth',
+			'configuration'      => 'configuration',
+			'validation'         => 'validation',
+		);
+		return isset( $map[ $reason_code ] ) ? $map[ $reason_code ] : $fallback;
 	}
 
 	private function __construct() {}

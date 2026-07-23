@@ -32,7 +32,7 @@ final class Collector {
 		$source   = $adapter->snapshot();
 		$allowed  = self::allowlists( $contract );
 
-		$payload = array(
+		$payload        = array(
 			'versions'         => self::versions( isset( $source['versions'] ) ? $source['versions'] : array(), $adapter ),
 			'is_multisite'     => Sanitizer::bool( isset( $source['is_multisite'] ) ? $source['is_multisite'] : false ),
 			'configured_units' => Sanitizer::counter( isset( $source['configured_units'] ) ? $source['configured_units'] : 0 ),
@@ -42,6 +42,12 @@ final class Collector {
 			'operation_health' => self::operations( isset( $source['operation_health'] ) ? $source['operation_health'] : array(), $allowed ),
 			'companions'       => self::companions( isset( $source['companions'] ) ? $source['companions'] : array(), $allowed['companions'] ),
 		);
+		$schema_version = isset( $contract['snapshot_schema_version'] ) ? (int) $contract['snapshot_schema_version'] : 1;
+		if ( 2 === $schema_version ) {
+			$observation_source      = isset( $source['observations'] ) && is_array( $source['observations'] ) ? $source['observations'] : array();
+			$observation_schema      = isset( $contract['observation_schema'] ) && is_array( $contract['observation_schema'] ) ? $contract['observation_schema'] : array();
+			$payload['observations'] = ObservationSanitizer::sanitize( $observation_source, $observation_schema );
+		}
 
 		$payload['active_units'] = min( $payload['active_units'], $payload['configured_units'] );
 		return $payload;

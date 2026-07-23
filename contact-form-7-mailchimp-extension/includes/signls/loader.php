@@ -117,4 +117,4 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 	}
 }
 
-Signls_Sdk_Loader::add_candidate( '1.0.0', __DIR__ . '/sdk.php', '7.4.0' );
+Signls_Sdk_Loader::add_candidate( '1.1.0', __DIR__ . '/sdk.php', '7.4.0' );

@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.81.05
+Stable tag: 0.9.81.07
 Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -58,7 +58,15 @@ ChimpMatic is independently developed and is not affiliated with or endorsed by 
 
 [Read how each external service is used, what data is sent, and review provider terms and privacy policies](https://chimpmatic.com/external-services/).
 
-Help us make our plugin better. [Learn more](https://chimpmatic.com/privacy).
+When the existing **Help Us Improve** setting is enabled, ChimpMatic Lite sends a signed product snapshot to `https://signls.dev/wp-json/chimpmatic/v1/telemetry` to measure setup completion, compatibility, feature use, reliability, upgrades, and long-term adoption. Administrators can turn sharing off or on repeatedly without restriction.
+
+The bounded snapshot contains random pseudonymous site/install/device identities; the current site URL and one snapshot user agent; WordPress, PHP, database, server, theme, Contact Form 7, and ChimpMatic facts; plugin inventory (maximum 500 rows, including name/version/author/active state); 16 fixed competitor indicators; aggregate provider/auth method, destination, mapping, feature, lifecycle, submission, performance, and scrubbed failure facts; and Contact Form 7 configuration labels (maximum 100 forms, 50 detailed forms, and 30 field/mapping rows per detailed form). Totals and truncation flags identify omitted rows.
+
+It does not send contact details, submitted values, credentials, API or license keys, OAuth secrets, cookies, authorization headers, raw provider responses, raw administrator email, commerce records, raw IP addresses, arbitrary settings, request bodies, or file contents. Server address and hostname are SHA-256 hashes; failure samples are scrubbed and limited to 50 characters.
+
+Active installations send at most daily and quiet installations at most weekly, with one coalesced refresh after relevant changes. Delivery receipts are retained for 90 days; current typed facts are replaced by newer observations; daily aggregates and pseudonymous adoption/lifecycle identity are retained for long-term analysis. Turning sharing off clears scheduled delivery, any pending payload, and the local delivery credential immediately without sending an opt-out event.
+
+[Review the complete public field matrix, exact bounds, destination, purpose, exclusions, and retention](https://github.com/signls-dev/signls/blob/main/reference/wordpress-signls-sdk-v2.md). Also review the [ChimpMatic privacy policy](https://chimpmatic.com/privacy).
 
 = Requirements =
 
@@ -90,7 +98,7 @@ Mailchimp supports OAuth or an API key. Brevo uses an API key, MailerLite uses a
 
 = Which email marketing providers does ChimpMatic Lite support? =
 
-Version 0.9.81.04 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
+Version 0.9.81.07 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
 
 = How do I connect Mailchimp to Contact Form 7? =
 
@@ -139,8 +147,11 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 1. Choose Mailchimp, Brevo, MailerLite, or Klaviyo inside a Contact Form 7 form.
 2. Select an audience, list, or group and map Contact Form 7 fields to subscriber fields.
 
-
 == Changelog ==
+
+= 0.9.81.07 =
+
+[Version 0.9.81.07 release notes](https://chimpmatic.com/changelog#0.9.81.07)
 
 = 0.9.81.05 =
 
@@ -153,9 +164,5 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 = 0.9.81.03 =
 
 [Version 0.9.81.03 release notes](https://chimpmatic.com/changelog#0.9.81.03)
-
-= 0.9.80.00 =
-
-[Version 0.9.80.00 release notes](https://chimpmatic.com/changelog#0.9.80.00)
 
 [View the complete ChimpMatic changelog](https://chimpmatic.com/changelog)
