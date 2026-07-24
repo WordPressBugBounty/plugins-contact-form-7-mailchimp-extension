@@ -19,6 +19,10 @@ class Cmatic_Deactivator {
 	}
 
 	public function deactivate() {
+		if ( class_exists( 'Cmatic_Pro_Syncer' ) ) {
+			Cmatic_Pro_Syncer::deactivate();
+		}
+
 		$this->options->set( 'lifecycle.is_active', false );
 
 		$this->record_deactivation();

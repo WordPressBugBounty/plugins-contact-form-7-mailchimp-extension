@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.81.07
+Stable tag: 0.9.81.08
 Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -98,7 +98,7 @@ Mailchimp supports OAuth or an API key. Brevo uses an API key, MailerLite uses a
 
 = Which email marketing providers does ChimpMatic Lite support? =
 
-Version 0.9.81.07 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
+Version 0.9.81.08 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form.
 
 = How do I connect Mailchimp to Contact Form 7? =
 
@@ -148,6 +148,10 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 2. Select an audience, list, or group and map Contact Form 7 fields to subscriber fields.
 
 == Changelog ==
+
+= 0.9.81.08 =
+
+[Version 0.9.81.08 release notes](https://chimpmatic.com/changelog#0.9.81.08)
 
 = 0.9.81.07 =
 
