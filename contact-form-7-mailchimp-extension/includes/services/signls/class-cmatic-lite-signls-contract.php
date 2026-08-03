@@ -34,13 +34,14 @@ final class Cmatic_Lite_Signls_Contract {
 
 	public static function get(): array {
 		return array(
-			'snapshot_schema_version' => 2,
-			'observation_profile'     => 'chimpmatic_connector_v1',
-			'integrations'            => self::INTEGRATIONS,
-			'features'                => self::FEATURES,
-			'operations'              => array( 'subscribe', 'connect', 'disconnect', 'refresh_schema' ),
-			'companions'              => array( 'chimpmatic' ),
-			'observation_schema'      => self::object(
+			'snapshot_schema_version'   => 2,
+			'observation_profile'       => 'chimpmatic_connector_v1',
+			'snapshot_payload_revision' => 2,
+			'integrations'              => self::INTEGRATIONS,
+			'features'                  => self::FEATURES,
+			'operations'                => array( 'subscribe', 'connect', 'disconnect', 'refresh_schema' ),
+			'companions'                => array( 'chimpmatic' ),
+			'observation_schema'        => self::object(
 				array(
 					'install'           => self::install(),
 					'metadata'          => self::metadata(),

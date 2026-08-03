@@ -35,13 +35,13 @@ final class Cmatic_License_Banner {
 
 	/** Resolve the banner state, or an empty string when no banner applies. */
 	public static function resolve_state(): string {
-		if ( ! defined( 'CMATIC_VERSION' ) ) {
+		if ( ! class_exists( 'Cmatic_License_State_Resolver' ) ) {
 			return '';
 		}
 
-		$license_state = 'none';
-		if ( class_exists( 'Cmatic_License_Validator' ) && method_exists( 'Cmatic_License_Validator', 'get_license_state' ) ) {
-			$license_state = (string) Cmatic_License_Validator::get_license_state();
+		$license_state = Cmatic_License_State_Resolver::resolve();
+		if ( '' === $license_state ) {
+			return '';
 		}
 
 		if ( 'active' === $license_state ) {
@@ -76,18 +76,9 @@ final class Cmatic_License_Banner {
 	}
 
 	private static function license_expires_at(): int {
-		if ( ! function_exists( 'chimpmatic_license' ) ) {
-			return 0;
-		}
-		try {
-			$activation = chimpmatic_license()->get_activation();
-			if ( $activation && method_exists( $activation, 'get_expires_at' ) ) {
-				return (int) $activation->get_expires_at();
-			}
-		} catch ( \Throwable $e ) {
-			return 0;
-		}
-		return 0;
+		return class_exists( 'Cmatic_License_State_Resolver' )
+			? Cmatic_License_State_Resolver::expires_at()
+			: 0;
 	}
 
 	/** Resolve the current server-provided promotion. */
@@ -134,37 +125,37 @@ final class Cmatic_License_Banner {
 
 	/** @return array{tone:string,message:string,coupon:?array,cta:string,cta_url:string,secondary:?string,secondary_url:?string,dismissible:bool}|null */
 	private static function view_for( string $state ): ?array {
-		$days_left = (int) max( 0, ceil( ( self::amnesty_until() - time() ) / DAY_IN_SECONDS ) );
+		$no_offer = array(
+			'kind'    => 'license',
+			'percent' => 0,
+		);
 
 		switch ( $state ) {
 			case 'unlicensed':
 			case 'unlicensed_urgent':
-				$offer = self::offer( 'activate' );
 				return array(
 					'tone'          => 'unlicensed_urgent' === $state ? 'amber' : 'blue',
-					'message'       => sprintf(
-						/* translators: %d: days until the activation deadline */
-						__( 'You are using Chimpmatic Pro without a license on file. Everything keeps working for %d more days. Make it official today and September 1st is just another day.', 'chimpmatic-lite' ),
-						$days_left
-					),
-					'offer'         => $offer,
-					'cta'           => __( 'Make it official', 'chimpmatic-lite' ),
+					'message'       => 'unlicensed_urgent' === $state
+						? __( 'We have not been able to confirm a Chimpmatic Pro license for this site yet. Your settings are safe. Please review your license details when you have a moment so your Pro access continues smoothly.', 'chimpmatic-lite' )
+						: __( 'We are getting Chimpmatic Pro ready for this site. Your forms and settings will continue to work while we confirm the license. If you already have a key, you can add it here.', 'chimpmatic-lite' ),
+					'offer'         => $no_offer,
+					'cta'           => __( 'View license options', 'chimpmatic-lite' ),
 					'cta_url'       => self::offer_url(
 						'https://chimpmatic.com/pricing',
 						'activate',
 						'unlicensed_urgent' === $state ? 'banner_lastcall' : 'banner_hello'
 					),
-					'secondary'     => __( 'I already have a key', 'chimpmatic-lite' ),
+					'secondary'     => __( 'I have a key', 'chimpmatic-lite' ),
 					'secondary_url' => admin_url( 'admin.php?page=wpcf7' ),
 					'dismissible'   => 'unlicensed' === $state,
 				);
 
 			case 'unlicensed_over':
 				return array(
-					'tone'          => 'red',
-					'message'       => __( 'Chimpmatic Pro is paused on this site. All your settings are saved and nothing was lost. Add a license and everything picks up exactly where it left off.', 'chimpmatic-lite' ),
-					'offer'         => self::offer( 'activate' ),
-					'cta'           => __( 'Bring Pro back', 'chimpmatic-lite' ),
+					'tone'          => 'amber',
+					'message'       => __( 'Chimpmatic Pro needs an active license for this site. Your forms, settings, and saved work are safely stored. Add or review a license to continue using Pro features.', 'chimpmatic-lite' ),
+					'offer'         => $no_offer,
+					'cta'           => __( 'Review license', 'chimpmatic-lite' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/pricing', 'activate', 'banner_freshstart' ),
 					'secondary'     => __( 'Enter my license key', 'chimpmatic-lite' ),
 					'secondary_url' => admin_url( 'admin.php?page=wpcf7' ),
@@ -172,19 +163,11 @@ final class Cmatic_License_Banner {
 				);
 
 			case 'expired':
-				$offer = self::offer( 'winback' );
-				$msg   = $offer['percent'] > 0
-					? sprintf(
-						/* translators: %d: win-back discount percentage */
-						__( 'Good to see you again! Your Chimpmatic Pro license ended a while ago, and we would love to have you back. Renew today for %d%% off, applied automatically at checkout. Everything is just as you left it.', 'chimpmatic-lite' ),
-						$offer['percent']
-					)
-					: __( 'Good to see you again! Your Chimpmatic Pro license ended a while ago, and we would love to have you back. Renew today with a special welcome-back discount, applied automatically at checkout. Everything is just as you left it.', 'chimpmatic-lite' );
 				return array(
 					'tone'          => 'green',
-					'message'       => $msg,
-					'offer'         => $offer,
-					'cta'           => __( 'Claim my welcome-back offer', 'chimpmatic-lite' ),
+					'message'       => __( 'Your Chimpmatic Pro license has ended. Thank you for using Chimpmatic—your settings are still here whenever you are ready. Renew to keep receiving Pro updates and support.', 'chimpmatic-lite' ),
+					'offer'         => $no_offer,
+					'cta'           => __( 'View renewal options', 'chimpmatic-lite' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/my-account', 'winback', 'banner_welcomeback' ),
 					'secondary'     => null,
 					'secondary_url' => null,
@@ -194,36 +177,23 @@ final class Cmatic_License_Banner {
 			case 'invalid':
 				return array(
 					'tone'          => 'amber',
-					'message'       => __( 'Your Chimpmatic Pro license key is not connecting to your account. It may have been mistyped or used on another site. A quick fix keeps Pro features, updates, and support flowing.', 'chimpmatic-lite' ),
-					'offer'         => self::offer( 'activate' ),
-					'cta'           => __( 'Fix my license', 'chimpmatic-lite' ),
+					'message'       => __( 'We could not verify this site’s Chimpmatic Pro license right now. This can happen when license details change or a connection needs a refresh. Review your license to get everything back in sync.', 'chimpmatic-lite' ),
+					'offer'         => $no_offer,
+					'cta'           => __( 'Review license', 'chimpmatic-lite' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/pricing', 'activate', 'banner_keyhelp' ),
-					'secondary'     => __( 'Re-enter my key', 'chimpmatic-lite' ),
+					'secondary'     => __( 'Enter a license key', 'chimpmatic-lite' ),
 					'secondary_url' => admin_url( 'admin.php?page=wpcf7' ),
 					'dismissible'   => true,
 				);
 
 			case 'expiring':
-				$offer   = self::offer( 'renew' );
 				$expires = self::license_expires_at();
 				$date    = esc_html( date_i18n( get_option( 'date_format' ), $expires ) );
-				$msg     = $offer['percent'] > 0
-					? sprintf(
-						/* translators: 1: expiry date, 2: renewal discount percentage */
-						__( 'Your Chimpmatic Pro license runs through %1$s. Renew early with %2$d%% off, applied automatically at checkout, and never miss an update.', 'chimpmatic-lite' ),
-						$date,
-						$offer['percent']
-					)
-					: sprintf(
-						/* translators: %s: expiry date */
-						__( 'Your Chimpmatic Pro license runs through %s. Renew early and never miss an update.', 'chimpmatic-lite' ),
-						$date
-					);
 				return array(
 					'tone'          => 'blue',
-					'message'       => $msg,
-					'offer'         => $offer,
-					'cta'           => __( 'Lock in my renewal', 'chimpmatic-lite' ),
+					'message'       => sprintf( __( 'Your Chimpmatic Pro license is active through %s. If you would like to continue receiving Pro updates and support without interruption, you can renew early at any time.', 'chimpmatic-lite' ), $date ),
+					'offer'         => $no_offer,
+					'cta'           => __( 'View renewal options', 'chimpmatic-lite' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/my-account', 'renew', 'banner_earlybird' ),
 					'secondary'     => null,
 					'secondary_url' => null,

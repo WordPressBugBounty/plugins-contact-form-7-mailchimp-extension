@@ -16,14 +16,17 @@ final class Scheduler {
 
 	private $state;
 
+	private $adapter;
+
 	private $routine_hook;
 
 	private $refresh_hook;
 
-	public function __construct( string $product, StateStore $state ) {
+	public function __construct( string $product, StateStore $state, ProductAdapterInterface $adapter ) {
 		$hash               = substr( hash( 'sha256', $product ), 0, 12 );
 		$this->product      = $product;
 		$this->state        = $state;
+		$this->adapter      = $adapter;
 		$this->routine_hook = 'signls_sdk_v1_' . $hash . '_routine';
 		$this->refresh_hook = 'signls_sdk_v1_' . $hash . '_refresh';
 	}
@@ -52,6 +55,9 @@ final class Scheduler {
 				'cadence_mode'           => 'daily',
 			)
 		);
+		if ( $this->quarantine_deferred() ) {
+			return;
+		}
 		if ( ! wp_next_scheduled( $this->refresh_hook ) ) {
 			wp_schedule_single_event( time() + 300 + self::jitter( $this->product . '|refresh', 600 ), $this->refresh_hook );
 		}
@@ -61,7 +67,10 @@ final class Scheduler {
 		if ( 'enabled' !== $this->state->get( 'consent_status', 'unset' ) ) {
 			return;
 		}
-		Runtime::run( $this->product );
+		$result = Runtime::run( $this->product );
+		if ( in_array( $result['class'], array( 'delivery_busy', 'delivery_lock_unavailable' ), true ) ) {
+			return;
+		}
 		$this->schedule_next();
 	}
 
@@ -84,6 +93,9 @@ final class Scheduler {
 		if ( 'enabled' !== $this->state->get( 'consent_status', 'unset' ) ) {
 			return;
 		}
+		if ( $this->quarantine_deferred() ) {
+			return;
+		}
 		if ( ! wp_next_scheduled( $this->refresh_hook ) ) {
 			wp_schedule_single_event( max( time() + 60, $when ), $this->refresh_hook );
 		}
@@ -104,6 +116,9 @@ final class Scheduler {
 		if ( $last > 0 && time() - $last < $age ) {
 			return;
 		}
+		if ( $this->quarantine_deferred() ) {
+			return;
+		}
 		if ( ! wp_next_scheduled( $this->refresh_hook ) ) {
 			wp_schedule_single_event( time() + 300 + self::jitter( $this->product . '|failsafe', 600 ), $this->refresh_hook );
 		}
@@ -120,5 +135,28 @@ final class Scheduler {
 	private static function jitter( string $seed, int $maximum ): int {
 		$hex = substr( hash( 'sha256', $seed ), 0, 8 );
 		return (int) ( hexdec( $hex ) % ( max( 1, $maximum ) + 1 ) );
+	}
+
+	private function quarantine_deferred(): bool {
+		if (
+			'' === (string) $this->state->get( 'pending_body', '' )
+			|| '' === (string) $this->state->get( 'pending_quarantine_class', '' )
+			|| (int) $this->state->get( 'pending_quarantine_probe_at', 0 ) <= time()
+		) {
+			return false;
+		}
+
+		try {
+			$contract = $this->adapter->contract();
+			$revision = isset( $contract['snapshot_payload_revision'] ) ? (int) $contract['snapshot_payload_revision'] : 1;
+			$revision = $revision > 0 ? $revision : 1;
+			return (
+				Transport::version() === (string) $this->state->get( 'pending_sdk_version', '' )
+				&& $this->adapter->product_version() === (string) $this->state->get( 'pending_product_version', '' )
+				&& $revision === (int) $this->state->get( 'pending_payload_revision', 1 )
+			);
+		} catch ( \Throwable $error ) {
+			return false;
+		}
 	}
 }

@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.0
-Stable tag: 0.9.81.08
+Stable tag: 0.9.81.09
 Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -148,6 +148,10 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 2. Select an audience, list, or group and map Contact Form 7 fields to subscriber fields.
 
 == Changelog ==
+
+= 0.9.81.09 =
+
+[Version 0.9.81.09 release notes](https://chimpmatic.com/changelog#0.9.81.09)
 
 = 0.9.81.08 =
 

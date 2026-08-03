@@ -76,7 +76,7 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 			$with_consent   += $features['required_consent'] ? 1 : 0;
 			$total_sends    += $submissions;
 			$total_fields   += count( $fields );
-			$total_mappings += $mappings['reported_total'];
+			$total_mappings += $mappings['mapped_count'];
 			$total_remote   += $mappings['remote_total'];
 			$field_counts[]  = count( $fields );
 			$list_counts[]   = count( $lists );
@@ -103,7 +103,7 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 						'reported_total' => $mappings['reported_total'],
 						'truncated'      => $mappings['reported_total'] > self::MAX_MAPPINGS,
 					),
-					'unmapped_cf7_fields'       => $this->unmapped_fields( $fields, $mappings['mapped_fields'] ),
+					'unmapped_cf7_fields'       => $mappings['unmapped_fields'],
 					'unmapped_mc_fields'        => max( 0, $mappings['remote_total'] - $mappings['reported_total'] ),
 					'features'                  => $features,
 				);
@@ -164,7 +164,7 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 					'total_cf7_fields' => $total_fields,
 					'total_mc_fields'  => $total_remote,
 					'mapped_fields'    => $total_mappings,
-					'mapping_rate'     => $total_fields > 0 ? min( 100, round( ( $total_mappings / $total_fields ) * 100, 2 ) ) : null,
+					'mapping_rate'     => $total_fields > 0 ? round( ( $total_mappings / $total_fields ) * 100, 2 ) : null,
 				),
 			),
 		);
@@ -335,8 +335,8 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 				}
 			}
 		}
-		$items  = array();
-		$mapped = array();
+		$items   = array();
+		$targets = array();
 		foreach ( array_slice( $definitions, 0, self::MAX_REMOTE_FIELDS ) as $offset => $definition ) {
 			if ( ! is_array( $definition ) || ! isset( $definition['tag'] ) || ! is_scalar( $definition['tag'] ) || '' === (string) $definition['tag'] ) {
 				continue;
@@ -346,31 +346,39 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 			if ( '' === $field ) {
 				continue;
 			}
-			$items[]  = array(
+			$items[] = array(
 				'cf7_field' => $field,
 				'mc_tag'    => (string) $definition['tag'],
 				'mc_type'   => isset( $definition['type'] ) && is_scalar( $definition['type'] ) ? (string) $definition['type'] : 'text',
 			);
-			$mapped[] = trim( $field, "[] \t\n\r\0\x0B" );
+			$target  = self::normalize_field_name( $field );
+			if ( '' !== $target ) {
+				$targets[ $target ] = true;
+			}
+		}
+		$mapped   = 0;
+		$unmapped = 0;
+		foreach ( $fields as $form_field ) {
+			$name = self::normalize_field_name( $form_field['name'] );
+			if ( '' !== $name && isset( $targets[ $name ] ) ) {
+				++$mapped;
+			} else {
+				++$unmapped;
+			}
 		}
 		$reported = count( $items );
 		$remote   = isset( $settings['total_merge_fields'] ) ? max( count( $definitions ), self::nonnegative_int( $settings['total_merge_fields'] ) ) : count( $definitions );
 		return array(
-			'items'          => $items,
-			'reported_total' => $reported,
-			'remote_total'   => max( 0, $remote ),
-			'mapped_fields'  => $mapped,
+			'items'           => $items,
+			'reported_total'  => $reported,
+			'remote_total'    => max( 0, $remote ),
+			'mapped_count'    => $mapped,
+			'unmapped_fields' => $unmapped,
 		);
 	}
 
-	private function unmapped_fields( array $fields, array $mapped ): int {
-		$count = 0;
-		foreach ( $fields as $field ) {
-			if ( ! in_array( $field['name'], $mapped, true ) ) {
-				++$count;
-			}
-		}
-		return $count;
+	private static function normalize_field_name( string $name ): string {
+		return trim( $name, "[] \t\n\r\0\x0B" );
 	}
 
 	private function features( array $settings ): array {

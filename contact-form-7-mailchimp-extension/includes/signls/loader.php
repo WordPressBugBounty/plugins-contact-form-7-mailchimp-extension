@@ -56,7 +56,9 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 				return;
 			}
 
-			require_once $candidate['bootstrap'];
+			if ( ! self::require_file( $candidate['bootstrap'] ) ) {
+				return;
+			}
 			if ( ! class_exists( 'Signls\\Sdk\\V1\\Runtime' ) ) {
 				return;
 			}
@@ -68,7 +70,9 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 						if ( ! is_file( $adapter_file ) ) {
 							continue;
 						}
-						require_once $adapter_file;
+						if ( ! self::require_file( $adapter_file ) ) {
+							continue;
+						}
 					}
 					\Signls\Sdk\V1\Runtime::boot( $descriptor );
 				} catch ( \Throwable $error ) {
@@ -114,7 +118,26 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 
 			return $candidates[0];
 		}
+
+		private static function require_file( $path ) {
+			if ( ! is_string( $path ) || ! is_file( $path ) ) {
+				return false;
+			}
+			set_error_handler( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler -- Contain a transient missing-file warning during plugin replacement.
+				static function ( $severity, $message ) use ( $path ) {
+					return E_WARNING === $severity && false !== strpos( $message, $path );
+				}
+			);
+			try {
+				require_once $path;
+				return true;
+			} catch ( \Throwable $error ) {
+				return false;
+			} finally {
+				restore_error_handler();
+			}
+		}
 	}
 }
 
-Signls_Sdk_Loader::add_candidate( '1.1.0', __DIR__ . '/sdk.php', '7.4.0' );
+Signls_Sdk_Loader::add_candidate( '1.1.3', __DIR__ . '/sdk.php', '7.4.0' );

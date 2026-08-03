@@ -57,10 +57,42 @@ final class StateStore {
 		return $this->replace( $state );
 	}
 
+	public static function pending_keys(): array {
+		return array(
+			'pending_sequence',
+			'pending_body',
+			'pending_body_hash',
+			'pending_sdk_version',
+			'pending_product_version',
+			'pending_payload_revision',
+			'pending_quarantine_class',
+			'pending_quarantine_status',
+			'pending_quarantined_at',
+			'pending_quarantine_probe_at',
+			'failure_class',
+			'next_retry_at',
+		);
+	}
+
+	public function clear_pending(): bool {
+		return $this->delete_keys( self::pending_keys() );
+	}
+
+	public function apply_clock_correction( int $offset, bool $clear_pending ): bool {
+		$state                 = $this->all();
+		$state['clock_offset'] = $offset;
+		if ( $clear_pending ) {
+			foreach ( self::pending_keys() as $key ) {
+				unset( $state[ $key ] );
+			}
+		}
+		return $this->replace( $state );
+	}
+
 	public function reconcile_sequence( int $expected_sequence ): bool {
 		$state                               = $this->all();
 		$state['last_acknowledged_sequence'] = max( 0, $expected_sequence - 1 );
-		foreach ( array( 'pending_sequence', 'pending_body', 'pending_body_hash', 'pending_sdk_version', 'pending_product_version', 'failure_class', 'next_retry_at' ) as $key ) {
+		foreach ( self::pending_keys() as $key ) {
 			unset( $state[ $key ] );
 		}
 		return $this->replace( $state );

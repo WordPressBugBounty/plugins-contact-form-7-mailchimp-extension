@@ -53,25 +53,21 @@ final class Identity {
 
 	public function clear_credential(): void {
 		$this->state->delete_keys(
-			array(
-				'credential_id',
-				'credential_secret',
-				'credential_key_id',
-				'pending_sequence',
-				'pending_body',
-				'pending_body_hash',
-				'pending_sdk_version',
-				'pending_product_version',
-				'last_acknowledged_sequence',
-				'last_acknowledged_at',
-				'last_success_at',
-				'last_attempt_started_at',
-				'last_attempt_finished_at',
-				'last_http_status',
-				'failure_class',
-				'retry_attempt',
-				'next_retry_at',
-				'clock_offset',
+			array_merge(
+				array(
+					'credential_id',
+					'credential_secret',
+					'credential_key_id',
+					'last_acknowledged_sequence',
+					'last_acknowledged_at',
+					'last_success_at',
+					'last_attempt_started_at',
+					'last_attempt_finished_at',
+					'last_http_status',
+					'retry_attempt',
+					'clock_offset',
+				),
+				StateStore::pending_keys()
 			)
 		);
 	}

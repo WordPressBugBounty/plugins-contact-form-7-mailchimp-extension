@@ -156,7 +156,7 @@ final class Cmatic_Lite_Signls_Inventory_Collector {
 		);
 		foreach ( self::COMPETITORS as $key => $basename ) {
 			$installed                     = isset( $plugins[ $basename ] );
-			$is_active                     = isset( $active[ $basename ] ) || isset( $network_active[ $basename ] );
+			$is_active                     = $installed && ( isset( $active[ $basename ] ) || isset( $network_active[ $basename ] ) );
 			$result[ $key . '_installed' ] = $installed;
 			$result[ $key . '_active' ]    = $is_active;
 			if ( $installed ) {
