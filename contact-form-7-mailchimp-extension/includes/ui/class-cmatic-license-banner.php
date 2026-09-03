@@ -81,21 +81,6 @@ final class Cmatic_License_Banner {
 			: 0;
 	}
 
-	/** Resolve the current server-provided promotion. */
-	private static function offer( string $kind ): array {
-		$percent = 0;
-		if ( class_exists( 'Cmatic_Pursuit' ) ) {
-			$pricing = Cmatic_Pursuit::pricing();
-			$percent = 'activate' === $kind
-				? (int) ( $pricing['discount_percent'] ?? 0 )
-				: (int) ( $pricing[ $kind . '_discount' ] ?? 0 );
-		}
-		return array(
-			'kind'    => $kind,
-			'percent' => $percent,
-		);
-	}
-
 	public static function render(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -123,7 +108,7 @@ final class Cmatic_License_Banner {
 		self::print_banner( $state, $view );
 	}
 
-	/** @return array{tone:string,message:string,coupon:?array,cta:string,cta_url:string,secondary:?string,secondary_url:?string,dismissible:bool}|null */
+	/** @return array{tone:string,message:string,offer:array{kind:string,percent:int},cta:string,cta_url:string,secondary:?string,secondary_url:?string,dismissible:bool}|null */
 	private static function view_for( string $state ): ?array {
 		$no_offer = array(
 			'kind'    => 'license',
@@ -136,16 +121,16 @@ final class Cmatic_License_Banner {
 				return array(
 					'tone'          => 'unlicensed_urgent' === $state ? 'amber' : 'blue',
 					'message'       => 'unlicensed_urgent' === $state
-						? __( 'We have not been able to confirm a Chimpmatic Pro license for this site yet. Your settings are safe. Please review your license details when you have a moment so your Pro access continues smoothly.', 'chimpmatic-lite' )
-						: __( 'We are getting Chimpmatic Pro ready for this site. Your forms and settings will continue to work while we confirm the license. If you already have a key, you can add it here.', 'chimpmatic-lite' ),
+						? __( 'We have not been able to confirm a Chimpmatic Pro license for this site yet. Your settings are safe. Please review your license details when you have a moment so your Pro access continues smoothly.', 'contact-form-7-mailchimp-extension' )
+						: __( 'We are getting Chimpmatic Pro ready for this site. Your forms and settings will continue to work while we confirm the license. If you already have a key, you can add it here.', 'contact-form-7-mailchimp-extension' ),
 					'offer'         => $no_offer,
-					'cta'           => __( 'View license options', 'chimpmatic-lite' ),
+					'cta'           => __( 'View license options', 'contact-form-7-mailchimp-extension' ),
 					'cta_url'       => self::offer_url(
 						'https://chimpmatic.com/pricing',
 						'activate',
 						'unlicensed_urgent' === $state ? 'banner_lastcall' : 'banner_hello'
 					),
-					'secondary'     => __( 'I have a key', 'chimpmatic-lite' ),
+					'secondary'     => __( 'I have a key', 'contact-form-7-mailchimp-extension' ),
 					'secondary_url' => admin_url( 'admin.php?page=wpcf7' ),
 					'dismissible'   => 'unlicensed' === $state,
 				);
@@ -153,11 +138,11 @@ final class Cmatic_License_Banner {
 			case 'unlicensed_over':
 				return array(
 					'tone'          => 'amber',
-					'message'       => __( 'Chimpmatic Pro needs an active license for this site. Your forms, settings, and saved work are safely stored. Add or review a license to continue using Pro features.', 'chimpmatic-lite' ),
+					'message'       => __( 'Chimpmatic Pro needs an active license for this site. Your forms, settings, and saved work are safely stored. Add or review a license to continue using Pro features.', 'contact-form-7-mailchimp-extension' ),
 					'offer'         => $no_offer,
-					'cta'           => __( 'Review license', 'chimpmatic-lite' ),
+					'cta'           => __( 'Review license', 'contact-form-7-mailchimp-extension' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/pricing', 'activate', 'banner_freshstart' ),
-					'secondary'     => __( 'Enter my license key', 'chimpmatic-lite' ),
+					'secondary'     => __( 'Enter my license key', 'contact-form-7-mailchimp-extension' ),
 					'secondary_url' => admin_url( 'admin.php?page=wpcf7' ),
 					'dismissible'   => false,
 				);
@@ -165,9 +150,9 @@ final class Cmatic_License_Banner {
 			case 'expired':
 				return array(
 					'tone'          => 'green',
-					'message'       => __( 'Your Chimpmatic Pro license has ended. Thank you for using Chimpmatic—your settings are still here whenever you are ready. Renew to keep receiving Pro updates and support.', 'chimpmatic-lite' ),
+					'message'       => __( 'Your Chimpmatic Pro license has ended. Thank you for using Chimpmatic—your settings are still here whenever you are ready. Renew to keep receiving Pro updates and support.', 'contact-form-7-mailchimp-extension' ),
 					'offer'         => $no_offer,
-					'cta'           => __( 'View renewal options', 'chimpmatic-lite' ),
+					'cta'           => __( 'View renewal options', 'contact-form-7-mailchimp-extension' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/my-account', 'winback', 'banner_welcomeback' ),
 					'secondary'     => null,
 					'secondary_url' => null,
@@ -177,11 +162,11 @@ final class Cmatic_License_Banner {
 			case 'invalid':
 				return array(
 					'tone'          => 'amber',
-					'message'       => __( 'We could not verify this site’s Chimpmatic Pro license right now. This can happen when license details change or a connection needs a refresh. Review your license to get everything back in sync.', 'chimpmatic-lite' ),
+					'message'       => __( 'We could not verify this site’s Chimpmatic Pro license right now. This can happen when license details change or a connection needs a refresh. Review your license to get everything back in sync.', 'contact-form-7-mailchimp-extension' ),
 					'offer'         => $no_offer,
-					'cta'           => __( 'Review license', 'chimpmatic-lite' ),
+					'cta'           => __( 'Review license', 'contact-form-7-mailchimp-extension' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/pricing', 'activate', 'banner_keyhelp' ),
-					'secondary'     => __( 'Enter a license key', 'chimpmatic-lite' ),
+					'secondary'     => __( 'Enter a license key', 'contact-form-7-mailchimp-extension' ),
 					'secondary_url' => admin_url( 'admin.php?page=wpcf7' ),
 					'dismissible'   => true,
 				);
@@ -191,9 +176,10 @@ final class Cmatic_License_Banner {
 				$date    = esc_html( date_i18n( get_option( 'date_format' ), $expires ) );
 				return array(
 					'tone'          => 'blue',
-					'message'       => sprintf( __( 'Your Chimpmatic Pro license is active through %s. If you would like to continue receiving Pro updates and support without interruption, you can renew early at any time.', 'chimpmatic-lite' ), $date ),
+					/* translators: %s: Localized license expiration date. */
+					'message'       => sprintf( __( 'Your Chimpmatic Pro license is active through %s. If you would like to continue receiving Pro updates and support without interruption, you can renew early at any time.', 'contact-form-7-mailchimp-extension' ), $date ),
 					'offer'         => $no_offer,
-					'cta'           => __( 'View renewal options', 'chimpmatic-lite' ),
+					'cta'           => __( 'View renewal options', 'contact-form-7-mailchimp-extension' ),
 					'cta_url'       => self::offer_url( 'https://chimpmatic.com/my-account', 'renew', 'banner_earlybird' ),
 					'secondary'     => null,
 					'secondary_url' => null,
@@ -247,7 +233,7 @@ final class Cmatic_License_Banner {
 						<?php
 						printf(
 							/* translators: %d: live discount percentage */
-							esc_html__( '%d%% off', 'chimpmatic-lite' ),
+							esc_html__( '%d%% off', 'contact-form-7-mailchimp-extension' ),
 							(int) $view['offer']['percent']
 						);
 						?>
@@ -263,7 +249,7 @@ final class Cmatic_License_Banner {
 				<?php endif; ?>
 			</span>
 			<?php if ( $view['dismissible'] ) : ?>
-				<button type="button" class="cmatic-license-banner-dismiss" aria-label="<?php esc_attr_e( 'Dismiss this notice', 'chimpmatic-lite' ); ?>"
+				<button type="button" class="cmatic-license-banner-dismiss" aria-label="<?php esc_attr_e( 'Dismiss this notice', 'contact-form-7-mailchimp-extension' ); ?>"
 					style="position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;color:#787c82;font-size:16px;line-height:1;padding:4px;">&#10005;</button>
 			<?php endif; ?>
 		</div>

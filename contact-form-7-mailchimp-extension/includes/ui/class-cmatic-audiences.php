@@ -27,11 +27,11 @@ class Cmatic_Audiences {
 				if ( '1' === $apivalid && $count > 0 ) {
 					printf(
 						/* translators: %d: Number of Mailchimp audiences */
-						esc_html__( 'Total Mailchimp Audiences: %d', 'chimpmatic-lite' ),
+						esc_html__( 'Total Mailchimp Audiences: %d', 'contact-form-7-mailchimp-extension' ),
 						(int) $count
 					);
 				} else {
-					esc_html_e( 'Mailchimp Audiences', 'chimpmatic-lite' );
+					esc_html_e( 'Mailchimp Audiences', 'contact-form-7-mailchimp-extension' );
 				}
 				?>
 			</label><br />
@@ -41,21 +41,21 @@ class Cmatic_Audiences {
 			</select>
 
 			<button type="button" id="mce_fetch_fields" class="button">
-				<?php esc_html_e( 'Sync Fields', 'chimpmatic-lite' ); ?>
+				<?php esc_html_e( 'Sync Fields', 'contact-form-7-mailchimp-extension' ); ?>
 			</button>
 
 			<small class="description">
 				<?php
 				if ( '1' === $apivalid && $count > 0 ) {
-					esc_html_e( 'Contacts from this form join the selected audience. Sync Fields refreshes its merge fields from Mailchimp.', 'chimpmatic-lite' );
+					esc_html_e( 'Contacts from this form join the selected audience. Sync Fields refreshes its merge fields from Mailchimp.', 'contact-form-7-mailchimp-extension' );
 				} elseif ( '1' === $apivalid ) {
-					esc_html_e( 'No audiences found in this account. Create one in Mailchimp, then click Sync Fields.', 'chimpmatic-lite' );
+					esc_html_e( 'No audiences found in this account. Create one in Mailchimp, then click Sync Fields.', 'contact-form-7-mailchimp-extension' );
 				} else {
-					esc_html_e( 'Connect your Mailchimp account above to load your audiences.', 'chimpmatic-lite' );
+					esc_html_e( 'Connect your Mailchimp account above to load your audiences.', 'contact-form-7-mailchimp-extension' );
 				}
 				?>
-				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e( 'Get help with Mailchimp audiences', 'chimpmatic-lite' ); ?>">
-					<?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?>
+				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php esc_attr_e( 'Get help with Mailchimp audiences', 'contact-form-7-mailchimp-extension' ); ?>">
+					<?php esc_html_e( 'Learn More', 'contact-form-7-mailchimp-extension' ); ?>
 				</a>
 			</small>
 		</div>
@@ -81,7 +81,7 @@ class Cmatic_Audiences {
 				<?php
 				printf(
 					/* translators: 1: audience name, 2: contact count, 3: merge-field count */
-					esc_html__( '%1$s (%2$s contacts, %3$d fields)', 'chimpmatic-lite' ),
+					esc_html__( '%1$s (%2$s contacts, %3$d fields)', 'contact-form-7-mailchimp-extension' ),
 					esc_html( $list_name ),
 					esc_html( number_format_i18n( $member_count ) ),
 					(int) $field_count

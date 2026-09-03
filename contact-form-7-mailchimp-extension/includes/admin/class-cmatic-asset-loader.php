@@ -114,157 +114,157 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 					'fieldLimit' => Cmatic_Lite_Esp_Capabilities::field_limit( '', (int) $form_settings['form_id'] ),
 					'i18n'       => array(
 						/* translators: %s: email provider name. */
-						'connectProvider'            => __( 'Connect %s', 'chimpmatic-lite' ),
+						'connectProvider'            => __( 'Connect %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'connected'                  => __( '%s connected', 'chimpmatic-lite' ),
+						'connected'                  => __( '%s connected', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'notConnected'               => __( '%s not connected', 'chimpmatic-lite' ),
+						'notConnected'               => __( '%s not connected', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'inactive'                   => __( 'Reconnect %s', 'chimpmatic-lite' ),
+						'inactive'                   => __( 'Reconnect %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider-specific destination name. */
-						'chooseDestination'          => __( 'Choose a %s', 'chimpmatic-lite' ),
+						'chooseDestination'          => __( 'Choose a %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider-specific destination name. */
-						'selectDestination'          => __( 'Select a %s...', 'chimpmatic-lite' ),
+						'selectDestination'          => __( 'Select a %s...', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'updateProvider'             => __( 'Update %s connection', 'chimpmatic-lite' ),
+						'updateProvider'             => __( 'Update %s connection', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: destination name, 3: provider data name. */
-						'connectDescription'         => __( 'Connect %1$s to choose a %2$s and map its %3$s.', 'chimpmatic-lite' ),
-						'updateConnection'           => __( 'Update connection', 'chimpmatic-lite' ),
-						'credential'                 => __( 'Credential', 'chimpmatic-lite' ),
+						'connectDescription'         => __( 'Connect %1$s to choose a %2$s and map its %3$s.', 'contact-form-7-mailchimp-extension' ),
+						'updateConnection'           => __( 'Update connection', 'contact-form-7-mailchimp-extension' ),
+						'credential'                 => __( 'Credential', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'checkingConnection'         => __( 'Checking your %s connection...', 'chimpmatic-lite' ),
+						'checkingConnection'         => __( 'Checking your %s connection...', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider destination plural. */
-						'loadingDestinations'        => __( 'Loading %s...', 'chimpmatic-lite' ),
+						'loadingDestinations'        => __( 'Loading %s...', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider destination plural. */
-						'refreshDestinations'        => __( 'Refresh %s', 'chimpmatic-lite' ),
+						'refreshDestinations'        => __( 'Refresh %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: credential type. */
-						'replaceCredential'          => __( 'Replace %s', 'chimpmatic-lite' ),
+						'replaceCredential'          => __( 'Replace %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'reconnectProvider'          => __( 'Reconnect %s', 'chimpmatic-lite' ),
+						'reconnectProvider'          => __( 'Reconnect %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: provider destination plural, 2: email provider name. */
-						'loadingDestinationsFrom'    => __( 'Loading %1$s from %2$s...', 'chimpmatic-lite' ),
+						'loadingDestinationsFrom'    => __( 'Loading %1$s from %2$s...', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'connectToContinue'          => __( 'Connect %s to continue.', 'chimpmatic-lite' ),
+						'connectToContinue'          => __( 'Connect %s to continue.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: selected destination, 2: email provider name, 3: destination type. */
-						'onlyDestination'            => __( '%1$s was selected because it is your only %2$s %3$s.', 'chimpmatic-lite' ),
+						'onlyDestination'            => __( '%1$s was selected because it is your only %2$s %3$s.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: destination count, 2: destination type plural. */
-						'destinationsFound'          => __( '%1$d %2$s found. Choose where new submissions from this form should go.', 'chimpmatic-lite' ),
+						'destinationsFound'          => __( '%1$d %2$s found. Choose where new submissions from this form should go.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: destination type singular. */
-						'oneDestinationFound'        => __( '1 %s found. Choose where new submissions from this form should go.', 'chimpmatic-lite' ),
+						'oneDestinationFound'        => __( '1 %s found. Choose where new submissions from this form should go.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider data name. */
-						'mapProviderFields'          => __( 'Map %1$s %2$s', 'chimpmatic-lite' ),
+						'mapProviderFields'          => __( 'Map %1$s %2$s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider data name. */
-						'mapData'                    => __( 'Map %s', 'chimpmatic-lite' ),
+						'mapData'                    => __( 'Map %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider data name. */
-						'mappedFields'               => __( 'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.', 'chimpmatic-lite' ),
+						'mappedFields'               => __( 'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider destination plural. */
-						'waitForDestinations'        => __( 'Wait while %s load.', 'chimpmatic-lite' ),
+						'waitForDestinations'        => __( 'Wait while %s load.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: provider destination type, 2: provider data name. */
-						'chooseToLoadFields'         => __( 'Choose a %1$s to load its %2$s.', 'chimpmatic-lite' ),
-						'unsavedChanges'             => __( 'Unsaved changes', 'chimpmatic-lite' ),
-						'saveChanges'                => __( 'Save changes', 'chimpmatic-lite' ),
-						'savedJustNow'               => __( 'Saved', 'chimpmatic-lite' ),
-						'saveToActivate'             => __( 'Save to activate this configuration.', 'chimpmatic-lite' ),
-						'saveConfiguration'          => __( 'Save configuration', 'chimpmatic-lite' ),
-						'saving'                     => __( 'Saving...', 'chimpmatic-lite' ),
-						'discardChanges'             => __( 'Discard unsaved changes and switch providers?', 'chimpmatic-lite' ),
+						'chooseToLoadFields'         => __( 'Choose a %1$s to load its %2$s.', 'contact-form-7-mailchimp-extension' ),
+						'unsavedChanges'             => __( 'Unsaved changes', 'contact-form-7-mailchimp-extension' ),
+						'saveChanges'                => __( 'Save changes', 'contact-form-7-mailchimp-extension' ),
+						'savedJustNow'               => __( 'Saved', 'contact-form-7-mailchimp-extension' ),
+						'saveToActivate'             => __( 'Save to activate this configuration.', 'contact-form-7-mailchimp-extension' ),
+						'saveConfiguration'          => __( 'Save configuration', 'contact-form-7-mailchimp-extension' ),
+						'saving'                     => __( 'Saving...', 'contact-form-7-mailchimp-extension' ),
+						'discardChanges'             => __( 'Discard unsaved changes and switch providers?', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: destination count, 3: provider destination name. */
-						'connectedDestinationsReady' => __( '%1$s connected. %2$d %3$s ready.', 'chimpmatic-lite' ),
+						'connectedDestinationsReady' => __( '%1$s connected. %2$d %3$s ready.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider data name. */
-						'loadingProviderFields'      => __( 'Loading %1$s %2$s...', 'chimpmatic-lite' ),
+						'loadingProviderFields'      => __( 'Loading %1$s %2$s...', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: destination name. */
-						'onlyDestinationSelected'    => __( '%1$s connected. %2$s was selected automatically.', 'chimpmatic-lite' ),
+						'onlyDestinationSelected'    => __( '%1$s connected. %2$s was selected automatically.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider data name. */
-						'providerFieldsReady'        => __( '%1$s %2$s are ready.', 'chimpmatic-lite' ),
+						'providerFieldsReady'        => __( '%1$s %2$s are ready.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'disconnectConfirm'          => __( 'Disconnect %s? Your field mappings will be kept.', 'chimpmatic-lite' ),
-						'readyToVerify'              => __( 'Ready to verify.', 'chimpmatic-lite' ),
+						'disconnectConfirm'          => __( 'Disconnect %s? Your field mappings will be kept.', 'contact-form-7-mailchimp-extension' ),
+						'readyToVerify'              => __( 'Ready to verify.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider destination name. */
-						'missingDestination'         => __( 'Connect %1$s and choose a %2$s before saving.', 'chimpmatic-lite' ),
-						'missingEmailMapping'        => __( 'Select a Contact Form 7 field for the required email address.', 'chimpmatic-lite' ),
+						'missingDestination'         => __( 'Connect %1$s and choose a %2$s before saving.', 'contact-form-7-mailchimp-extension' ),
+						'missingEmailMapping'        => __( 'Select a Contact Form 7 field for the required email address.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: provider person name, 2: selected destination, 3: email provider name. */
-						'setupOutcome'               => __( 'New %1$s from this form will be added to %2$s in %3$s.', 'chimpmatic-lite' ),
+						'setupOutcome'               => __( 'New %1$s from this form will be added to %2$s in %3$s.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %d: mapped field count. */
-						'mappedCount'                => __( '%d fields mapped - Saved', 'chimpmatic-lite' ),
+						'mappedCount'                => __( '%d fields mapped - Saved', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: Contact Form 7 field, 2: form field type, 3: provider field name, 4: provider field type. */
-						'mappingTypeWarning'         => __( '%1$s is a %2$s field, but %3$s expects %4$s. Review this mapping.', 'chimpmatic-lite' ),
+						'mappingTypeWarning'         => __( '%1$s is a %2$s field, but %3$s expects %4$s. Review this mapping.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'requestFailed'              => __( '%s could not complete the request. Try again.', 'chimpmatic-lite' ),
-						'consentRequiresPro'         => __( 'Advanced consent controls are available with an active Chimpmatic Pro license.', 'chimpmatic-lite' ),
-						'doiVerified'                => __( 'DOI settings verified.', 'chimpmatic-lite' ),
-						'doiFailed'                  => __( 'DOI settings could not be verified.', 'chimpmatic-lite' ),
-						'managedByMailerLite'        => __( 'Managed by MailerLite', 'chimpmatic-lite' ),
-						'mailerLiteOptin'            => __( 'MailerLite uses the Double opt-in for API and integrations setting in your account.', 'chimpmatic-lite' ),
-						'doubleOptin'                => __( 'Double opt-in', 'chimpmatic-lite' ),
-						'singleOptin'                => __( 'Single opt-in', 'chimpmatic-lite' ),
-						'optinUnavailable'           => __( 'Opt-in setting unavailable', 'chimpmatic-lite' ),
-						'klaviyoOptin'               => __( 'The selected Klaviyo list controls whether confirmation is required.', 'chimpmatic-lite' ),
-						'consentIncomplete'          => __( 'Complete the consent and opt-in settings before saving.', 'chimpmatic-lite' ),
+						'requestFailed'              => __( '%s could not complete the request. Try again.', 'contact-form-7-mailchimp-extension' ),
+						'consentRequiresPro'         => __( 'Advanced consent controls are available with an active Chimpmatic Pro license.', 'contact-form-7-mailchimp-extension' ),
+						'doiVerified'                => __( 'DOI settings verified.', 'contact-form-7-mailchimp-extension' ),
+						'doiFailed'                  => __( 'DOI settings could not be verified.', 'contact-form-7-mailchimp-extension' ),
+						'managedByMailerLite'        => __( 'Managed by MailerLite', 'contact-form-7-mailchimp-extension' ),
+						'mailerLiteOptin'            => __( 'MailerLite uses the Double opt-in for API and integrations setting in your account.', 'contact-form-7-mailchimp-extension' ),
+						'doubleOptin'                => __( 'Double opt-in', 'contact-form-7-mailchimp-extension' ),
+						'singleOptin'                => __( 'Single opt-in', 'contact-form-7-mailchimp-extension' ),
+						'optinUnavailable'           => __( 'Opt-in setting unavailable', 'contact-form-7-mailchimp-extension' ),
+						'klaviyoOptin'               => __( 'The selected Klaviyo list controls whether confirmation is required.', 'contact-form-7-mailchimp-extension' ),
+						'consentIncomplete'          => __( 'Complete the consent and opt-in settings before saving.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider group name. */
-						'useGroupWithoutPro'         => __( 'Use %s when Chimpmatic Pro is inactive', 'chimpmatic-lite' ),
-						'groupsForEverySubscriber'   => __( 'Groups for every subscriber', 'chimpmatic-lite' ),
-						'mailerLiteGroupsHelp'       => __( 'Every subscriber successfully sent to MailerLite is added to each selected group. Mark one selected group “Use when Pro is inactive.”', 'chimpmatic-lite' ),
-						'useWhenProInactive'         => __( 'Use when Pro is inactive', 'chimpmatic-lite' ),
-						'routingRequiresPro'         => __( 'Additional MailerLite groups and answer-based rules require Chimpmatic Pro.', 'chimpmatic-lite' ),
-						'routingSavedInactive'       => __( 'MailerLite group rules are saved but inactive. Subscribers are added only to the group marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.', 'chimpmatic-lite' ),
-						'contactFormField'           => __( 'Contact Form 7 field', 'chimpmatic-lite' ),
-						'answerIs'                   => __( 'Answer is', 'chimpmatic-lite' ),
-						'addSubscriberToGroup'       => __( 'Add subscriber to group', 'chimpmatic-lite' ),
-						'whenThisField'              => __( 'When this field', 'chimpmatic-lite' ),
-						'isThisValue'                => __( 'is this value', 'chimpmatic-lite' ),
-						'when'                       => __( 'When', 'chimpmatic-lite' ),
-						'is'                         => __( 'is', 'chimpmatic-lite' ),
-						'addSubscriberTo'            => __( 'add subscriber to', 'chimpmatic-lite' ),
-						'chooseField'                => __( 'Choose a field', 'chimpmatic-lite' ),
-						'chooseValue'                => __( 'Choose a value', 'chimpmatic-lite' ),
-						'chooseGroup'                => __( 'Choose a group', 'chimpmatic-lite' ),
-						'removeRule'                 => __( 'Remove rule', 'chimpmatic-lite' ),
+						'useGroupWithoutPro'         => __( 'Use %s when Chimpmatic Pro is inactive', 'contact-form-7-mailchimp-extension' ),
+						'groupsForEverySubscriber'   => __( 'Groups for every subscriber', 'contact-form-7-mailchimp-extension' ),
+						'mailerLiteGroupsHelp'       => __( 'Every subscriber successfully sent to MailerLite is added to each selected group. Mark one selected group “Use when Pro is inactive.”', 'contact-form-7-mailchimp-extension' ),
+						'useWhenProInactive'         => __( 'Use when Pro is inactive', 'contact-form-7-mailchimp-extension' ),
+						'routingRequiresPro'         => __( 'Additional MailerLite groups and answer-based rules require Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
+						'routingSavedInactive'       => __( 'MailerLite group rules are saved but inactive. Subscribers are added only to the group marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.', 'contact-form-7-mailchimp-extension' ),
+						'contactFormField'           => __( 'Contact Form 7 field', 'contact-form-7-mailchimp-extension' ),
+						'answerIs'                   => __( 'Answer is', 'contact-form-7-mailchimp-extension' ),
+						'addSubscriberToGroup'       => __( 'Add subscriber to group', 'contact-form-7-mailchimp-extension' ),
+						'whenThisField'              => __( 'When this field', 'contact-form-7-mailchimp-extension' ),
+						'isThisValue'                => __( 'is this value', 'contact-form-7-mailchimp-extension' ),
+						'when'                       => __( 'When', 'contact-form-7-mailchimp-extension' ),
+						'is'                         => __( 'is', 'contact-form-7-mailchimp-extension' ),
+						'addSubscriberTo'            => __( 'add subscriber to', 'contact-form-7-mailchimp-extension' ),
+						'chooseField'                => __( 'Choose a field', 'contact-form-7-mailchimp-extension' ),
+						'chooseValue'                => __( 'Choose a value', 'contact-form-7-mailchimp-extension' ),
+						'chooseGroup'                => __( 'Choose a group', 'contact-form-7-mailchimp-extension' ),
+						'removeRule'                 => __( 'Remove rule', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %d: routing rule number. */
-						'removeRuleNumber'           => __( 'Remove rule %d', 'chimpmatic-lite' ),
+						'removeRuleNumber'           => __( 'Remove rule %d', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %d: routing rule number. */
-						'ruleNumber'                 => __( 'Rule %d', 'chimpmatic-lite' ),
-						'routingIncomplete'          => __( 'Choose a field, an answer, and a destination group.', 'chimpmatic-lite' ),
-						'routingInvalid'             => __( 'This rule contains an unavailable field, answer, or group.', 'chimpmatic-lite' ),
-						'routingDuplicate'           => __( 'This rule duplicates another rule.', 'chimpmatic-lite' ),
-						'routingFixBeforeSave'       => __( 'Complete or remove the highlighted routing rules before saving.', 'chimpmatic-lite' ),
+						'ruleNumber'                 => __( 'Rule %d', 'contact-form-7-mailchimp-extension' ),
+						'routingIncomplete'          => __( 'Choose a field, an answer, and a destination group.', 'contact-form-7-mailchimp-extension' ),
+						'routingInvalid'             => __( 'This rule contains an unavailable field, answer, or group.', 'contact-form-7-mailchimp-extension' ),
+						'routingDuplicate'           => __( 'This rule duplicates another rule.', 'contact-form-7-mailchimp-extension' ),
+						'routingFixBeforeSave'       => __( 'Complete or remove the highlighted routing rules before saving.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: always-used group count, 2: answer-based rule count, 3: mapped subscriber-field count. */
-						'mailerLiteSummary'          => __( 'Always-used groups: %1$d · Answer-based rules: %2$d · Subscriber fields mapped: %3$d · Saved', 'chimpmatic-lite' ),
-						'proOptionsInactive'         => __( 'Saved MailerLite Pro settings are inactive. Subscribers continue with the current Active behavior; renew Pro to restore the saved settings.', 'chimpmatic-lite' ),
-						'fieldCreationRequiresPro'   => __( 'Creating MailerLite subscriber fields requires Chimpmatic Pro.', 'chimpmatic-lite' ),
-						'fieldCreated'               => __( 'MailerLite subscriber field created. Choose its Contact Form 7 source and save.', 'chimpmatic-lite' ),
-						'fieldCreateUnconfirmed'     => __( 'Field creation was not confirmed. Refresh MailerLite subscriber fields before retrying.', 'chimpmatic-lite' ),
-						'fieldRefreshRequired'       => __( 'Subscriber field created; refresh MailerLite subscriber fields before mapping it.', 'chimpmatic-lite' ),
-						'creating'                   => __( 'Creating...', 'chimpmatic-lite' ),
-						'createField'                => __( 'Create field', 'chimpmatic-lite' ),
-						'findSubscriber'             => __( 'Find subscriber', 'chimpmatic-lite' ),
-						'findingSubscriber'          => __( 'Finding subscriber...', 'chimpmatic-lite' ),
+						'mailerLiteSummary'          => __( 'Always-used groups: %1$d · Answer-based rules: %2$d · Subscriber fields mapped: %3$d · Saved', 'contact-form-7-mailchimp-extension' ),
+						'proOptionsInactive'         => __( 'Saved MailerLite Pro settings are inactive. Subscribers continue with the current Active behavior; renew Pro to restore the saved settings.', 'contact-form-7-mailchimp-extension' ),
+						'fieldCreationRequiresPro'   => __( 'Creating MailerLite subscriber fields requires Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
+						'fieldCreated'               => __( 'MailerLite subscriber field created. Choose its Contact Form 7 source and save.', 'contact-form-7-mailchimp-extension' ),
+						'fieldCreateUnconfirmed'     => __( 'Field creation was not confirmed. Refresh MailerLite subscriber fields before retrying.', 'contact-form-7-mailchimp-extension' ),
+						'fieldRefreshRequired'       => __( 'Subscriber field created; refresh MailerLite subscriber fields before mapping it.', 'contact-form-7-mailchimp-extension' ),
+						'creating'                   => __( 'Creating...', 'contact-form-7-mailchimp-extension' ),
+						'createField'                => __( 'Create field', 'contact-form-7-mailchimp-extension' ),
+						'findSubscriber'             => __( 'Find subscriber', 'contact-form-7-mailchimp-extension' ),
+						'findingSubscriber'          => __( 'Finding subscriber...', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: MailerLite subscriber status. */
-						'subscriberFound'            => __( 'Subscriber found · %s', 'chimpmatic-lite' ),
-						'noSubscriberFound'          => __( 'No subscriber found.', 'chimpmatic-lite' ),
-						'statusUnavailable'          => __( 'status unavailable', 'chimpmatic-lite' ),
+						'subscriberFound'            => __( 'Subscriber found · %s', 'contact-form-7-mailchimp-extension' ),
+						'noSubscriberFound'          => __( 'No subscriber found.', 'contact-form-7-mailchimp-extension' ),
+						'statusUnavailable'          => __( 'status unavailable', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: comma-separated MailerLite group names. */
-						'groupsLabel'                => __( 'Groups: %s', 'chimpmatic-lite' ),
-						'lookupFailed'               => __( 'MailerLite could not find the subscriber. Try again.', 'chimpmatic-lite' ),
+						'groupsLabel'                => __( 'Groups: %s', 'contact-form-7-mailchimp-extension' ),
+						'lookupFailed'               => __( 'MailerLite could not find the subscriber. Try again.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: provider person name, 2: email provider name. */
-						'testingWarning'             => __( 'Real submission: may create or update a %1$s in %2$s and trigger confirmation emails or automations.', 'chimpmatic-lite' ),
+						'testingWarning'             => __( 'Real submission: may create or update a %1$s in %2$s and trigger confirmation emails or automations.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider credential label. */
-						'credentialStored'           => __( '%s stored securely', 'chimpmatic-lite' ),
+						'credentialStored'           => __( '%s stored securely', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'sendToProvider'             => __( 'Send to %s', 'chimpmatic-lite' ),
+						'sendToProvider'             => __( 'Send to %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'consentGateExplanation'     => __( 'Choose whether every valid form submission is sent to %s or only submissions with affirmative consent.', 'chimpmatic-lite' ),
+						'consentGateExplanation'     => __( 'Choose whether every valid form submission is sent to %s or only submissions with affirmative consent.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'confirmationInProvider'     => __( 'Confirmation in %s', 'chimpmatic-lite' ),
+						'confirmationInProvider'     => __( 'Confirmation in %s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'confirmationExplanation'    => __( 'Controls whether %s requires confirmation after the form is submitted.', 'chimpmatic-lite' ),
+						'confirmationExplanation'    => __( 'Controls whether %s requires confirmation after the form is submitted.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
-						'openConfirmationSettings'   => __( 'Open %s confirmation settings', 'chimpmatic-lite' ),
+						'openConfirmationSettings'   => __( 'Open %s confirmation settings', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: number of provider data fields available with Pro, 2: provider data name. */
-						'proDataLimit'               => __( 'Up to %1$d %2$s are available with your active Chimpmatic Pro license.', 'chimpmatic-lite' ),
+						'proDataLimit'               => __( 'Up to %1$d %2$s are available with your active Chimpmatic Pro license.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: number of provider data fields included in Lite, 2: provider data name. */
-						'liteDataLimit'              => __( 'Your Lite setup includes %1$d %2$s. Email address is always included.', 'chimpmatic-lite' ),
+						'liteDataLimit'              => __( 'Your Lite setup includes %1$d %2$s. Email address is always included.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider data name. */
-						'unlockData'                 => __( 'Unlock every available %s and advanced features with Chimpmatic Pro', 'chimpmatic-lite' ),
+						'unlockData'                 => __( 'Unlock every available %s and advanced features with Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ),
 					),
 				)
 			);
@@ -421,13 +421,13 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 
 		private static function get_i18n_strings(): array {
 			return array(
-				'loading'            => __( 'Loading...', 'chimpmatic-lite' ),
-				'error'              => __( 'An error occurred. Check the browser console for details.', 'chimpmatic-lite' ),
-				'apiKeyValid'        => __( 'API Connected', 'chimpmatic-lite' ),
-				'apiKeyInvalid'      => __( 'API Inactive', 'chimpmatic-lite' ),
-				'findContact'        => __( 'Find contact', 'chimpmatic-lite' ),
-				'findingContact'     => __( 'Finding contact...', 'chimpmatic-lite' ),
-				'findAnotherContact' => __( 'Find another contact', 'chimpmatic-lite' ),
+				'loading'            => __( 'Loading...', 'contact-form-7-mailchimp-extension' ),
+				'error'              => __( 'An error occurred. Check the browser console for details.', 'contact-form-7-mailchimp-extension' ),
+				'apiKeyValid'        => __( 'API Connected', 'contact-form-7-mailchimp-extension' ),
+				'apiKeyInvalid'      => __( 'API Inactive', 'contact-form-7-mailchimp-extension' ),
+				'findContact'        => __( 'Find contact', 'contact-form-7-mailchimp-extension' ),
+				'findingContact'     => __( 'Finding contact...', 'contact-form-7-mailchimp-extension' ),
+				'findAnotherContact' => __( 'Find another contact', 'contact-form-7-mailchimp-extension' ),
 			);
 		}
 

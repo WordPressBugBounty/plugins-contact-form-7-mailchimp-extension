@@ -71,13 +71,13 @@ class Cmatic_Notification_Center {
 		if ( ! $api_key ) {
 			$this->add_notification(
 				new Cmatic_Notification(
-					__( 'Connect your Mailchimp API to enable email subscriptions.', 'chimpmatic-lite' ),
+					__( 'Connect your Mailchimp API to enable email subscriptions.', 'contact-form-7-mailchimp-extension' ),
 					array(
 						'id'        => 'cmatic-api-not-connected',
 						'type'      => Cmatic_Notification::WARNING,
 						'priority'  => 1.0,
 						'link'      => $this->get_settings_url(),
-						'link_text' => __( 'Connect Now', 'chimpmatic-lite' ),
+						'link_text' => __( 'Connect Now', 'contact-form-7-mailchimp-extension' ),
 					)
 				)
 			);
@@ -86,13 +86,13 @@ class Cmatic_Notification_Center {
 		if ( class_exists( 'Cmatic_Options_Repository' ) && Cmatic_Options_Repository::get_option( 'debug', false ) ) {
 			$this->add_notification(
 				new Cmatic_Notification(
-					__( 'Debug logging is currently enabled.', 'chimpmatic-lite' ),
+					__( 'Debug logging is currently enabled.', 'contact-form-7-mailchimp-extension' ),
 					array(
 						'id'        => 'cmatic-debug-enabled',
 						'type'      => Cmatic_Notification::INFO,
 						'priority'  => 0.3,
 						'link'      => $this->get_settings_url(),
-						'link_text' => __( 'View Settings', 'chimpmatic-lite' ),
+						'link_text' => __( 'View Settings', 'contact-form-7-mailchimp-extension' ),
 					)
 				)
 			);

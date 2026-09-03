@@ -114,7 +114,7 @@ class Cmatic_Response_Handler {
 				$success ? '' : $reason['sample']
 			);
 			if ( $recorded ) {
-				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
 			// Signals must never change form-submission behavior.

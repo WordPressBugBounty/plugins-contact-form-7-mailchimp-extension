@@ -62,7 +62,7 @@ final class Cmatic_Lite_Esp_Mailerlite extends Cmatic_Lite_Esp_Provider implemen
 		$fields = array(
 			array(
 				'tag'           => 'EMAIL',
-				'name'          => __( 'Subscriber email address', 'chimpmatic-lite' ),
+				'name'          => __( 'Subscriber email address', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'email',
 				'display_order' => 0,
 			),

@@ -55,7 +55,7 @@ class Cmatic_Redirect {
 			return false;
 		}
 
-		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		if ( wp_doing_ajax() ) {
 			return false;
 		}
 

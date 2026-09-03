@@ -33,26 +33,26 @@ class Cmatic_Pro_Showcase {
 		<div class="<?php echo esc_attr( $disclosure_class ); ?>">
 			<div class="mce-custom-fields holder-img">
 				<h3 class="title cmatic-title-with-toggle">
-					<span><?php esc_html_e( 'GDPR Marketing Preferences', 'chimpmatic-lite' ); ?></span>
+					<span><?php esc_html_e( 'GDPR Marketing Preferences', 'contact-form-7-mailchimp-extension' ); ?></span>
 				</h3>
-				<p><?php esc_html_e( 'Collect lawful consent on the form and sync it to your audience\'s Mailchimp marketing permissions. Match each permission to a checkbox or acceptance field:', 'chimpmatic-lite' ); ?></p>
+				<p><?php esc_html_e( 'Collect lawful consent on the form and sync it to your audience\'s Mailchimp marketing permissions. Match each permission to a checkbox or acceptance field:', 'contact-form-7-mailchimp-extension' ); ?></p>
 				<div class="cmatic-showcase-grid">
 					<label class="cmatic-showcase-row">
-						<span class="cmatic-showcase-label"><?php esc_html_e( 'Consent to email communications', 'chimpmatic-lite' ); ?></span>
-						<select disabled="disabled" title="<?php esc_attr_e( 'GDPR fields are a Chimpmatic Pro feature', 'chimpmatic-lite' ); ?>">
-							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'chimpmatic-lite' ); ?></option>
+						<span class="cmatic-showcase-label"><?php esc_html_e( 'Consent to email communications', 'contact-form-7-mailchimp-extension' ); ?></span>
+						<select disabled="disabled" title="<?php esc_attr_e( 'GDPR fields are a Chimpmatic Pro feature', 'contact-form-7-mailchimp-extension' ); ?>">
+							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ); ?></option>
 						</select>
 					</label>
 					<label class="cmatic-showcase-row">
-						<span class="cmatic-showcase-label"><?php esc_html_e( 'Consent to data processing', 'chimpmatic-lite' ); ?></span>
-						<select disabled="disabled" title="<?php esc_attr_e( 'GDPR fields are a Chimpmatic Pro feature', 'chimpmatic-lite' ); ?>">
-							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'chimpmatic-lite' ); ?></option>
+						<span class="cmatic-showcase-label"><?php esc_html_e( 'Consent to data processing', 'contact-form-7-mailchimp-extension' ); ?></span>
+						<select disabled="disabled" title="<?php esc_attr_e( 'GDPR fields are a Chimpmatic Pro feature', 'contact-form-7-mailchimp-extension' ); ?>">
+							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ); ?></option>
 						</select>
 					</label>
 				</div>
-				<?php self::render_unlock_line( 'gdpr_showcase', __( 'Unlock GDPR with Pro', 'chimpmatic-lite' ), $discount ); ?>
-				<p class="cmatic-showcase-note"><?php esc_html_e( 'Example permissions. With Pro, the permissions defined on your Mailchimp audience appear here automatically.', 'chimpmatic-lite' ); ?></p>
-				<a class="lin-to-pro" href="<?php echo esc_url( Cmatic_Pursuit::promo_checkout( 'gdpr_overlay' ) ); ?>" target="_blank" title="<?php esc_attr_e( 'Chimpmatic Pro Options', 'chimpmatic-lite' ); ?>"><span><?php esc_html_e( 'PRO Feature', 'chimpmatic-lite' ); ?> <span><?php esc_html_e( 'Learn More...', 'chimpmatic-lite' ); ?></span></span></a>
+				<?php self::render_unlock_line( 'gdpr_showcase', __( 'Unlock GDPR with Pro', 'contact-form-7-mailchimp-extension' ), $discount ); ?>
+				<p class="cmatic-showcase-note"><?php esc_html_e( 'Example permissions. With Pro, the permissions defined on your Mailchimp audience appear here automatically.', 'contact-form-7-mailchimp-extension' ); ?></p>
+				<a class="lin-to-pro" href="<?php echo esc_url( Cmatic_Pursuit::promo_checkout( 'gdpr_overlay' ) ); ?>" target="_blank" title="<?php esc_attr_e( 'Chimpmatic Pro Options', 'contact-form-7-mailchimp-extension' ); ?>"><span><?php esc_html_e( 'PRO Feature', 'contact-form-7-mailchimp-extension' ); ?> <span><?php esc_html_e( 'Learn More...', 'contact-form-7-mailchimp-extension' ); ?></span></span></a>
 			</div>
 		</div>
 		<?php
@@ -63,33 +63,33 @@ class Cmatic_Pro_Showcase {
 		<div class="<?php echo esc_attr( $disclosure_class ); ?>">
 			<div class="mce-custom-fields holder-img">
 				<h3 class="title cmatic-title-with-toggle">
-					<span><?php esc_html_e( 'Groups & Interests', 'chimpmatic-lite' ); ?></span>
-					<label class="cmatic-toggle-row cmatic-showcase-locked" title="<?php esc_attr_e( 'Groups are a Chimpmatic Pro feature', 'chimpmatic-lite' ); ?>">
-						<span class="cmatic-toggle-label"><?php esc_html_e( 'Replace Groups', 'chimpmatic-lite' ); ?></span>
+					<span><?php esc_html_e( 'Groups & Interests', 'contact-form-7-mailchimp-extension' ); ?></span>
+					<label class="cmatic-toggle-row cmatic-showcase-locked" title="<?php esc_attr_e( 'Groups are a Chimpmatic Pro feature', 'contact-form-7-mailchimp-extension' ); ?>">
+						<span class="cmatic-toggle-label"><?php esc_html_e( 'Replace Groups', 'contact-form-7-mailchimp-extension' ); ?></span>
 						<span class="cmatic-toggle">
 							<input type="checkbox" disabled="disabled">
 							<span class="cmatic-toggle-slider"></span>
 						</span>
 					</label>
 				</h3>
-				<p><?php esc_html_e( 'Send subscribers into your Mailchimp interest groups straight from the form. Match each category to your checkboxes or radio buttons:', 'chimpmatic-lite' ); ?></p>
+				<p><?php esc_html_e( 'Send subscribers into your Mailchimp interest groups straight from the form. Match each category to your checkboxes or radio buttons:', 'contact-form-7-mailchimp-extension' ); ?></p>
 				<div class="cmatic-showcase-grid">
 					<label class="cmatic-showcase-row">
-						<span class="cmatic-showcase-label"><?php esc_html_e( 'Newsletter Topics', 'chimpmatic-lite' ); ?> <span class="cmatic-showcase-meta"><?php esc_html_e( 'type: checkboxes', 'chimpmatic-lite' ); ?></span></span>
-						<select disabled="disabled" title="<?php esc_attr_e( 'Groups are a Chimpmatic Pro feature', 'chimpmatic-lite' ); ?>">
-							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'chimpmatic-lite' ); ?></option>
+						<span class="cmatic-showcase-label"><?php esc_html_e( 'Newsletter Topics', 'contact-form-7-mailchimp-extension' ); ?> <span class="cmatic-showcase-meta"><?php esc_html_e( 'type: checkboxes', 'contact-form-7-mailchimp-extension' ); ?></span></span>
+						<select disabled="disabled" title="<?php esc_attr_e( 'Groups are a Chimpmatic Pro feature', 'contact-form-7-mailchimp-extension' ); ?>">
+							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ); ?></option>
 						</select>
 					</label>
 					<label class="cmatic-showcase-row">
-						<span class="cmatic-showcase-label"><?php esc_html_e( 'Email Frequency', 'chimpmatic-lite' ); ?> <span class="cmatic-showcase-meta"><?php esc_html_e( 'type: radio', 'chimpmatic-lite' ); ?></span></span>
-						<select disabled="disabled" title="<?php esc_attr_e( 'Groups are a Chimpmatic Pro feature', 'chimpmatic-lite' ); ?>">
-							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'chimpmatic-lite' ); ?></option>
+						<span class="cmatic-showcase-label"><?php esc_html_e( 'Email Frequency', 'contact-form-7-mailchimp-extension' ); ?> <span class="cmatic-showcase-meta"><?php esc_html_e( 'type: radio', 'contact-form-7-mailchimp-extension' ); ?></span></span>
+						<select disabled="disabled" title="<?php esc_attr_e( 'Groups are a Chimpmatic Pro feature', 'contact-form-7-mailchimp-extension' ); ?>">
+							<option><?php esc_html_e( 'Available in Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ); ?></option>
 						</select>
 					</label>
 				</div>
-				<?php self::render_unlock_line( 'groups_showcase', __( 'Unlock Groups with Pro', 'chimpmatic-lite' ), $discount ); ?>
-				<p class="cmatic-showcase-note"><?php esc_html_e( 'Example categories. With Pro, your audience\'s real interest groups appear here automatically.', 'chimpmatic-lite' ); ?></p>
-				<a class="lin-to-pro" href="<?php echo esc_url( Cmatic_Pursuit::promo_checkout( 'groups_overlay' ) ); ?>" target="_blank" title="<?php esc_attr_e( 'Chimpmatic Pro Options', 'chimpmatic-lite' ); ?>"><span><?php esc_html_e( 'PRO Feature', 'chimpmatic-lite' ); ?> <span><?php esc_html_e( 'Learn More...', 'chimpmatic-lite' ); ?></span></span></a>
+				<?php self::render_unlock_line( 'groups_showcase', __( 'Unlock Groups with Pro', 'contact-form-7-mailchimp-extension' ), $discount ); ?>
+				<p class="cmatic-showcase-note"><?php esc_html_e( 'Example categories. With Pro, your audience\'s real interest groups appear here automatically.', 'contact-form-7-mailchimp-extension' ); ?></p>
+				<a class="lin-to-pro" href="<?php echo esc_url( Cmatic_Pursuit::promo_checkout( 'groups_overlay' ) ); ?>" target="_blank" title="<?php esc_attr_e( 'Chimpmatic Pro Options', 'contact-form-7-mailchimp-extension' ); ?>"><span><?php esc_html_e( 'PRO Feature', 'contact-form-7-mailchimp-extension' ); ?> <span><?php esc_html_e( 'Learn More...', 'contact-form-7-mailchimp-extension' ); ?></span></span></a>
 			</div>
 		</div>
 		<?php
@@ -104,7 +104,7 @@ class Cmatic_Pro_Showcase {
 				<span class="cmatic-showcase-off">
 					<?php
 					/* translators: %d: current discount percentage from the live promo */
-					printf( esc_html__( '%d%% off', 'chimpmatic-lite' ), (int) $discount );
+					printf( esc_html__( '%d%% off', 'contact-form-7-mailchimp-extension' ), (int) $discount );
 					?>
 				</span>
 			<?php endif; ?>

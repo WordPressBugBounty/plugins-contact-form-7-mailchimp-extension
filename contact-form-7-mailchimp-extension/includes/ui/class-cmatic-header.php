@@ -32,7 +32,7 @@ class Cmatic_Header {
 		$this->provider         = isset( $args['provider'] ) && is_string( $args['provider'] ) ? sanitize_key( $args['provider'] ) : 'mailchimp';
 		$this->provider_options = isset( $args['provider_options'] ) && is_array( $args['provider_options'] ) ? $args['provider_options'] : array();
 		$this->review_phrases   = array(
-			__( 'Loving Chimpmatic? Leave a review', 'chimpmatic-lite' ),
+			__( 'Loving Chimpmatic? Leave a review', 'contact-form-7-mailchimp-extension' ),
 		);
 	}
 
@@ -71,17 +71,17 @@ class Cmatic_Header {
 		if ( isset( $this->provider_options[ $this->provider ] ) ) {
 			return (string) $this->provider_options[ $this->provider ];
 		}
-		return __( 'Email provider', 'chimpmatic-lite' );
+		return __( 'Email provider', 'contact-form-7-mailchimp-extension' );
 	}
 
 	public function render(): void {
 		$badge_class = $this->is_pro ? 'cmatic-header__badge--pro' : 'cmatic-header__badge--lite';
-		$badge_text  = $this->is_pro ? __( 'PRO', 'chimpmatic-lite' ) : __( 'Lite', 'chimpmatic-lite' );
+		$badge_text  = $this->is_pro ? __( 'PRO', 'contact-form-7-mailchimp-extension' ) : __( 'Lite', 'contact-form-7-mailchimp-extension' );
 		?>
 		<header class="cmatic-header">
 			<div class="cmatic-header__inner">
 				<div class="cmatic-header__brand">
-					<span class="cmatic-header__title"><?php esc_html_e( 'Chimpmatic', 'chimpmatic-lite' ); ?></span>
+					<span class="cmatic-header__title"><?php esc_html_e( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ); ?></span>
 					<span class="cmatic-header__badge <?php echo esc_attr( $badge_class ); ?>"><?php echo esc_html( $badge_text ); ?></span>
 					<span class="cmatic-header__version">v<?php echo esc_html( $this->version ); ?></span>
 				</div>
@@ -91,12 +91,12 @@ class Cmatic_Header {
 					<div class="cmatic-header__actions">
 						<?php if ( $this->is_pro ) : ?>
 							<a href="<?php echo esc_url( Cmatic_Pursuit::url( 'https://chimpmatic.com/my-account', 'plugin', 'header_account', 'account' ) ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review">
-								<?php esc_html_e( 'My Account', 'chimpmatic-lite' ); ?>
+								<?php esc_html_e( 'My Account', 'contact-form-7-mailchimp-extension' ); ?>
 							</a>
 						<?php else : ?>
 							<a href="<?php echo esc_url( $this->review_url ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review">
 								<?php echo esc_html( $this->get_review_phrase() ); ?>
-								<span class="cmatic-sparkles" aria-label="<?php esc_attr_e( 'Five stars', 'chimpmatic-lite' ); ?>"></span>
+								<span class="cmatic-sparkles" aria-label="<?php esc_attr_e( 'Five stars', 'contact-form-7-mailchimp-extension' ); ?>"></span>
 							</a>
 						<?php endif; ?>
 					</div>
@@ -112,9 +112,9 @@ class Cmatic_Header {
 		}
 		?>
 		<div class="cmatic-header__provider-control">
-			<label for="cmatic-provider"><?php esc_html_e( 'Email provider', 'chimpmatic-lite' ); ?></label>
+			<label for="cmatic-provider"><?php esc_html_e( 'Email provider', 'contact-form-7-mailchimp-extension' ); ?></label>
 			<select id="cmatic-provider" name="wpcf7-cmatic-provider[provider]">
-				<option value="" disabled <?php selected( '', $this->provider ); ?>><?php esc_html_e( 'Select a provider...', 'chimpmatic-lite' ); ?></option>
+				<option value="" disabled <?php selected( '', $this->provider ); ?>><?php esc_html_e( 'Select a provider...', 'contact-form-7-mailchimp-extension' ); ?></option>
 				<?php foreach ( $this->provider_options as $slug => $label ) : ?>
 					<option value="<?php echo esc_attr( (string) $slug ); ?>" <?php selected( $this->provider, (string) $slug ); ?>>
 						<?php echo esc_html( (string) $label ); ?>
@@ -139,15 +139,15 @@ class Cmatic_Header {
 		if ( 'connected' === $this->api_status ) {
 			$dot_class = 'cmatic-header__status-dot--connected';
 			/* translators: %s: email provider name */
-			$status_text = sprintf( __( '%s connected', 'chimpmatic-lite' ), $provider_label );
+			$status_text = sprintf( __( '%s connected', 'contact-form-7-mailchimp-extension' ), $provider_label );
 		} elseif ( 'fresh' === $this->api_status ) {
 			$dot_class = 'cmatic-header__status-dot--neutral';
 			/* translators: %s: email provider name */
-			$status_text = sprintf( __( '%s not connected', 'chimpmatic-lite' ), $provider_label );
+			$status_text = sprintf( __( '%s not connected', 'contact-form-7-mailchimp-extension' ), $provider_label );
 		} else {
 			$dot_class = 'cmatic-header__status-dot--disconnected';
 			/* translators: %s: email provider name */
-			$status_text = sprintf( __( '%s connection inactive', 'chimpmatic-lite' ), $provider_label );
+			$status_text = sprintf( __( '%s connection inactive', 'contact-form-7-mailchimp-extension' ), $provider_label );
 		}
 		?>
 		<div class="cmatic-header__status" role="status" aria-live="polite">

@@ -74,7 +74,7 @@ final class Cmatic_Rest_Reset {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				esc_html__( 'You do not have permission to access this endpoint.', 'chimpmatic-lite' ),
+				esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -83,7 +83,7 @@ final class Cmatic_Rest_Reset {
 		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'chimpmatic-lite' ),
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -102,7 +102,7 @@ final class Cmatic_Rest_Reset {
 		if ( ! $form_id ) {
 			return new WP_Error(
 				'missing_form_id',
-				__( 'Form ID is required for form reset.', 'chimpmatic-lite' ),
+				__( 'Form ID is required for form reset.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -113,7 +113,7 @@ final class Cmatic_Rest_Reset {
 		return rest_ensure_response(
 			array(
 				'success' => true,
-				'message' => __( 'Form settings cleared successfully.', 'chimpmatic-lite' ),
+				'message' => __( 'Form settings cleared successfully.', 'contact-form-7-mailchimp-extension' ),
 			)
 		);
 	}

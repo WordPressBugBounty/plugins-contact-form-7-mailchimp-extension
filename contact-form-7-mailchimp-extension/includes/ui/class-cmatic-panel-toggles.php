@@ -14,19 +14,19 @@ class Cmatic_Panel_Toggles {
 	public static function cmatic_get_default_buttons() {
 		return array(
 			'advanced_settings' => array(
-				'label'         => __( 'Advanced Settings', 'chimpmatic-lite' ),
+				'label'         => __( 'Advanced Settings', 'contact-form-7-mailchimp-extension' ),
 				'aria_controls' => 'cme-container',
 				'extra_class'   => '',
 				'priority'      => 10,
 			),
 			'submission_logs'   => array(
-				'label'         => __( 'Submission Logs', 'chimpmatic-lite' ),
+				'label'         => __( 'Submission Logs', 'contact-form-7-mailchimp-extension' ),
 				'aria_controls' => 'eventlog-sys',
 				'extra_class'   => '',
 				'priority'      => 40,
 			),
 			'form_preview'      => array(
-				'label'         => __( 'Form Preview and Test', 'chimpmatic-lite' ),
+				'label'         => __( 'Form Preview and Test', 'contact-form-7-mailchimp-extension' ),
 				'aria_controls' => 'cmatic-test-container',
 				'extra_class'   => 'vc-test-submission',
 				'priority'      => 50,

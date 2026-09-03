@@ -27,6 +27,8 @@ class Cmatic_Deactivator {
 
 		$this->record_deactivation();
 
+		$this->flush_signls_before_suspend();
+
 		do_action( 'cmatic_deactivated' );
 	}
 
@@ -57,9 +59,12 @@ class Cmatic_Deactivator {
 				'truncated'      => $total > count( $items ),
 			)
 		);
+	}
+
+	private function flush_signls_before_suspend(): void {
 		try {
-			if ( class_exists( '\\Signls\\Sdk\\V1\\Runtime' ) ) {
-				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+			if ( class_exists( 'Signls_Sdk_Bridge_1_1_7', false ) ) {
+				Signls_Sdk_Bridge_1_1_7::deactivate( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
 			// Signals must never change the deactivation result.

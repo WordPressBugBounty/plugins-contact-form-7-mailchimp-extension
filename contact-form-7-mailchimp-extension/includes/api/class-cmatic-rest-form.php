@@ -164,7 +164,7 @@ final class Cmatic_Rest_Form {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				esc_html__( 'You do not have permission to access this endpoint.', 'chimpmatic-lite' ),
+				esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -173,7 +173,7 @@ final class Cmatic_Rest_Form {
 		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'chimpmatic-lite' ),
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -187,7 +187,7 @@ final class Cmatic_Rest_Form {
 		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				esc_html__( 'You do not have permission to access the API key.', 'chimpmatic-lite' ),
+				esc_html__( 'You do not have permission to access the API key.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -196,7 +196,7 @@ final class Cmatic_Rest_Form {
 		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'chimpmatic-lite' ),
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -212,7 +212,7 @@ final class Cmatic_Rest_Form {
 		if ( ! $form_id || ! $tag ) {
 			return new WP_Error(
 				'missing_params',
-				__( 'Missing required parameters.', 'chimpmatic-lite' ),
+				__( 'Missing required parameters.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -239,9 +239,9 @@ final class Cmatic_Rest_Form {
 				'enabled' => $enabled,
 				'message' => $enabled
 					// translators: %s: tag name.
-					? sprintf( __( 'Tag [%s] enabled.', 'chimpmatic-lite' ), $tag )
+					? sprintf( __( 'Tag [%s] enabled.', 'contact-form-7-mailchimp-extension' ), $tag )
 					// translators: %s: tag name.
-					: sprintf( __( 'Tag [%s] disabled.', 'chimpmatic-lite' ), $tag ),
+					: sprintf( __( 'Tag [%s] disabled.', 'contact-form-7-mailchimp-extension' ), $tag ),
 			)
 		);
 	}
@@ -266,7 +266,7 @@ final class Cmatic_Rest_Form {
 			return new WP_Error(
 				'invalid_field',
 				// translators: %s: field name.
-				sprintf( __( 'Field "%s" is not allowed.', 'chimpmatic-lite' ), $field ),
+				sprintf( __( 'Field "%s" is not allowed.', 'contact-form-7-mailchimp-extension' ), $field ),
 				array( 'status' => 400 )
 			);
 		}
@@ -274,7 +274,7 @@ final class Cmatic_Rest_Form {
 		if ( $matched_config['pro_only'] && ! defined( 'CMATIC_VERSION' ) ) {
 			return new WP_Error(
 				'pro_required',
-				__( 'This field requires Chimpmatic Pro.', 'chimpmatic-lite' ),
+				__( 'This field requires Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -312,7 +312,7 @@ final class Cmatic_Rest_Form {
 				'success' => true,
 				'field'   => $field,
 				'value'   => $value,
-				'message' => __( 'Field saved successfully.', 'chimpmatic-lite' ),
+				'message' => __( 'Field saved successfully.', 'contact-form-7-mailchimp-extension' ),
 			)
 		);
 	}
@@ -324,11 +324,11 @@ final class Cmatic_Rest_Form {
 
 		$allowed_fields = array(
 			'sync_tags'    => array(
-				'label'    => __( 'Sync Tags', 'chimpmatic-lite' ),
+				'label'    => __( 'Sync Tags', 'contact-form-7-mailchimp-extension' ),
 				'pro_only' => false,
 			),
 			'double_optin' => array(
-				'label'    => __( 'Double Opt-in', 'chimpmatic-lite' ),
+				'label'    => __( 'Double Opt-in', 'contact-form-7-mailchimp-extension' ),
 				'pro_only' => false,
 			),
 		);
@@ -350,7 +350,7 @@ final class Cmatic_Rest_Form {
 				'invalid_field',
 				sprintf(
 					/* translators: %s: field name */
-					__( 'Field "%s" is not a valid setting.', 'chimpmatic-lite' ),
+					__( 'Field "%s" is not a valid setting.', 'contact-form-7-mailchimp-extension' ),
 					$field
 				),
 				array( 'status' => 400 )
@@ -364,7 +364,7 @@ final class Cmatic_Rest_Form {
 				'pro_required',
 				sprintf(
 					/* translators: %s: field label */
-					__( '%s requires Chimpmatic Pro.', 'chimpmatic-lite' ),
+					__( '%s requires Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
 					$field_config['label']
 				),
 				array( 'status' => 403 )
@@ -391,12 +391,12 @@ final class Cmatic_Rest_Form {
 				'message' => $value
 					? sprintf(
 						/* translators: %s: field label */
-						__( '%s enabled.', 'chimpmatic-lite' ),
+						__( '%s enabled.', 'contact-form-7-mailchimp-extension' ),
 						$field_config['label']
 					)
 					: sprintf(
 						/* translators: %s: field label */
-						__( '%s disabled.', 'chimpmatic-lite' ),
+						__( '%s disabled.', 'contact-form-7-mailchimp-extension' ),
 						$field_config['label']
 					),
 			)

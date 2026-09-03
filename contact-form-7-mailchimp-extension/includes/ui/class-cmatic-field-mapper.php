@@ -31,7 +31,7 @@ final class Cmatic_Field_Mapper_UI {
 						<?php
 						printf(
 							/* translators: 1: cached merge-field count, 2: audience merge-field count */
-							esc_html__( 'Your audience field list looks out of date (%1$d cached, audience reports %2$d). Click Sync Fields above to refresh your mapping rows.', 'chimpmatic-lite' ),
+							esc_html__( 'Your audience field list looks out of date (%1$d cached, audience reports %2$d). Click Sync Fields above to refresh your mapping rows.', 'contact-form-7-mailchimp-extension' ),
 							(int) $cmatic_cached_fields,
 							(int) $total_merge
 						);
@@ -49,21 +49,21 @@ final class Cmatic_Field_Mapper_UI {
 					<?php
 					printf(
 						/* translators: %d: number of fields included in Lite. */
-						esc_html__( 'Your Lite setup includes %d merge fields. Contact email address is always included.', 'chimpmatic-lite' ),
+						esc_html__( 'Your Lite setup includes %d merge fields. Contact email address is always included.', 'contact-form-7-mailchimp-extension' ),
 						(int) CMATIC_LITE_FIELDS
 					);
 					?>
 					<a href="<?php echo esc_url( $upgrade_url ); ?>" class="helping-field cmatic-unlock-fields" target="_blank" rel="noopener noreferrer">
-						<?php esc_html_e( 'Unlock every available field and advanced features with Chimpmatic Pro', 'chimpmatic-lite' ); ?>
+						<?php esc_html_e( 'Unlock every available field and advanced features with Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ); ?>
 						<?php if ( $discount > 0 ) : ?>
 							<span class="cmatic-field-offer">
 								<?php
 								/* translators: %d: current discount percentage from the live promotion. */
-								printf( esc_html__( '%d%% off', 'chimpmatic-lite' ), (int) $discount );
+								printf( esc_html__( '%d%% off', 'contact-form-7-mailchimp-extension' ), (int) $discount );
 								?>
 							</span>
 						<?php endif; ?>
-						<span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'chimpmatic-lite' ); ?></span>
+						<span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'contact-form-7-mailchimp-extension' ); ?></span>
 					</a>
 				</p>
 			</div>
@@ -147,7 +147,7 @@ final class Cmatic_Field_Mapper_UI {
 		<select class="chm-select" id="wpcf7-mailchimp-<?php echo esc_attr( $field_name ); ?>" name="wpcf7-mailchimp[<?php echo esc_attr( $field_name ); ?>]">
 			<?php if ( 'email' !== $filter ) : ?>
 				<option value="" <?php selected( $saved_value, '' ); ?>>
-					<?php esc_html_e( 'Choose..', 'chimpmatic-lite' ); ?>
+					<?php esc_html_e( 'Choose..', 'contact-form-7-mailchimp-extension' ); ?>
 				</option>
 			<?php endif; ?>
 
@@ -199,12 +199,12 @@ final class Cmatic_Field_Mapper_UI {
 		?>
 		<div class="mcee-container">
 			<label for="wpcf7-mailchimp-accept">
-				<?php esc_html_e( 'Opt-in Checkbox', 'chimpmatic-lite' ); ?>
-				<span class="mce-type"><?php esc_html_e( 'Optional', 'chimpmatic-lite' ); ?></span>
+				<?php esc_html_e( 'Opt-in Checkbox', 'contact-form-7-mailchimp-extension' ); ?>
+				<span class="mce-type"><?php esc_html_e( 'Optional', 'contact-form-7-mailchimp-extension' ); ?></span>
 			</label>
 			<select class="chm-select" id="wpcf7-mailchimp-accept" name="wpcf7-mailchimp[accept]">
 				<option value=" " <?php selected( $cf7_mch['accept'] ?? ' ', ' ' ); ?>>
-					<?php esc_html_e( 'None - Always subscribe', 'chimpmatic-lite' ); ?>
+					<?php esc_html_e( 'None - Always subscribe', 'contact-form-7-mailchimp-extension' ); ?>
 				</option>
 				<?php if ( empty( $checkbox_fields ) ) : ?>
 					<option value="" disabled>
@@ -216,7 +216,7 @@ final class Cmatic_Field_Mapper_UI {
 						}
 						printf(
 							/* translators: %s: Form title */
-							esc_html__( '"%s" has no [checkbox] or [acceptance] fields', 'chimpmatic-lite' ),
+							esc_html__( '"%s" has no [checkbox] or [acceptance] fields', 'contact-form-7-mailchimp-extension' ),
 							esc_html( $form_title )
 						);
 						?>
@@ -235,12 +235,12 @@ final class Cmatic_Field_Mapper_UI {
 			</select>
 			<?php
 			$cmatic_accept_saved = trim( (string) ( $cf7_mch['accept'] ?? '' ) );
-			$cmatic_optin_always = __( 'Every valid submission is subscribed. Pick a checkbox field to require consent first.', 'chimpmatic-lite' );
-			$cmatic_optin_gated  = __( 'Only subscribe if this checkbox is checked', 'chimpmatic-lite' );
+			$cmatic_optin_always = __( 'Every valid submission is subscribed. Pick a checkbox field to require consent first.', 'contact-form-7-mailchimp-extension' );
+			$cmatic_optin_gated  = __( 'Only subscribe if this checkbox is checked', 'contact-form-7-mailchimp-extension' );
 			?>
 			<small class="description" id="cmatic-optin-helper" data-always="<?php echo esc_attr( $cmatic_optin_always ); ?>" data-gated="<?php echo esc_attr( $cmatic_optin_gated ); ?>">
 				<span class="cmatic-optin-helper-text"><?php echo esc_html( '' === $cmatic_accept_saved ? $cmatic_optin_always : $cmatic_optin_gated ); ?></span>
-				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-opt-in-checkbox', 'optin_field' ) ); ?>" class="helping-field" target="_blank"><?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?></a>
+				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-opt-in-checkbox', 'optin_field' ) ); ?>" class="helping-field" target="_blank"><?php esc_html_e( 'Learn More', 'contact-form-7-mailchimp-extension' ); ?></a>
 			</small>
 		</div>
 		<?php
@@ -251,20 +251,20 @@ final class Cmatic_Field_Mapper_UI {
 		?>
 		<div class="mcee-container">
 			<label for="wpcf7-mailchimp-double-optin">
-				<?php esc_html_e( 'Double Opt-in', 'chimpmatic-lite' ); ?>
-				<span class="mce-type"><?php esc_html_e( 'Optional', 'chimpmatic-lite' ); ?></span>
+				<?php esc_html_e( 'Double Opt-in', 'contact-form-7-mailchimp-extension' ); ?>
+				<span class="mce-type"><?php esc_html_e( 'Optional', 'contact-form-7-mailchimp-extension' ); ?></span>
 			</label>
 			<select class="chm-select" id="wpcf7-mailchimp-double-optin" name="wpcf7-mailchimp[confsubs]" data-field="double_optin">
 				<option value="0" <?php selected( $value, '0' ); ?>>
-					<?php esc_html_e( 'Subscribers are added immediately', 'chimpmatic-lite' ); ?>
+					<?php esc_html_e( 'Subscribers are added immediately', 'contact-form-7-mailchimp-extension' ); ?>
 				</option>
 				<option value="1" <?php selected( $value, '1' ); ?>>
-					<?php esc_html_e( 'Subscribers must confirm via email', 'chimpmatic-lite' ); ?>
+					<?php esc_html_e( 'Subscribers must confirm via email', 'contact-form-7-mailchimp-extension' ); ?>
 				</option>
 			</select>
 			<small class="description">
-				<?php esc_html_e( 'Choose how subscribers are added to your Mailchimp audience', 'chimpmatic-lite' ); ?>
-				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-double-opt-in', 'double_optin' ) ); ?>" class="helping-field" target="_blank"><?php esc_html_e( 'Learn More', 'chimpmatic-lite' ); ?></a>
+				<?php esc_html_e( 'Choose how subscribers are added to your Mailchimp audience', 'contact-form-7-mailchimp-extension' ); ?>
+				<a href="<?php echo esc_url( Cmatic_Pursuit::docs( 'mailchimp-double-opt-in', 'double_optin' ) ); ?>" class="helping-field" target="_blank"><?php esc_html_e( 'Learn More', 'contact-form-7-mailchimp-extension' ); ?></a>
 			</small>
 		</div>
 		<?php

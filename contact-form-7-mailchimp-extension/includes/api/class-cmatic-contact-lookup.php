@@ -112,7 +112,7 @@ class Cmatic_Contact_Lookup {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				__( 'You do not have permission to access this endpoint.', 'chimpmatic-lite' ),
+				__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -137,7 +137,7 @@ class Cmatic_Contact_Lookup {
 		if ( empty( $api_key ) ) {
 			return new WP_Error(
 				'no_api_key',
-				__( 'No API key configured. Please connect to Mailchimp first.', 'chimpmatic-lite' ),
+				__( 'No API key configured. Please connect to Mailchimp first.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -145,7 +145,7 @@ class Cmatic_Contact_Lookup {
 		if ( ! preg_match( '/^([a-f0-9]{32})-([a-z]{2,3}\d+)$/', $api_key, $matches ) ) {
 			return new WP_Error(
 				'invalid_api_key',
-				__( 'Invalid API key format.', 'chimpmatic-lite' ),
+				__( 'Invalid API key format.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -159,7 +159,7 @@ class Cmatic_Contact_Lookup {
 		if ( is_wp_error( $lists_resp[2] ) || 200 !== wp_remote_retrieve_response_code( $lists_resp[2] ) ) {
 			return new WP_Error(
 				'api_error',
-				__( 'Failed to retrieve audiences from Mailchimp.', 'chimpmatic-lite' ),
+				__( 'Failed to retrieve audiences from Mailchimp.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -173,7 +173,7 @@ class Cmatic_Contact_Lookup {
 					'success' => true,
 					'email'   => $email,
 					'found'   => false,
-					'message' => __( 'No audiences found in your Mailchimp account.', 'chimpmatic-lite' ),
+					'message' => __( 'No audiences found in your Mailchimp account.', 'contact-form-7-mailchimp-extension' ),
 					'results' => array(),
 				)
 			);
@@ -282,11 +282,11 @@ class Cmatic_Contact_Lookup {
 				'message'     => $found_count > 0
 					? sprintf(
 						/* translators: %1$d: found count, %2$d: total lists */
-						__( 'Contact found in %1$d of %2$d audiences.', 'chimpmatic-lite' ),
+						__( 'Contact found in %1$d of %2$d audiences.', 'contact-form-7-mailchimp-extension' ),
 						$found_count,
 						count( $lists )
 					)
-					: __( 'Contact not found in any audience.', 'chimpmatic-lite' ),
+					: __( 'Contact not found in any audience.', 'contact-form-7-mailchimp-extension' ),
 				'results'     => $results,
 			)
 		);
@@ -300,17 +300,17 @@ class Cmatic_Contact_Lookup {
 		?>
 		<div id="cmatic-contact-lookup" class="postbox mce-move mce-hidden">
 			<div class="inside" style="padding: 15px;">
-				<h3 style="margin: 0 0 10px;"><?php esc_html_e( 'Find a Mailchimp contact', 'chimpmatic-lite' ); ?></h3>
-				<p><?php esc_html_e( 'Check whether a contact exists in Mailchimp and view their status in each audience.', 'chimpmatic-lite' ); ?></p>
+				<h3 style="margin: 0 0 10px;"><?php esc_html_e( 'Find a Mailchimp contact', 'contact-form-7-mailchimp-extension' ); ?></h3>
+				<p><?php esc_html_e( 'Check whether a contact exists in Mailchimp and view their status in each audience.', 'contact-form-7-mailchimp-extension' ); ?></p>
 
 				<div style="margin: 15px 0;">
 					<input type="email"
 						id="cmatic-lookup-email"
-						placeholder="<?php esc_attr_e( 'Enter email address...', 'chimpmatic-lite' ); ?>"
+						placeholder="<?php esc_attr_e( 'Enter email address...', 'contact-form-7-mailchimp-extension' ); ?>"
 						data-form-id="<?php echo esc_attr( $args['form_id'] ); ?>"
 						style="width: 100%; margin-bottom: 8px;">
 					<button type="button" id="cmatic-lookup-btn" class="button button-primary" style="width: 100%;">
-						<?php esc_html_e( 'Find contact', 'chimpmatic-lite' ); ?>
+						<?php esc_html_e( 'Find contact', 'contact-form-7-mailchimp-extension' ); ?>
 					</button>
 				</div>
 

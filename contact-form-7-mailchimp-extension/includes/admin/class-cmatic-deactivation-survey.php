@@ -181,7 +181,7 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 			return new WP_REST_Response(
 				array(
 					'success' => true,
-					'message' => __( 'Thank you for your feedback!', 'chimpmatic-lite' ),
+					'message' => __( 'Thank you for your feedback!', 'contact-form-7-mailchimp-extension' ),
 				),
 				200
 			);
@@ -258,42 +258,42 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 							'reasons'         => array(
 								array(
 									'id'          => 1,
-									'text'        => __( 'I found a better Mailchimp integration', 'chimpmatic-lite' ),
+									'text'        => __( 'I found a better Mailchimp integration', 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => 'plugin-dropdown',
-									'placeholder' => __( 'Select the plugin you are switching to', 'chimpmatic-lite' ),
+									'placeholder' => __( 'Select the plugin you are switching to', 'contact-form-7-mailchimp-extension' ),
 									'max_length'  => 0,
 								),
 								array(
 									'id'          => 2,
-									'text'        => __( 'Missing features I need', 'chimpmatic-lite' ),
+									'text'        => __( 'Missing features I need', 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => 'textfield',
-									'placeholder' => __( 'What features would you like to see?', 'chimpmatic-lite' ),
+									'placeholder' => __( 'What features would you like to see?', 'contact-form-7-mailchimp-extension' ),
 									'max_length'  => 200,
 								),
 								array(
 									'id'          => 3,
-									'text'        => __( 'Too complicated to set up', 'chimpmatic-lite' ),
+									'text'        => __( 'Too complicated to set up', 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => '',
 									'placeholder' => '',
 								),
 								array(
 									'id'          => 4,
-									'text'        => __( "It's a temporary deactivation", 'chimpmatic-lite' ),
+									'text'        => __( "It's a temporary deactivation", 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => '',
 									'placeholder' => '',
 								),
 								array(
 									'id'          => 5,
-									'text'        => __( 'Conflicts with another plugin', 'chimpmatic-lite' ),
+									'text'        => __( 'Conflicts with another plugin', 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => 'plugin-dropdown',
-									'placeholder' => __( 'Select the conflicting plugin', 'chimpmatic-lite' ),
+									'placeholder' => __( 'Select the conflicting plugin', 'contact-form-7-mailchimp-extension' ),
 									'max_length'  => 0,
 								),
 								array(
 									'id'          => 6,
-									'text'        => __( 'Other reason', 'chimpmatic-lite' ),
+									'text'        => __( 'Other reason', 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => 'textfield',
-									'placeholder' => __( 'Please share your reason...', 'chimpmatic-lite' ),
+									'placeholder' => __( 'Please share your reason...', 'contact-form-7-mailchimp-extension' ),
 									'max_length'  => 200,
 								),
 							),
@@ -307,18 +307,18 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 
 		private function get_strings() {
 			return array(
-				'title'           => __( 'Quick Feedback', 'chimpmatic-lite' ),
-				'description'     => __( 'If you have a moment, please let us know why you are deactivating Chimpmatic Lite:', 'chimpmatic-lite' ),
-				'submitButton'    => __( 'Submit & Deactivate', 'chimpmatic-lite' ),
-				'skipButton'      => __( 'Skip & Deactivate', 'chimpmatic-lite' ),
-				'cancelButton'    => __( 'Cancel', 'chimpmatic-lite' ),
-				'thankYou'        => __( 'Thank you for your feedback!', 'chimpmatic-lite' ),
-				'deactivating'    => __( 'Deactivating plugin...', 'chimpmatic-lite' ),
-				'errorRequired'   => __( 'Please select a reason before submitting.', 'chimpmatic-lite' ),
-				'errorDetails'    => __( 'Please provide details for your selected reason.', 'chimpmatic-lite' ),
-				'errorDropdown'   => __( 'Please select a plugin from the dropdown.', 'chimpmatic-lite' ),
-				'errorSubmission' => __( 'Failed to submit feedback. The plugin will still be deactivated.', 'chimpmatic-lite' ),
-				'closeLabel'      => __( 'Close dialog', 'chimpmatic-lite' ),
+				'title'           => __( 'Quick Feedback', 'contact-form-7-mailchimp-extension' ),
+				'description'     => __( 'If you have a moment, please let us know why you are deactivating Chimpmatic Lite:', 'contact-form-7-mailchimp-extension' ),
+				'submitButton'    => __( 'Submit & Deactivate', 'contact-form-7-mailchimp-extension' ),
+				'skipButton'      => __( 'Skip & Deactivate', 'contact-form-7-mailchimp-extension' ),
+				'cancelButton'    => __( 'Cancel', 'contact-form-7-mailchimp-extension' ),
+				'thankYou'        => __( 'Thank you for your feedback!', 'contact-form-7-mailchimp-extension' ),
+				'deactivating'    => __( 'Deactivating plugin...', 'contact-form-7-mailchimp-extension' ),
+				'errorRequired'   => __( 'Please select a reason before submitting.', 'contact-form-7-mailchimp-extension' ),
+				'errorDetails'    => __( 'Please provide details for your selected reason.', 'contact-form-7-mailchimp-extension' ),
+				'errorDropdown'   => __( 'Please select a plugin from the dropdown.', 'contact-form-7-mailchimp-extension' ),
+				'errorSubmission' => __( 'Failed to submit feedback. The plugin will still be deactivated.', 'contact-form-7-mailchimp-extension' ),
+				'closeLabel'      => __( 'Close dialog', 'contact-form-7-mailchimp-extension' ),
 			);
 		}
 	}

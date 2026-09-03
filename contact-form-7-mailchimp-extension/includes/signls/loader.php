@@ -41,6 +41,9 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 			}
 
 			self::$descriptors[ $product ] = $descriptor;
+			if ( self::$booted ) {
+				return self::boot_descriptor( $descriptor );
+			}
 			self::schedule_boot();
 			return true;
 		}
@@ -64,21 +67,7 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 			}
 
 			foreach ( self::$descriptors as $descriptor ) {
-				try {
-					$adapter_file = isset( $descriptor['adapter_file'] ) ? (string) $descriptor['adapter_file'] : '';
-					if ( '' !== $adapter_file ) {
-						if ( ! is_file( $adapter_file ) ) {
-							continue;
-						}
-						if ( ! self::require_file( $adapter_file ) ) {
-							continue;
-						}
-					}
-					\Signls\Sdk\V1\Runtime::boot( $descriptor );
-				} catch ( \Throwable $error ) {
-					// A product's observations must never break the host plugin.
-					continue;
-				}
+				self::boot_descriptor( $descriptor );
 			}
 		}
 
@@ -119,6 +108,19 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 			return $candidates[0];
 		}
 
+		private static function boot_descriptor( array $descriptor ) {
+			try {
+				$adapter_file = isset( $descriptor['adapter_file'] ) ? (string) $descriptor['adapter_file'] : '';
+				if ( '' !== $adapter_file && ! self::require_file( $adapter_file ) ) {
+					return false;
+				}
+				return \Signls\Sdk\V1\Runtime::boot( $descriptor );
+			} catch ( \Throwable $error ) {
+				// A product's observations must never break the host plugin.
+				return false;
+			}
+		}
+
 		private static function require_file( $path ) {
 			if ( ! is_string( $path ) || ! is_file( $path ) ) {
 				return false;
@@ -140,4 +142,8 @@ if ( ! class_exists( 'Signls_Sdk_Loader', false ) ) {
 	}
 }
 
-Signls_Sdk_Loader::add_candidate( '1.1.3', __DIR__ . '/sdk.php', '7.4.0' );
+require_once __DIR__ . '/bridge-1-1-5.php';
+require_once __DIR__ . '/bridge-1-1-6.php';
+require_once __DIR__ . '/bridge-1-1-7.php';
+
+Signls_Sdk_Loader::add_candidate( '1.1.10', __DIR__ . '/sdk.php', '7.4.0' );

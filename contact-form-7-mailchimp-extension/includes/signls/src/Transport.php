@@ -14,7 +14,7 @@ final class Transport {
 
 	private const DEFAULT_ENDPOINT = 'https://signls.dev';
 
-	private const SDK_VERSION = '1.1.3';
+	private const SDK_VERSION = '1.1.10';
 
 	private const CLOCK_SKEW_SECONDS = 300;
 
@@ -62,6 +62,10 @@ final class Transport {
 			'permanent'   => true,
 			'quarantined' => true,
 		);
+	}
+
+	public function has_compatible_pending( ProductAdapterInterface $adapter ): bool {
+		return '' !== $this->reconcile_pending_identity( $adapter, $this->payload_revision( $adapter ) );
 	}
 
 	public function deliver( ProductAdapterInterface $adapter, array $payload ): array {

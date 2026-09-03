@@ -134,9 +134,9 @@ class Cmatic_Submission_Feedback {
 
 	private static function get_status_text( $status ) {
 		$statuses = array(
-			'subscribed'   => __( 'Subscribed', 'chimpmatic-lite' ),
-			'pending'      => __( 'Pending Confirmation', 'chimpmatic-lite' ),
-			'unsubscribed' => __( 'Unsubscribed', 'chimpmatic-lite' ),
+			'subscribed'   => __( 'Subscribed', 'contact-form-7-mailchimp-extension' ),
+			'pending'      => __( 'Pending Confirmation', 'contact-form-7-mailchimp-extension' ),
+			'unsubscribed' => __( 'Unsubscribed', 'contact-form-7-mailchimp-extension' ),
 		);
 		return isset( $statuses[ $status ] ) ? $statuses[ $status ] : $status;
 	}
@@ -144,30 +144,30 @@ class Cmatic_Submission_Feedback {
 	private static function get_success_message( $email, $status ) {
 		if ( 'pending' === $status ) {
 			/* translators: %s: email address */
-			return sprintf( __( '%s added - awaiting confirmation email.', 'chimpmatic-lite' ), $email );
+			return sprintf( __( '%s added - awaiting confirmation email.', 'contact-form-7-mailchimp-extension' ), $email );
 		}
 		/* translators: %s: email address */
-		return sprintf( __( '%s subscribed successfully!', 'chimpmatic-lite' ), $email );
+		return sprintf( __( '%s subscribed successfully!', 'contact-form-7-mailchimp-extension' ), $email );
 	}
 
 	private static function get_failure_message( $reason, $detail = '' ) {
 		$messages = array(
-			'invalid_email'                => __( 'Invalid email address provided.', 'chimpmatic-lite' ),
-			'already_subscribed'           => __( 'This email is already subscribed.', 'chimpmatic-lite' ),
-			'permanently_deleted'          => __( 'This email was permanently deleted and cannot be re-imported.', 'chimpmatic-lite' ),
-			'previously_unsubscribed'      => __( 'This email previously unsubscribed and cannot be re-added.', 'chimpmatic-lite' ),
-			'compliance_state'             => __( 'This email is in a compliance state and cannot be subscribed.', 'chimpmatic-lite' ),
-			'api_error'                    => __( 'Mailchimp API error occurred.', 'chimpmatic-lite' ),
-			'network_error'                => __( 'Network error connecting to Mailchimp.', 'chimpmatic-lite' ),
-			'provider_api_error'           => __( 'The email provider rejected the subscription request.', 'chimpmatic-lite' ),
-			'provider_network_error'       => __( 'A network error occurred while connecting to the email provider.', 'chimpmatic-lite' ),
+			'invalid_email'                => __( 'Invalid email address provided.', 'contact-form-7-mailchimp-extension' ),
+			'already_subscribed'           => __( 'This email is already subscribed.', 'contact-form-7-mailchimp-extension' ),
+			'permanently_deleted'          => __( 'This email was permanently deleted and cannot be re-imported.', 'contact-form-7-mailchimp-extension' ),
+			'previously_unsubscribed'      => __( 'This email previously unsubscribed and cannot be re-added.', 'contact-form-7-mailchimp-extension' ),
+			'compliance_state'             => __( 'This email is in a compliance state and cannot be subscribed.', 'contact-form-7-mailchimp-extension' ),
+			'api_error'                    => __( 'Mailchimp API error occurred.', 'contact-form-7-mailchimp-extension' ),
+			'network_error'                => __( 'Network error connecting to Mailchimp.', 'contact-form-7-mailchimp-extension' ),
+			'provider_api_error'           => __( 'The email provider rejected the subscription request.', 'contact-form-7-mailchimp-extension' ),
+			'provider_network_error'       => __( 'A network error occurred while connecting to the email provider.', 'contact-form-7-mailchimp-extension' ),
 			'provider_configuration_error' => __(
 				'The selected provider cannot honor this form\'s opt-in status without additional configuration.',
-				'chimpmatic-lite'
+				'contact-form-7-mailchimp-extension'
 			),
 		);
 
-		$message = isset( $messages[ $reason ] ) ? $messages[ $reason ] : __( 'Subscription failed.', 'chimpmatic-lite' );
+		$message = isset( $messages[ $reason ] ) ? $messages[ $reason ] : __( 'Subscription failed.', 'contact-form-7-mailchimp-extension' );
 
 		if ( ! empty( $detail ) ) {
 			$message .= ' ' . $detail;
@@ -178,10 +178,10 @@ class Cmatic_Submission_Feedback {
 
 	private static function get_skip_message( $reason ) {
 		$messages = array(
-			'acceptance_not_checked' => __( 'Opt-in checkbox was not checked.', 'chimpmatic-lite' ),
-			'no_api_configured'      => __( 'Mailchimp API is not configured for this form.', 'chimpmatic-lite' ),
+			'acceptance_not_checked' => __( 'Opt-in checkbox was not checked.', 'contact-form-7-mailchimp-extension' ),
+			'no_api_configured'      => __( 'Mailchimp API is not configured for this form.', 'contact-form-7-mailchimp-extension' ),
 		);
-		return isset( $messages[ $reason ] ) ? $messages[ $reason ] : __( 'Subscription skipped.', 'chimpmatic-lite' );
+		return isset( $messages[ $reason ] ) ? $messages[ $reason ] : __( 'Subscription skipped.', 'contact-form-7-mailchimp-extension' );
 	}
 
 	public static function parse_api_error( $api_response, $email = '' ) {

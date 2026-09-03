@@ -93,7 +93,7 @@ class Cmatic_Admin_Bar_Menu {
 		$icon_styles = 'width:26px;height:30px;float:left;background:url(\'' . esc_attr( $icon_svg ) . '\') center/20px no-repeat;';
 
 		$title  = '<div id="cmatic-ab-icon" class="ab-item cmatic-logo svg" style="' . esc_attr( $icon_styles ) . '">';
-		$title .= '<span class="screen-reader-text">' . esc_html__( 'Chimpmatic Lite', 'chimpmatic-lite' ) . '</span>';
+		$title .= '<span class="screen-reader-text">' . esc_html__( 'Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ) . '</span>';
 		$title .= '</div>';
 
 		if ( $badge_count > 0 ) {
@@ -115,10 +115,10 @@ class Cmatic_Admin_Bar_Menu {
 				array(
 					'parent' => self::MENU_IDENTIFIER,
 					'id'     => 'chimpmatic-update',
-					'title'  => esc_html__( 'Update Available', 'chimpmatic-lite' ) . ' ' . $this->get_notification_counter( 1 ),
+					'title'  => esc_html__( 'Update Available', 'contact-form-7-mailchimp-extension' ) . ' ' . $this->get_notification_counter( 1 ),
 					'href'   => $this->get_update_url(),
 					'meta'   => array(
-						'title' => esc_attr__( 'Update strongly recommended', 'chimpmatic-lite' ),
+						'title' => esc_attr__( 'Update strongly recommended', 'contact-form-7-mailchimp-extension' ),
 					),
 				)
 			);
@@ -129,7 +129,7 @@ class Cmatic_Admin_Bar_Menu {
 				array(
 					'parent' => self::MENU_IDENTIFIER,
 					'id'     => 'chimpmatic-activate-license',
-					'title'  => esc_html__( 'Activate License', 'chimpmatic-lite' ),
+					'title'  => esc_html__( 'Activate License', 'contact-form-7-mailchimp-extension' ),
 					'href'   => $this->get_license_activation_url(),
 				)
 			);
@@ -141,7 +141,7 @@ class Cmatic_Admin_Bar_Menu {
 			array(
 				'parent' => self::MENU_IDENTIFIER,
 				'id'     => 'chimpmatic-docs',
-				'title'  => esc_html__( 'Documentation', 'chimpmatic-lite' ),
+				'title'  => esc_html__( 'Documentation', 'contact-form-7-mailchimp-extension' ),
 				'href'   => Cmatic_Pursuit::adminbar( 'help', 'menu_docs' ),
 				'meta'   => array(
 					'target' => '_blank',
@@ -154,7 +154,7 @@ class Cmatic_Admin_Bar_Menu {
 			array(
 				'parent' => self::MENU_IDENTIFIER,
 				'id'     => 'chimpmatic-support',
-				'title'  => esc_html__( 'Support', 'chimpmatic-lite' ),
+				'title'  => esc_html__( 'Support', 'contact-form-7-mailchimp-extension' ),
 				'href'   => Cmatic_Pursuit::adminbar( 'support', 'menu_support' ),
 				'meta'   => array(
 					'target' => '_blank',
@@ -167,7 +167,7 @@ class Cmatic_Admin_Bar_Menu {
 			array(
 				'parent' => self::MENU_IDENTIFIER,
 				'id'     => 'chimpmatic-reviews',
-				'title'  => esc_html__( 'Reviews', 'chimpmatic-lite' ),
+				'title'  => esc_html__( 'Reviews', 'contact-form-7-mailchimp-extension' ),
 				'href'   => 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/',
 				'meta'   => array(
 					'target' => '_blank',
@@ -177,7 +177,7 @@ class Cmatic_Admin_Bar_Menu {
 		);
 
 		if ( ! $this->is_pro_active() ) {
-			$upgrade_title = esc_html__( 'Upgrade to Pro', 'chimpmatic-lite' );
+			$upgrade_title = esc_html__( 'Upgrade to Pro', 'contact-form-7-mailchimp-extension' );
 
 			if ( $this->should_show_upgrade_badge() ) {
 				$upgrade_title .= ' ' . $this->get_notification_counter( 1 );
@@ -213,7 +213,7 @@ class Cmatic_Admin_Bar_Menu {
 			array(
 				'parent' => self::MENU_IDENTIFIER,
 				'id'     => 'chimpmatic-forms-header',
-				'title'  => esc_html__( 'Form Settings', 'chimpmatic-lite' ),
+				'title'  => esc_html__( 'Form Settings', 'contact-form-7-mailchimp-extension' ),
 				'href'   => false,
 			)
 		);
@@ -250,10 +250,10 @@ class Cmatic_Admin_Bar_Menu {
 			&& ! empty( $cf7_mch['list'] );
 
 		if ( $is_connected ) {
-			return '<span class="cmatic-api-status cmatic-api-connected" title="' . esc_attr__( 'Connected to Mailchimp API', 'chimpmatic-lite' ) . '">' . esc_html__( 'API', 'chimpmatic-lite' ) . '</span>';
+			return '<span class="cmatic-api-status cmatic-api-connected" title="' . esc_attr__( 'Connected to Mailchimp API', 'contact-form-7-mailchimp-extension' ) . '">' . esc_html__( 'API', 'contact-form-7-mailchimp-extension' ) . '</span>';
 		}
 
-		return '<span class="cmatic-api-status cmatic-api-disconnected" title="' . esc_attr__( 'Not connected to Mailchimp API', 'chimpmatic-lite' ) . '">' . esc_html__( 'API', 'chimpmatic-lite' ) . '</span>';
+		return '<span class="cmatic-api-status cmatic-api-disconnected" title="' . esc_attr__( 'Not connected to Mailchimp API', 'contact-form-7-mailchimp-extension' ) . '">' . esc_html__( 'API', 'contact-form-7-mailchimp-extension' ) . '</span>';
 	}
 
 	private function get_notification_counter( $count ) {
@@ -263,7 +263,7 @@ class Cmatic_Admin_Bar_Menu {
 
 		$screen_reader_text = sprintf(
 			/* translators: %s: number of notifications */
-			_n( '%s notification', '%s notifications', $count, 'chimpmatic-lite' ),
+			_n( '%s notification', '%s notifications', $count, 'contact-form-7-mailchimp-extension' ),
 			number_format_i18n( $count )
 		);
 

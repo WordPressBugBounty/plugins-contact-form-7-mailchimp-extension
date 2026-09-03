@@ -78,37 +78,37 @@ final class Cmatic_Lite_Esp_Klaviyo extends Cmatic_Lite_Esp_Provider {
 		return array(
 			array(
 				'tag'           => 'EMAIL',
-				'name'          => __( 'Profile email address', 'chimpmatic-lite' ),
+				'name'          => __( 'Profile email address', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'email',
 				'display_order' => 0,
 			),
 			array(
 				'tag'           => 'first_name',
-				'name'          => __( 'First Name', 'chimpmatic-lite' ),
+				'name'          => __( 'First Name', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'text',
 				'display_order' => 1,
 			),
 			array(
 				'tag'           => 'last_name',
-				'name'          => __( 'Last Name', 'chimpmatic-lite' ),
+				'name'          => __( 'Last Name', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'text',
 				'display_order' => 2,
 			),
 			array(
 				'tag'           => 'phone_number',
-				'name'          => __( 'Phone Number', 'chimpmatic-lite' ),
+				'name'          => __( 'Phone Number', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'phone',
 				'display_order' => 3,
 			),
 			array(
 				'tag'           => 'organization',
-				'name'          => __( 'Organization', 'chimpmatic-lite' ),
+				'name'          => __( 'Organization', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'text',
 				'display_order' => 4,
 			),
 			array(
 				'tag'           => 'title',
-				'name'          => __( 'Title', 'chimpmatic-lite' ),
+				'name'          => __( 'Title', 'contact-form-7-mailchimp-extension' ),
 				'type'          => 'text',
 				'display_order' => 5,
 			),

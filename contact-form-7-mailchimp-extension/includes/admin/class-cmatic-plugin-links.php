@@ -35,8 +35,8 @@ class Cmatic_Plugin_Links {
 			$links[] = sprintf(
 				'<a href="%s" target="_blank" title="%s">%s</a>',
 				esc_url( Cmatic_Pursuit::docs( 'help', 'plugin_row_meta' ) ),
-				esc_attr__( 'Chimpmatic Lite Documentation', 'chimpmatic-lite' ),
-				esc_html__( 'Chimpmatic Documentation', 'chimpmatic-lite' )
+				esc_attr__( 'Chimpmatic Lite Documentation', 'contact-form-7-mailchimp-extension' ),
+				esc_html__( 'Chimpmatic Documentation', 'contact-form-7-mailchimp-extension' )
 			);
 		}
 
@@ -73,7 +73,7 @@ class Cmatic_Plugin_Links {
 		return sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( $url ),
-			esc_html__( 'Settings', 'chimpmatic-lite' )
+			esc_html__( 'Settings', 'contact-form-7-mailchimp-extension' )
 		);
 	}
 
@@ -81,8 +81,8 @@ class Cmatic_Plugin_Links {
 		return sprintf(
 			'<a href="%s" target="_blank" title="%s">%s</a>',
 			esc_url( Cmatic_Pursuit::docs( 'help', 'plugins_page' ) ),
-			esc_attr__( 'Chimpmatic Documentation', 'chimpmatic-lite' ),
-			esc_html__( 'Docs', 'chimpmatic-lite' )
+			esc_attr__( 'Chimpmatic Documentation', 'contact-form-7-mailchimp-extension' ),
+			esc_html__( 'Docs', 'contact-form-7-mailchimp-extension' )
 		);
 	}
 

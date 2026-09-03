@@ -14,7 +14,7 @@ class Cmatic_Log_Viewer {
 
 	protected static $namespace   = 'chimpmatic-lite/v1';
 	protected static $log_prefix  = '[Chimpmatic Lite]';
-	protected static $text_domain = 'chimpmatic-lite';
+	protected static $text_domain = 'contact-form-7-mailchimp-extension';
 	protected static $max_lines   = 500;
 	protected static $initialized = false;
 
@@ -117,16 +117,28 @@ class Cmatic_Log_Viewer {
 		return WP_CONTENT_DIR . '/debug.log';
 	}
 
+	private static function filesystem() {
+		global $wp_filesystem;
+
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		if ( ! WP_Filesystem() || ! $wp_filesystem instanceof WP_Filesystem_Base ) {
+			return null;
+		}
+
+		return $wp_filesystem;
+	}
+
 	public static function get_logs( $request ) {
 		$log_path     = static::get_log_path();
 		$prefix       = static::get_log_prefix();
 		$apply_filter = '1' === $request->get_param( 'filter' );
+		$filesystem   = self::filesystem();
 
-		if ( ! file_exists( $log_path ) ) {
+		if ( ! $filesystem || ! $filesystem->exists( $log_path ) ) {
 			return new WP_REST_Response(
 				array(
 					'success'  => false,
-					'message'  => __( 'Debug log file not found. Ensure WP_DEBUG_LOG is enabled.', 'chimpmatic-lite' ),
+					'message'  => __( 'Debug log file not found. Ensure WP_DEBUG_LOG is enabled.', 'contact-form-7-mailchimp-extension' ),
 					'logs'     => '',
 					'filtered' => $apply_filter,
 				),
@@ -156,11 +168,11 @@ class Cmatic_Log_Viewer {
 			$message = $apply_filter
 				? sprintf(
 					/* translators: %1$s: prefix, %2$d: number of lines checked */
-					__( 'No %1$s entries found in the recent log data. Note: This viewer only shows the last %2$d lines of the log file.', 'chimpmatic-lite' ),
+					__( 'No %1$s entries found in the recent log data. Note: This viewer only shows the last %2$d lines of the log file.', 'contact-form-7-mailchimp-extension' ),
 					$prefix,
 					self::$max_lines
 				)
-				: __( 'Debug log is empty.', 'chimpmatic-lite' );
+				: __( 'Debug log is empty.', 'contact-form-7-mailchimp-extension' );
 
 			return new WP_REST_Response(
 				array(
@@ -187,60 +199,50 @@ class Cmatic_Log_Viewer {
 	}
 
 	public static function clear_logs( $request ) {
-		$log_path = static::get_log_path();
+		$log_path   = static::get_log_path();
+		$filesystem = self::filesystem();
 
-		if ( ! file_exists( $log_path ) ) {
+		if ( ! $filesystem || ! $filesystem->exists( $log_path ) ) {
 			return new WP_REST_Response(
 				array(
 					'success' => true,
 					'cleared' => false,
-					'message' => __( 'Debug log file does not exist.', 'chimpmatic-lite' ),
+					'message' => __( 'Debug log file does not exist.', 'contact-form-7-mailchimp-extension' ),
 				),
 				200
 			);
 		}
 
-		if ( ! wp_is_writable( $log_path ) ) {
+		if ( ! $filesystem->is_writable( $log_path ) ) {
 			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'cleared' => false,
-					'message' => __( 'Debug log file is not writable.', 'chimpmatic-lite' ),
+					'message' => __( 'Debug log file is not writable.', 'contact-form-7-mailchimp-extension' ),
 				),
 				500
 			);
 		}
 
-		$file_handle = fopen( $log_path, 'w' );
-
-		if ( false === $file_handle ) {
+		if ( ! $filesystem->put_contents( $log_path, '', FS_CHMOD_FILE ) ) {
 			return new WP_REST_Response(
 				array(
 					'success' => false,
 					'cleared' => false,
-					'message' => __( 'Failed to clear debug log file.', 'chimpmatic-lite' ),
+					'message' => __( 'Failed to clear debug log file.', 'contact-form-7-mailchimp-extension' ),
 				),
 				500
 			);
 		}
 
-		fclose( $file_handle );
-
-		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			error_log(
-				sprintf(
-					'[%s] [Chimpmatic Lite] Debug log cleared by user: %s',
-					gmdate( 'd-M-Y H:i:s' ) . ' UTC',
-					wp_get_current_user()->user_login
-				)
-			);
-		}
+		$logger = new Cmatic_File_Logger( 'Log-Viewer', true );
+		$logger->log( 'INFO', 'Debug log cleared by an administrator.', array( 'user_id' => get_current_user_id() ) );
 
 		return new WP_REST_Response(
 			array(
 				'success' => true,
 				'cleared' => true,
-				'message' => __( 'Debug log cleared successfully.', 'chimpmatic-lite' ),
+				'message' => __( 'Debug log cleared successfully.', 'contact-form-7-mailchimp-extension' ),
 			),
 			200
 		);
@@ -288,143 +290,32 @@ class Cmatic_Log_Viewer {
 	}
 
 	protected static function read_last_lines( $filepath, $lines = 500 ) {
-		$handle = fopen( $filepath, 'r' );
-		if ( ! $handle ) {
+		$filesystem = self::filesystem();
+		if ( ! $filesystem ) {
 			return array();
 		}
 
-		$result    = array();
-		$chunk     = 4096;
-		$file_size = filesize( $filepath );
-		if ( 0 === $file_size ) {
-			fclose( $handle );
+		$contents = $filesystem->get_contents( $filepath );
+		if ( false === $contents || '' === $contents ) {
 			return array();
 		}
-		$pos    = $file_size;
-		$buffer = '';
-		while ( $pos > 0 && count( $result ) < $lines ) { // phpcs:ignore Squiz.PHP.DisallowSizeFunctionsInLoops.Found -- Result growth is the loop termination condition.
-			$read_size = min( $chunk, $pos );
-			$pos      -= $read_size;
-			fseek( $handle, $pos );
-			$buffer       = fread( $handle, $read_size ) . $buffer;
-			$buffer_lines = explode( "\n", $buffer );
-			$buffer       = array_shift( $buffer_lines );
-			$result       = array_merge( $buffer_lines, $result );
-		}
-		if ( 0 === $pos && ! empty( $buffer ) ) {
-			array_unshift( $result, $buffer );
-		}
-		fclose( $handle );
-		return array_slice( $result, -$lines );
+
+		$result = preg_split( '/\r\n|\r|\n/', $contents );
+		return is_array( $result ) ? array_slice( $result, -absint( $lines ) ) : array();
 	}
 
 	public static function enqueue_assets( $hook ) {
 	}
 
 	protected static function get_inline_js() {
-		$namespace = self::$namespace;
-
-		return <<<JS
-(function($) {
-	'use strict';
-
-	var CmaticLogViewer = {
-		namespace: '{$namespace}',
-
-		getRestRoot: function() {
-			if (typeof wpApiSettings !== 'undefined' && wpApiSettings.root) {
-				return wpApiSettings.root;
-			}
-			if (typeof chimpmaticLite !== 'undefined' && chimpmaticLite.restUrl) {
-				return chimpmaticLite.restUrl.replace(/chimpmatic-lite\/v1\/$/, '');
-			}
-			return window.location.origin + '/wp-json/';
-		},
-
-		getNonce: function() {
-			if (typeof wpApiSettings !== 'undefined' && wpApiSettings.nonce) {
-				return wpApiSettings.nonce;
-			}
-			if (typeof chimpmaticLite !== 'undefined' && chimpmaticLite.restNonce) {
-				return chimpmaticLite.restNonce;
-			}
-			return '';
-		},
-
-		init: function() {
-			$(document).on('click', '.cme-trigger-log', this.toggleLogs.bind(this));
-			$(document).on('click', '.vc-clear-logs', this.clearLogs.bind(this));
-		},
-
-		toggleLogs: function(e) {
-			e.preventDefault();
-			var \$container = $('#eventlog-sys');
-			var \$trigger = $(e.currentTarget);
-
-			if (\$container.is(':visible')) {
-				\$container.slideUp(200);
-				\$trigger.text('View Debug Logs');
-			} else {
-				\$container.slideDown(200);
-				\$trigger.text('Hide Debug Logs');
-				this.fetchLogs();
-			}
-		},
-
-		fetchLogs: function() {
-			var self = this;
-			var \$panel = $('#log_panel');
-
-			\$panel.text('Loading logs...');
-
-			$.ajax({
-				url: this.getRestRoot() + this.namespace + '/logs',
-				method: 'GET',
-				beforeSend: function(xhr) {
-					var nonce = self.getNonce();
-					if (nonce) {
-						xhr.setRequestHeader('X-WP-Nonce', nonce);
-					}
-				},
-				success: function(response) {
-					if (response.logs) {
-						\$panel.text(response.logs);
-					} else {
-						\$panel.text(response.message || 'No logs found.');
-					}
-				},
-				error: function(xhr) {
-					\$panel.text('Error loading logs: ' + xhr.statusText);
-				}
-			});
-		},
-
-		clearLogs: function(e) {
-			e.preventDefault();
-			$('#log_panel').text('Logs cleared.');
-		},
-
-		refresh: function() {
-			if ($('#eventlog-sys').is(':visible')) {
-				this.fetchLogs();
-			}
-		}
-	};
-
-	$(document).ready(function() {
-		CmaticLogViewer.init();
-	});
-
-	window.CmaticLogViewer = CmaticLogViewer;
-})(jQuery);
-JS;
+		return '';
 	}
 
 	public static function render( $args = array() ) {
 		$defaults = array(
-			'title'       => __( 'Submission Logs', 'chimpmatic-lite' ),
-			'clear_text'  => __( 'Clear Logs', 'chimpmatic-lite' ),
-			'placeholder' => __( 'Click "View Debug Logs" to fetch the log content.', 'chimpmatic-lite' ),
+			'title'       => __( 'Submission Logs', 'contact-form-7-mailchimp-extension' ),
+			'clear_text'  => __( 'Clear Logs', 'contact-form-7-mailchimp-extension' ),
+			'placeholder' => __( 'Click "View Debug Logs" to fetch the log content.', 'contact-form-7-mailchimp-extension' ),
 			'class'       => '',
 		);
 
@@ -435,7 +326,7 @@ JS;
 				<div class="vc-logs-header">
 					<span class="vc-logs-title"><?php echo esc_html( $args['title'] ); ?></span>
 					<span class="vc-logs-actions">
-						<a href="#" class="vc-toggle-filter" data-filtered="1"><?php echo esc_html__( 'Show All', 'chimpmatic-lite' ); ?></a>
+						<a href="#" class="vc-toggle-filter" data-filtered="1"><?php echo esc_html__( 'Show All', 'contact-form-7-mailchimp-extension' ); ?></a>
 						<span class="vc-logs-separator">|</span>
 						<a href="#" class="vc-clear-logs"><?php echo esc_html( $args['clear_text'] ); ?></a>
 					</span>

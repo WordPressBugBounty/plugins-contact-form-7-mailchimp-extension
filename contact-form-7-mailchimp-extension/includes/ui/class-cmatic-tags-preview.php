@@ -72,14 +72,14 @@ class Cmatic_Tags_Preview {
 				<p>You can add these as your contacts tags:</p>
 				<div id="chm_panel_camposformatags">
 					<?php self::render_tag_chips( $filtered_tags, $cf7_mch ); ?>
-					<label class="atags"><b>Arbitrary Tags Here:</b> <input type="text" id="wpcf7-mailchimp-labeltags_cm-tag" name="wpcf7-mailchimp[labeltags_cm-tag]" value="<?php echo isset( $cf7_mch['labeltags_cm-tag'] ) ? esc_attr( $cf7_mch['labeltags_cm-tag'] ) : ''; ?>" placeholder="<?php esc_attr_e( 'Available in Chimpmatic Pro', 'chimpmatic-lite' ); ?>" title="<?php esc_attr_e( 'Subscriber tagging is a Chimpmatic Pro feature', 'chimpmatic-lite' ); ?>" disabled="disabled">
+					<label class="atags"><b>Arbitrary Tags Here:</b> <input type="text" id="wpcf7-mailchimp-labeltags_cm-tag" name="wpcf7-mailchimp[labeltags_cm-tag]" value="<?php echo isset( $cf7_mch['labeltags_cm-tag'] ) ? esc_attr( $cf7_mch['labeltags_cm-tag'] ) : ''; ?>" placeholder="<?php esc_attr_e( 'Available in Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ); ?>" title="<?php esc_attr_e( 'Subscriber tagging is a Chimpmatic Pro feature', 'contact-form-7-mailchimp-extension' ); ?>" disabled="disabled">
 						<p class="description">You can type in your tags here. Comma separated text or [mail-tags]</p>
 					</label>
 				</div>
 				<?php
 				if ( class_exists( 'Cmatic_Pro_Showcase' ) ) {
 					$cmatic_tags_pricing = Cmatic_Pursuit::pricing();
-					Cmatic_Pro_Showcase::render_unlock_line( 'tags_showcase', __( 'Unlock Tags with Pro', 'chimpmatic-lite' ), (int) ( $cmatic_tags_pricing['discount_percent'] ?? 0 ) );
+					Cmatic_Pro_Showcase::render_unlock_line( 'tags_showcase', __( 'Unlock Tags with Pro', 'contact-form-7-mailchimp-extension' ), (int) ( $cmatic_tags_pricing['discount_percent'] ?? 0 ) );
 				}
 				$cmatic_tags_promo_url = Cmatic_Pursuit::promo_checkout( 'tags_overlay' );
 				?>

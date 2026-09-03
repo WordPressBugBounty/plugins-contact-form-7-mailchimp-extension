@@ -108,7 +108,7 @@ final class Cmatic_Rest_Lists {
 		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				esc_html__( 'You do not have permission to access the API key.', 'chimpmatic-lite' ),
+				esc_html__( 'You do not have permission to access the API key.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -117,7 +117,7 @@ final class Cmatic_Rest_Lists {
 		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'chimpmatic-lite' ),
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -148,7 +148,7 @@ final class Cmatic_Rest_Lists {
 			self::record_transition( 'connect', false, 'configuration', 'API key is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_api_key',
-				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'chimpmatic-lite' ),
+				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -283,7 +283,7 @@ final class Cmatic_Rest_Lists {
 
 			return new WP_Error(
 				'api_request_failed',
-				esc_html__( 'Failed to load Mailchimp audiences. Check debug log for details.', 'chimpmatic-lite' ),
+				esc_html__( 'Failed to load Mailchimp audiences. Check debug log for details.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -309,7 +309,7 @@ final class Cmatic_Rest_Lists {
 			self::record_transition( 'refresh_schema', false, 'configuration', 'API key is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_api_key',
-				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'chimpmatic-lite' ),
+				esc_html__( 'API key not found. Please connect to Mailchimp first.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -401,7 +401,7 @@ final class Cmatic_Rest_Lists {
 			self::record_transition( 'refresh_schema', false, 'remote_rejected', $e, 'remote_rejected' );
 			return new WP_Error(
 				'api_request_failed',
-				esc_html__( 'Failed to load merge fields. Check debug log for details.', 'chimpmatic-lite' ),
+				esc_html__( 'Failed to load merge fields. Check debug log for details.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -451,7 +451,7 @@ final class Cmatic_Rest_Lists {
 				$success ? '' : $reason['sample']
 			);
 			if ( $recorded ) {
-				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
 			// Signals must never change a REST result.

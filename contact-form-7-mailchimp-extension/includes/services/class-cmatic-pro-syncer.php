@@ -174,7 +174,6 @@ class Cmatic_Pro_Syncer {
 		}
 
 		update_option( 'cmatic_license_instance', $activation_instance );
-		delete_option( '_site_transient_update_plugins' );
 		delete_site_transient( 'update_plugins' );
 		return true;
 	}
@@ -682,7 +681,7 @@ class Cmatic_Pro_Syncer {
 		if ( $wp_filesystem->is_dir( $destination ) && ! $wp_filesystem->delete( $destination, true ) ) {
 			return false;
 		}
-		$moved = move_dir( $backup, $destination, true );
+		$moved = $wp_filesystem->move( $backup, $destination, true );
 		if ( true !== $moved ) {
 			return false;
 		}

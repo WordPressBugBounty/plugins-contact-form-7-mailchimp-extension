@@ -46,7 +46,7 @@ final class Cmatic_Admin_Panel {
 
 		$panel_key            = defined( 'CMATIC_VERSION' ) ? 'Chimpmatic Providers' : self::PANEL_KEY;
 		$panels[ $panel_key ] = array(
-			'title'    => defined( 'CMATIC_VERSION' ) ? __( 'Email Providers', 'chimpmatic-lite' ) : __( 'Chimpmatic', 'chimpmatic-lite' ),
+			'title'    => defined( 'CMATIC_VERSION' ) ? __( 'Email Providers', 'contact-form-7-mailchimp-extension' ) : __( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ),
 			'callback' => array( __CLASS__, 'render_panel' ),
 		);
 
@@ -219,7 +219,7 @@ final class Cmatic_Admin_Panel {
 		update_option( $option_name, self::mirror_legacy_mappings( $updated_settings ) );
 
 		try {
-			\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+			Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 		} catch ( \Throwable $exception ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- Signal bookkeeping must never alter the Contact Form 7 save result.
 		}
 	}

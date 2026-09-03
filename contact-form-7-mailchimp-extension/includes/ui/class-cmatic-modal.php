@@ -97,7 +97,7 @@ if ( ! class_exists( 'Cmatic_Modal' ) ) {
 					<div class="cmatic-modal__header">
 						<h2 id="<?php echo esc_attr( $this->modal_id ); ?>-title"><?php echo esc_html( $title ); ?></h2>
 						<?php $this->render_header_actions(); ?>
-						<button type="button" class="cmatic-modal__close" aria-label="<?php esc_attr_e( 'Close dialog', 'chimpmatic-lite' ); ?>">
+						<button type="button" class="cmatic-modal__close" aria-label="<?php esc_attr_e( 'Close dialog', 'contact-form-7-mailchimp-extension' ); ?>">
 							<span aria-hidden="true">&times;</span>
 						</button>
 					</div>
@@ -150,7 +150,7 @@ if ( ! class_exists( 'Cmatic_Modal' ) ) {
 
 		protected function get_strings() {
 			return array(
-				'closeLabel' => __( 'Close dialog', 'chimpmatic-lite' ),
+				'closeLabel' => __( 'Close dialog', 'contact-form-7-mailchimp-extension' ),
 			);
 		}
 

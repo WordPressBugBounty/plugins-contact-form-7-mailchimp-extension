@@ -40,29 +40,32 @@ class Cmatic_Activator {
 	}
 
 	public function ensure_initialized() {
-		$this->record_upgrade();
+		$upgrade_recorded = $this->record_upgrade();
 
 		if ( get_option( self::INITIALIZED_FLAG ) ) {
 			$install_id = $this->options->get( 'install.id' );
 			if ( ! empty( $install_id ) ) {
+				if ( $upgrade_recorded ) {
+					$this->relevant_change();
+				}
 				return;
 			}
 			delete_option( self::INITIALIZED_FLAG );
 		}
 
-		$this->do_activation( false );
+		$this->do_activation( false, $upgrade_recorded );
 	}
 
-	private function do_activation( $is_normal_activation ) {
+	private function do_activation( $is_normal_activation, $upgrade_recorded = false ) {
 		$this->install_data->ensure();
 
 		$this->migration->run();
 
 		$this->pro_status->update();
 
-		$this->record_upgrade();
+		$upgrade_recorded = $this->record_upgrade() || $upgrade_recorded;
 
-		$this->record_activation();
+		$activation_recorded = $this->record_activation();
 
 		if ( $is_normal_activation ) {
 			$this->redirect->schedule();
@@ -73,24 +76,28 @@ class Cmatic_Activator {
 		add_option( self::INITIALIZED_FLAG, true );
 
 		do_action( 'cmatic_activated', $is_normal_activation );
+
+		if ( ! $is_normal_activation && ( $upgrade_recorded || $activation_recorded ) ) {
+			$this->relevant_change();
+		}
 	}
 
-	private function record_activation() {
+	private function record_activation(): bool {
 		$activations = $this->append_timestamp( 'lifecycle.activations', time() );
 
 		$this->options->set( 'lifecycle.is_reactivation', $activations['reported_total'] > 1 );
-		$this->relevant_change();
+		return true;
 	}
 
-	private function record_upgrade(): void {
+	private function record_upgrade(): bool {
 		$current  = (string) $this->version;
 		$previous = (string) $this->options->get( 'lifecycle.current_version', '' );
 		if ( '' === $previous ) {
 			$this->options->set( 'lifecycle.current_version', $current );
-			return;
+			return false;
 		}
 		if ( $current === $previous ) {
-			return;
+			return false;
 		}
 
 		$this->append_timestamp( 'lifecycle.upgrades', time() );
@@ -104,7 +111,7 @@ class Cmatic_Activator {
 		$this->options->set( 'lifecycle.version_history', array_slice( $history, -256 ) );
 		$this->options->set( 'lifecycle.previous_version', $previous );
 		$this->options->set( 'lifecycle.current_version', $current );
-		$this->relevant_change();
+		return true;
 	}
 
 	private function append_timestamp( string $key, int $timestamp ): array {
@@ -135,10 +142,13 @@ class Cmatic_Activator {
 		return $value;
 	}
 
-	private function relevant_change(): void {
+	private function relevant_change( bool $flush_immediately = false ): void {
 		try {
-			if ( class_exists( '\\Signls\\Sdk\\V1\\Runtime' ) ) {
-				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+			if ( class_exists( 'Signls_Sdk_Bridge_1_1_7', false ) ) {
+				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
+				if ( $flush_immediately ) {
+					Signls_Sdk_Bridge_1_1_7::flush_immediate( 'contact-form-7-mailchimp-extension' );
+				}
 			}
 		} catch ( Throwable $error ) {
 			// Signals must never change the activation result.
@@ -196,6 +206,7 @@ class Cmatic_Activator {
 		Cmatic_Cron::unschedule();
 
 		$this->relevant_change();
+		$this->flush_and_suspend_signls();
 
 		delete_option( self::INITIALIZED_FLAG );
 
@@ -220,13 +231,34 @@ class Cmatic_Activator {
 		);
 
 		add_action(
+			'activated_plugin',
+			function ( $plugin, $network_wide ) use ( $plugin_file, $version ) {
+				unset( $network_wide );
+				if ( plugin_basename( $plugin_file ) !== (string) $plugin ) {
+					return;
+				}
+				$activator = new self( $version );
+				$activator->relevant_change( true );
+			},
+			10,
+			2
+		);
+
+		add_action(
+			'init',
+			function () use ( $version ) {
+				$activator = new self( $version );
+				$activator->ensure_initialized();
+			},
+			1
+		);
+
+		add_action(
 			'admin_init',
 			function () use ( $version ) {
 				$activator = new self( $version );
 
 				$activator->verify_lifecycle_state();
-
-				$activator->ensure_initialized();
 				$activator->get_redirect()->maybe_redirect();
 			},
 			5
@@ -240,5 +272,16 @@ class Cmatic_Activator {
 			},
 			99
 		);
+	}
+
+	private function flush_and_suspend_signls(): void {
+		try {
+			if ( class_exists( 'Signls_Sdk_Bridge_1_1_7', false ) ) {
+				Signls_Sdk_Bridge_1_1_7::deactivate( 'contact-form-7-mailchimp-extension' );
+			}
+		} catch ( Throwable $error ) {
+			// Signals must never change missed-deactivation recovery.
+			return;
+		}
 	}
 }

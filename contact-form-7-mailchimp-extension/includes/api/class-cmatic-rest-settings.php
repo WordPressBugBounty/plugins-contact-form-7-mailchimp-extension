@@ -107,7 +107,7 @@ final class Cmatic_Rest_Settings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				esc_html__( 'You do not have permission to access this endpoint.', 'chimpmatic-lite' ),
+				esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -116,7 +116,7 @@ final class Cmatic_Rest_Settings {
 		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'chimpmatic-lite' ),
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -131,7 +131,7 @@ final class Cmatic_Rest_Settings {
 		if ( ! array_key_exists( $field, self::$allowed_settings ) ) {
 			return new WP_Error(
 				'invalid_field',
-				__( 'Invalid settings field.', 'chimpmatic-lite' ),
+				__( 'Invalid settings field.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -140,7 +140,7 @@ final class Cmatic_Rest_Settings {
 
 		if ( 'telemetry' === $field ) {
 			if ( ! self::handle_signls_toggle( (bool) $enabled ) ) {
-				return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'chimpmatic-lite' ), array( 'status' => 500 ) );
+				return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 500 ) );
 			}
 		} else {
 			Cmatic_Options_Repository::set_option( $field_config['path'], $enabled ? 1 : 0 );
@@ -155,9 +155,9 @@ final class Cmatic_Rest_Settings {
 				'enabled' => $enabled,
 				'message' => $enabled
 					// translators: %s: setting label.
-					? sprintf( __( '%s enabled.', 'chimpmatic-lite' ), $label )
+					? sprintf( __( '%s enabled.', 'contact-form-7-mailchimp-extension' ), $label )
 					// translators: %s: setting label.
-					: sprintf( __( '%s disabled.', 'chimpmatic-lite' ), $label ),
+					: sprintf( __( '%s disabled.', 'contact-form-7-mailchimp-extension' ), $label ),
 			)
 		);
 	}
@@ -184,9 +184,9 @@ final class Cmatic_Rest_Settings {
 			return false;
 		}
 		if ( $enabled ) {
-			\Signls\Sdk\V1\Runtime::enable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
+			Signls_Sdk_Bridge_1_1_7::enable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
 		} else {
-			\Signls\Sdk\V1\Runtime::disable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
+			Signls_Sdk_Bridge_1_1_7::disable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
 		}
 		return true;
 	}
@@ -200,7 +200,7 @@ final class Cmatic_Rest_Settings {
 
 		$saved = self::handle_telemetry_toggle( $enabled );
 		if ( ! $saved ) {
-			return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'chimpmatic-lite' ), array( 'status' => 500 ) );
+			return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 500 ) );
 		}
 
 		return rest_ensure_response(
@@ -208,8 +208,8 @@ final class Cmatic_Rest_Settings {
 				'success' => true,
 				'enabled' => $enabled,
 				'message' => $enabled
-					? esc_html__( 'Telemetry enabled. Thank you for helping improve the plugin!', 'chimpmatic-lite' )
-					: esc_html__( 'Telemetry disabled.', 'chimpmatic-lite' ),
+					? esc_html__( 'Telemetry enabled. Thank you for helping improve the plugin!', 'contact-form-7-mailchimp-extension' )
+					: esc_html__( 'Telemetry disabled.', 'contact-form-7-mailchimp-extension' ),
 			)
 		);
 	}
@@ -221,7 +221,7 @@ final class Cmatic_Rest_Settings {
 			case 'signls_consent':
 				// Compatibility for an already-open pre-removal admin page. The retired notice
 				// disappears on navigation; its stale dismissal request intentionally has no side effects.
-				$message = __( 'Sharing notice retired.', 'chimpmatic-lite' );
+				$message = __( 'Sharing notice retired.', 'contact-form-7-mailchimp-extension' );
 				break;
 
 			case 'license_banner':
@@ -229,20 +229,20 @@ final class Cmatic_Rest_Settings {
 					? Cmatic_License_Banner::handle_dismiss( (string) $request->get_param( 'state' ) )
 					: false;
 				if ( false === $result ) {
-					return new WP_Error( 'bad_state', esc_html__( 'Unknown banner state.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+					return new WP_Error( 'bad_state', esc_html__( 'Unknown banner state.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 				}
-				$message = __( 'License banner snoozed.', 'chimpmatic-lite' );
+				$message = __( 'License banner snoozed.', 'contact-form-7-mailchimp-extension' );
 				break;
 
 			case 'upgrade':
 				Cmatic_Options_Repository::set_option( 'ui.upgrade_clicked', true );
-				$message = __( 'Upgrade notice dismissed.', 'chimpmatic-lite' );
+				$message = __( 'Upgrade notice dismissed.', 'contact-form-7-mailchimp-extension' );
 				break;
 
 			case 'news':
 			default:
 				Cmatic_Options_Repository::set_option( 'ui.news', false );
-				$message = __( 'Notice dismissed successfully.', 'chimpmatic-lite' );
+				$message = __( 'Notice dismissed successfully.', 'contact-form-7-mailchimp-extension' );
 				break;
 		}
 

@@ -49,14 +49,14 @@ class Cmatic_Api_Panel {
 			$btn_class = 'button';
 			?>
 			<div class="cmatic-field-group">
-			<label for="cmatic-api"><?php echo esc_html__( 'Mailchimp API Key:', 'chimpmatic-lite' ); ?></label><br />
+			<label for="cmatic-api"><?php echo esc_html__( 'Mailchimp API Key:', 'contact-form-7-mailchimp-extension' ); ?></label><br />
 			<div class="cmatic-api-wrap">
 				<input
 					type="text"
 					id="cmatic-api"
 					name="wpcf7-mailchimp[api]"
 					class="wide"
-					placeholder="<?php echo esc_attr__( 'Enter Your Mailchimp API key Here', 'chimpmatic-lite' ); ?>"
+					placeholder="<?php echo esc_attr__( 'Enter Your Mailchimp API key Here', 'contact-form-7-mailchimp-extension' ); ?>"
 					value="<?php echo esc_attr( $is_masked ? $masked_key : $api_key ); ?>"
 					data-masked-key="<?php echo esc_attr( $masked_key ); ?>"
 					data-is-masked="<?php echo $is_masked ? '1' : '0'; ?>"
@@ -71,11 +71,11 @@ class Cmatic_Api_Panel {
 				class="<?php echo esc_attr( $btn_class ); ?>"
 			/>
 
-			<small class="description"><?php esc_html_e( 'Stored credentials stay hidden. Paste a new key to replace this one.', 'chimpmatic-lite' ); ?></small>
+			<small class="description"><?php esc_html_e( 'Stored credentials stay hidden. Paste a new key to replace this one.', 'contact-form-7-mailchimp-extension' ); ?></small>
 
 			<small class="description need-api">
-				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'chimpmatic-lite' ); ?>">
-					<?php echo esc_html__( 'Find your Mailchimp API here', 'chimpmatic-lite' ); ?>
+				<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'contact-form-7-mailchimp-extension' ); ?>">
+					<?php echo esc_html__( 'Find your Mailchimp API here', 'contact-form-7-mailchimp-extension' ); ?>
 					<span class="red-icon dashicons dashicons-arrow-right"></span>
 					<span class="red-icon dashicons dashicons-arrow-right"></span>
 				</a>
@@ -100,23 +100,23 @@ class Cmatic_Api_Panel {
 
 		if ( $account_name ) {
 			/* translators: %1$s: Mailchimp account name, %2$s: datacenter ID */
-			$status_text = sprintf( __( "Connected to %1\$s's Mailchimp (%2\$s)", 'chimpmatic-lite' ), $account_name, $dc );
+			$status_text = sprintf( __( "Connected to %1\$s's Mailchimp (%2\$s)", 'contact-form-7-mailchimp-extension' ), $account_name, $dc );
 		} else {
 			/* translators: %s: datacenter ID */
-			$status_text = sprintf( __( 'Connected to Mailchimp (%s)', 'chimpmatic-lite' ), $dc );
+			$status_text = sprintf( __( 'Connected to Mailchimp (%s)', 'contact-form-7-mailchimp-extension' ), $dc );
 		}
 
 		$authorized_text = '';
 		if ( $connected_by && $connected_date ) {
 			$date_formatted = date_i18n( get_option( 'date_format' ), strtotime( $connected_date ) );
 			/* translators: %1$s: WordPress user name, %2$s: formatted date */
-			$authorized_text = sprintf( __( 'Authorized by %1$s on %2$s', 'chimpmatic-lite' ), $connected_by, $date_formatted );
+			$authorized_text = sprintf( __( 'Authorized by %1$s on %2$s', 'contact-form-7-mailchimp-extension' ), $connected_by, $date_formatted );
 		}
 
 		$learn_more_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'oauth_learn_more' );
 		?>
 		<div class="cmatic-field-group cmatic-oauth-state">
-			<label><?php echo esc_html__( 'Mailchimp Connection:', 'chimpmatic-lite' ); ?></label><br />
+			<label><?php echo esc_html__( 'Mailchimp Connection:', 'contact-form-7-mailchimp-extension' ); ?></label><br />
 			<span class="cmatic-oauth-status-text">
 				<span class="dashicons dashicons-yes-alt"></span>
 				<?php echo esc_html( $status_text ); ?>
@@ -129,14 +129,14 @@ class Cmatic_Api_Panel {
 				data-form-id="<?php echo esc_attr( $form_id ); ?>"
 			/>
 			<button type="button" class="button cmatic-oauth-disconnect" data-form-id="<?php echo esc_attr( $form_id ); ?>">
-				<?php echo esc_html__( 'Disconnect', 'chimpmatic-lite' ); ?>
+				<?php echo esc_html__( 'Disconnect', 'contact-form-7-mailchimp-extension' ); ?>
 			</button>
 			<?php if ( $authorized_text ) : ?>
 			<br />
 			<small class="description">
 				<?php echo esc_html( $authorized_text ); ?>
-				<a href="<?php echo esc_url( $learn_more_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Learn more about Mailchimp OAuth', 'chimpmatic-lite' ); ?>">
-					<?php echo esc_html__( 'Learn More', 'chimpmatic-lite' ); ?>
+				<a href="<?php echo esc_url( $learn_more_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Learn more about Mailchimp OAuth', 'contact-form-7-mailchimp-extension' ); ?>">
+					<?php echo esc_html__( 'Learn More', 'contact-form-7-mailchimp-extension' ); ?>
 					<span class="red-icon dashicons dashicons-arrow-right"></span>
 					<span class="red-icon dashicons dashicons-arrow-right"></span>
 				</a>
@@ -150,21 +150,21 @@ class Cmatic_Api_Panel {
 		?>
 		<div class="cmatic-field-group cmatic-oauth-state">
 			<div class="cmatic-mailchimp-connect-intro">
-				<h2 id="cmatic-mailchimp-connect-heading"><?php echo esc_html__( 'Connect Mailchimp', 'chimpmatic-lite' ); ?></h2>
-				<p><?php echo esc_html__( 'Connect Mailchimp to choose an audience and map its merge fields.', 'chimpmatic-lite' ); ?></p>
+				<h2 id="cmatic-mailchimp-connect-heading"><?php echo esc_html__( 'Connect Mailchimp', 'contact-form-7-mailchimp-extension' ); ?></h2>
+				<p><?php echo esc_html__( 'Connect Mailchimp to choose an audience and map its merge fields.', 'contact-form-7-mailchimp-extension' ); ?></p>
 			</div>
-			<div class="cmatic-connect-options" aria-label="<?php echo esc_attr__( 'Mailchimp connection options', 'chimpmatic-lite' ); ?>">
+			<div class="cmatic-connect-options" aria-label="<?php echo esc_attr__( 'Mailchimp connection options', 'contact-form-7-mailchimp-extension' ); ?>">
 				<div class="cmatic-auth-choice-wrap cmatic-oauth-connect-wrap">
 					<button type="button" class="cmatic-auth-choice cmatic-auth-choice--recommended cmatic-oauth-connect" data-form-id="<?php echo esc_attr( $form_id ); ?>">
 						<span class="cmatic-auth-choice__top">
 							<span class="cmatic-auth-choice__icon dashicons dashicons-yes" aria-hidden="true"></span>
-							<span class="cmatic-recommended-badge"><?php echo esc_html__( 'Recommended', 'chimpmatic-lite' ); ?></span>
+							<span class="cmatic-recommended-badge"><?php echo esc_html__( 'Recommended', 'contact-form-7-mailchimp-extension' ); ?></span>
 						</span>
-						<strong class="cmatic-auth-choice__title"><?php echo esc_html__( 'Sign in with Mailchimp', 'chimpmatic-lite' ); ?></strong>
-						<span class="cmatic-auth-choice__description" data-cmatic-oauth-description><?php echo esc_html__( 'The quickest setup. Sign in securely without copying or managing an API key.', 'chimpmatic-lite' ); ?></span>
+						<strong class="cmatic-auth-choice__title"><?php echo esc_html__( 'Sign in with Mailchimp', 'contact-form-7-mailchimp-extension' ); ?></strong>
+						<span class="cmatic-auth-choice__description" data-cmatic-oauth-description><?php echo esc_html__( 'The quickest setup. Sign in securely without copying or managing an API key.', 'contact-form-7-mailchimp-extension' ); ?></span>
 						<span class="cmatic-oauth-status" role="status" aria-live="polite" hidden></span>
 						<span class="cmatic-auth-choice__action">
-							<span data-cmatic-oauth-action-label><?php echo esc_html__( 'Continue with Mailchimp', 'chimpmatic-lite' ); ?></span>
+							<span data-cmatic-oauth-action-label><?php echo esc_html__( 'Continue with Mailchimp', 'contact-form-7-mailchimp-extension' ); ?></span>
 							<span aria-hidden="true">&rarr;</span>
 						</span>
 					</button>
@@ -174,10 +174,10 @@ class Cmatic_Api_Panel {
 						<span class="cmatic-auth-choice__top">
 							<span class="cmatic-auth-choice__icon" aria-hidden="true">&bull;&bull;&bull;</span>
 						</span>
-						<strong class="cmatic-auth-choice__title"><?php echo esc_html__( 'Use an API key', 'chimpmatic-lite' ); ?></strong>
-						<span class="cmatic-auth-choice__description"><?php echo esc_html__( 'Choose this when you already have a key or someone else manages the Mailchimp account.', 'chimpmatic-lite' ); ?></span>
+						<strong class="cmatic-auth-choice__title"><?php echo esc_html__( 'Use an API key', 'contact-form-7-mailchimp-extension' ); ?></strong>
+						<span class="cmatic-auth-choice__description"><?php echo esc_html__( 'Choose this when you already have a key or someone else manages the Mailchimp account.', 'contact-form-7-mailchimp-extension' ); ?></span>
 						<span class="cmatic-auth-choice__action">
-							<span data-cmatic-api-action-label><?php echo esc_html__( 'Enter API key', 'chimpmatic-lite' ); ?></span>
+							<span data-cmatic-api-action-label><?php echo esc_html__( 'Enter API key', 'contact-form-7-mailchimp-extension' ); ?></span>
 							<span aria-hidden="true">&rarr;</span>
 						</span>
 					</button>
@@ -185,34 +185,34 @@ class Cmatic_Api_Panel {
 			</div>
 
 			<div id="cmatic-manual-api-panel" class="cmatic-manual-api-panel cmatic-hidden">
-				<button type="button" class="cmatic-back-auth-options">&larr; <?php echo esc_html__( 'Connection options', 'chimpmatic-lite' ); ?></button>
-				<label for="cmatic-api"><?php echo esc_html__( 'Mailchimp API Key:', 'chimpmatic-lite' ); ?></label><br />
+				<button type="button" class="cmatic-back-auth-options">&larr; <?php echo esc_html__( 'Connection options', 'contact-form-7-mailchimp-extension' ); ?></button>
+				<label for="cmatic-api"><?php echo esc_html__( 'Mailchimp API Key:', 'contact-form-7-mailchimp-extension' ); ?></label><br />
 				<div class="cmatic-api-wrap">
 					<input
 						type="password"
 						id="cmatic-api"
 						name="wpcf7-mailchimp[api]"
 						class="wide"
-						placeholder="<?php echo esc_attr__( 'Enter Your Mailchimp API key Here', 'chimpmatic-lite' ); ?>"
+						placeholder="<?php echo esc_attr__( 'Enter Your Mailchimp API key Here', 'contact-form-7-mailchimp-extension' ); ?>"
 						value=""
 						data-masked-key=""
 						data-is-masked="0"
 						data-has-key="0"
 					/>
-					<button type="button" class="cmatic-eye" title="<?php echo esc_attr__( 'Show/Hide', 'chimpmatic-lite' ); ?>">
+					<button type="button" class="cmatic-eye" title="<?php echo esc_attr__( 'Show/Hide', 'contact-form-7-mailchimp-extension' ); ?>">
 						<span class="dashicons dashicons-hidden"></span>
 					</button>
 				</div>
 				<input
 					id="chm_activalist"
 					type="button"
-					value="<?php echo esc_attr__( 'Sync Audiences', 'chimpmatic-lite' ); ?>"
+					value="<?php echo esc_attr__( 'Sync Audiences', 'contact-form-7-mailchimp-extension' ); ?>"
 					class="button"
 					data-form-id="<?php echo esc_attr( $form_id ); ?>"
 				/>
 				<small class="description need-api">
-					<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'chimpmatic-lite' ); ?>">
-						<?php echo esc_html__( 'Find your Mailchimp API here', 'chimpmatic-lite' ); ?>
+					<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer" title="<?php echo esc_attr__( 'Get help with Mailchimp API Key', 'contact-form-7-mailchimp-extension' ); ?>">
+						<?php echo esc_html__( 'Find your Mailchimp API here', 'contact-form-7-mailchimp-extension' ); ?>
 						<span class="red-icon dashicons dashicons-arrow-right"></span>
 						<span class="red-icon dashicons dashicons-arrow-right"></span>
 					</a>

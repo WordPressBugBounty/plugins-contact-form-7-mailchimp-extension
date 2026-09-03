@@ -21,14 +21,14 @@ final class Cmatic_Lite_Service_Context {
 			|| ! class_exists( 'Cmatic_Lite_Signls_Privacy' )
 			|| 'enabled' !== Cmatic_Lite_Signls_Privacy::consent_status()
 			|| ! class_exists( 'Signls_Sdk_Loader' )
-			|| ! class_exists( 'Signls\Sdk\V1\Runtime' )
+			|| ! class_exists( 'Signls_Sdk_Bridge_1_1_7', false )
 			|| ! class_exists( 'Signls\Sdk\V1\SiteIdentity' )
 			|| ! defined( 'SPARTAN_MCE_VERSION' ) ) {
 			return array();
 		}
 
 		try {
-			$state = \Signls\Sdk\V1\Runtime::state( self::PRODUCT );
+			$state = Signls_Sdk_Bridge_1_1_7::state( self::PRODUCT );
 			if ( 'enabled' !== ( $state['consent_status'] ?? '' ) ) {
 				return array();
 			}

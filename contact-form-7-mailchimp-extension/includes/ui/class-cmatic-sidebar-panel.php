@@ -29,10 +29,10 @@ final class Cmatic_Sidebar_Panel {
 		<div class="misc-pub-section chimpmatic-info" id="chimpmatic-version-info">
 			<div style="margin-bottom: 3px;">
 				<?php if ( defined( 'CMATIC_VERSION' ) ) : ?>
-					<strong><?php echo esc_html__( 'Chimpmatic Pro', 'chimpmatic-lite' ) . ' ' . esc_html( CMATIC_VERSION ); ?></strong>
-					<div style="color: #646970; font-size: 11px;"><?php echo esc_html__( 'Lite base', 'chimpmatic-lite' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></div>
+					<strong><?php echo esc_html__( 'Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ) . ' ' . esc_html( CMATIC_VERSION ); ?></strong>
+					<div style="color: #646970; font-size: 11px;"><?php echo esc_html__( 'Lite base', 'contact-form-7-mailchimp-extension' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></div>
 				<?php else : ?>
-					<strong><?php echo esc_html__( 'Chimpmatic Lite', 'chimpmatic-lite' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></strong>
+					<strong><?php echo esc_html__( 'Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></strong>
 				<?php endif; ?>
 			</div>
 			<div style="margin-top: 5px;">

@@ -51,9 +51,9 @@ final class Cmatic_Lite_Esp_Degrade_Notice {
 			printf(
 				'<div class="notice notice-warning is-dismissible"><p>%s <a href="%s">%s</a></p></div>',
 				/* translators: %d: Contact Form 7 form ID. */
-				esc_html( sprintf( __( 'MailerLite Pro features are saved but inactive for form %d. Capture continues using the first group and legacy status.', 'chimpmatic-lite' ), $form_id ) ),
+				esc_html( sprintf( __( 'MailerLite Pro features are saved but inactive for form %d. Capture continues using the first group and legacy status.', 'contact-form-7-mailchimp-extension' ), $form_id ) ),
 				esc_url( $url ),
-				esc_html__( 'Review and renew', 'chimpmatic-lite' )
+				esc_html__( 'Review and renew', 'contact-form-7-mailchimp-extension' )
 			);
 		}
 	}

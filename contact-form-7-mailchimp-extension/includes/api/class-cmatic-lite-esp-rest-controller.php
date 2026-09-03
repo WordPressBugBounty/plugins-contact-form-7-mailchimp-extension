@@ -155,14 +155,14 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				esc_html__( 'You cannot edit this form.', 'chimpmatic-lite' ),
+				esc_html__( 'You cannot edit this form.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
 		if ( ! wp_verify_nonce( (string) $request->get_header( 'X-WP-Nonce' ), 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'chimpmatic-lite' ),
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -181,7 +181,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'connect', false, 'configuration', 'Provider credential is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_provider_key',
-				esc_html__( 'Enter a provider credential first.', 'chimpmatic-lite' ),
+				esc_html__( 'Enter a provider credential first.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -193,7 +193,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'connect', false, 'auth', $validation, 'revoked_credential' );
 			return new WP_Error(
 				'invalid_provider_key',
-				esc_html__( 'The provider rejected this credential.', 'chimpmatic-lite' ),
+				esc_html__( 'The provider rejected this credential.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -203,7 +203,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'connect', false, 'remote_rejected', $lists['_cmatic_error'], 'remote_rejected' );
 			return new WP_Error(
 				'provider_lists_failed',
-				esc_html__( 'The credential is valid, but provider destinations could not be loaded.', 'chimpmatic-lite' ),
+				esc_html__( 'The credential is valid, but provider destinations could not be loaded.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -233,7 +233,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				self::record_transition( $slug, 'connect', false, 'configuration', 'Credential persistence failed.', 'configuration' );
 				return new WP_Error(
 					'credential_save_failed',
-					esc_html__( 'Could not encrypt provider credentials.', 'chimpmatic-lite' ),
+					esc_html__( 'Could not encrypt provider credentials.', 'contact-form-7-mailchimp-extension' ),
 					array( 'status' => 500 )
 				);
 			}
@@ -251,7 +251,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'connect', false, 'configuration', 'Provider settings persistence failed.', 'configuration' );
 			return new WP_Error(
 				'provider_settings_save_failed',
-				esc_html__( 'The provider connected, but its settings could not be saved.', 'chimpmatic-lite' ),
+				esc_html__( 'The provider connected, but its settings could not be saved.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -299,7 +299,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'refresh_schema', false, 'validation', 'Destination is missing or no longer known.', 'deleted_destination' );
 			return new WP_Error(
 				'invalid_provider_list',
-				esc_html__( 'Select a destination returned by the connected provider.', 'chimpmatic-lite' ),
+				esc_html__( 'Select a destination returned by the connected provider.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -309,7 +309,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'refresh_schema', false, 'configuration', 'Provider credential is not configured.', 'configuration' );
 			return new WP_Error(
 				'missing_provider_key',
-				esc_html__( 'Connect this provider first.', 'chimpmatic-lite' ),
+				esc_html__( 'Connect this provider first.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -324,7 +324,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'refresh_schema', false, 'remote_rejected', $result['_cmatic_error'], 'remote_rejected' );
 			return new WP_Error(
 				'provider_fields_failed',
-				esc_html__( 'Provider fields could not be loaded; existing mappings were preserved.', 'chimpmatic-lite' ),
+				esc_html__( 'Provider fields could not be loaded; existing mappings were preserved.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 502 )
 			);
 		}
@@ -362,7 +362,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			self::record_transition( $slug, 'disconnect', false, 'configuration', 'Provider settings persistence failed.', 'configuration' );
 			return new WP_Error(
 				'provider_settings_save_failed',
-				esc_html__( 'The provider could not be disconnected.', 'chimpmatic-lite' ),
+				esc_html__( 'The provider could not be disconnected.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -385,18 +385,18 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$type     = sanitize_key( (string) $request->get_param( 'type' ) );
 		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
 		if ( 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Field_Creator_Interface || ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_create_field', $slug, $form_id ) ) {
-			return new WP_Error( 'provider_field_create_forbidden', esc_html__( 'Field creation is unavailable.', 'chimpmatic-lite' ), array( 'status' => 403 ) );
+			return new WP_Error( 'provider_field_create_forbidden', esc_html__( 'Field creation is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
 		if ( '' === $name || strlen( $name ) > 255 || ! in_array( $type, array( 'text', 'number', 'date' ), true ) ) {
-			return new WP_Error( 'invalid_provider_field', esc_html__( 'Enter a valid field name and type.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+			return new WP_Error( 'invalid_provider_field', esc_html__( 'Enter a valid field name and type.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
 		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		if ( '' === $key ) {
-			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect MailerLite first.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect MailerLite first.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
 		$lock = 'cmatic_ml_field_' . substr( hash_hmac( 'sha256', get_current_user_id() . '|' . $form_id . '|' . strtolower( $name ) . '|' . $type, wp_salt( 'nonce' ) ), 0, 40 );
 		if ( ! self::acquire_lock( $lock, 60 ) ) {
-			return new WP_Error( 'provider_field_create_locked', esc_html__( 'An identical field creation is already running.', 'chimpmatic-lite' ), array( 'status' => 409 ) );
+			return new WP_Error( 'provider_field_create_locked', esc_html__( 'An identical field creation is already running.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 409 ) );
 		}
 		try {
 			$result = $provider->create_field(
@@ -411,17 +411,25 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			delete_option( $lock );
 		}
 		if ( empty( $result['success'] ) ) {
-			return new WP_Error( 'provider_field_create_failed', esc_html__( 'Creation was not confirmed. Refresh fields before trying again.', 'chimpmatic-lite' ), array( 'status' => 502 ) );
+			return new WP_Error( 'provider_field_create_failed', esc_html__( 'Creation was not confirmed. Refresh fields before trying again.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 502 ) );
 		}
-		$data = isset( $result['body']['data'] ) && is_array( $result['body']['data'] ) ? $result['body']['data'] : (array) ( $result['body'] ?? array() );
+		$data       = isset( $result['body']['data'] ) && is_array( $result['body']['data'] ) ? $result['body']['data'] : (array) ( $result['body'] ?? array() );
+		$field_id   = $data['id'] ?? '';
+		$field_name = $data['name'] ?? $name;
+		$field_key  = $data['key'] ?? $field_name;
+		$field_type = $data['type'] ?? $type;
+		$field_id   = is_scalar( $field_id ) ? (string) $field_id : '';
+		$field_name = is_scalar( $field_name ) ? (string) $field_name : $name;
+		$field_key  = is_scalar( $field_key ) ? (string) $field_key : $field_name;
+		$field_type = is_scalar( $field_type ) ? (string) $field_type : $type;
 		return rest_ensure_response(
 			array(
 				'success' => true,
 				'field'   => array(
-					'id'   => sanitize_text_field( (string) ( $data['id'] ?? '' ) ),
-					'key'  => sanitize_text_field( (string) ( $data['key'] ?? $data['name'] ?? '' ) ),
-					'name' => sanitize_text_field( (string) ( $data['name'] ?? $name ) ),
-					'type' => sanitize_key( (string) ( $data['type'] ?? $type ) ),
+					'id'   => sanitize_text_field( $field_id ),
+					'key'  => sanitize_text_field( $field_key ),
+					'name' => sanitize_text_field( $field_name ),
+					'type' => sanitize_key( $field_type ),
 				),
 			)
 		);
@@ -433,21 +441,21 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$email    = sanitize_email( (string) $request->get_param( 'email' ) );
 		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
 		if ( ! current_user_can( 'manage_options' ) || 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Lookup_Interface ) {
-			return new WP_Error( 'provider_lookup_forbidden', esc_html__( 'Subscriber lookup is unavailable.', 'chimpmatic-lite' ), array( 'status' => 403 ) );
+			return new WP_Error( 'provider_lookup_forbidden', esc_html__( 'Subscriber lookup is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
 		if ( ! is_email( $email ) ) {
-			return new WP_Error( 'invalid_lookup_email', esc_html__( 'Enter a valid email address.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+			return new WP_Error( 'invalid_lookup_email', esc_html__( 'Enter a valid email address.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
 		if ( ! self::consume_lookup_limit( $form_id, $email ) ) {
-			return new WP_Error( 'provider_lookup_limited', esc_html__( 'Too many lookups. Try again later.', 'chimpmatic-lite' ), array( 'status' => 429 ) );
+			return new WP_Error( 'provider_lookup_limited', esc_html__( 'Too many lookups. Try again later.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 429 ) );
 		}
 		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		if ( '' === $key ) {
-			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect MailerLite first.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect MailerLite first.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
 		$result = $provider->lookup( $key, $email );
 		if ( empty( $result['success'] ) ) {
-			return new WP_Error( 'provider_lookup_failed', esc_html__( 'MailerLite lookup failed.', 'chimpmatic-lite' ), array( 'status' => 502 ) );
+			return new WP_Error( 'provider_lookup_failed', esc_html__( 'MailerLite lookup failed.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 502 ) );
 		}
 		$data     = isset( $result['data'] ) && is_array( $result['data'] ) ? $result['data'] : array();
 		$settings = self::provider_settings( $form_id, $slug );
@@ -471,7 +479,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$response = rest_ensure_response(
 			array(
 				'found'  => ! empty( $result['found'] ),
-				'status' => sanitize_key( (string) ( $data['status'] ?? '' ) ),
+				'status' => sanitize_key( self::scalar_string( $data['status'] ?? '' ) ),
 				'groups' => $groups,
 				'fields' => $sanitized_fields,
 			)
@@ -492,15 +500,15 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			|| 'double' !== $mode
 			|| ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id )
 		) {
-			return new WP_Error( 'provider_consent_forbidden', esc_html__( 'Advanced provider consent is unavailable.', 'chimpmatic-lite' ), array( 'status' => 403 ) );
+			return new WP_Error( 'provider_consent_forbidden', esc_html__( 'Advanced provider consent is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
 		if ( $template_id < 1 || 'https' !== wp_parse_url( $redirect, PHP_URL_SCHEME ) || ! self::is_known_list( $form_id, $slug, $list_id ) ) {
-			return new WP_Error( 'invalid_provider_consent', esc_html__( 'Check the selected list and double opt-in settings.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+			return new WP_Error( 'invalid_provider_consent', esc_html__( 'Check the selected list and double opt-in settings.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
 
 		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		if ( '' === $key ) {
-			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect Brevo before verifying double opt-in.', 'chimpmatic-lite' ), array( 'status' => 400 ) );
+			return new WP_Error( 'missing_provider_key', esc_html__( 'Connect Brevo before verifying double opt-in.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
 		$options                = array(
 			'subscription_mode' => $mode,
@@ -511,7 +519,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$credential_fingerprint = self::credential_fingerprint( $key );
 		unset( $key );
 		if ( ! $result['success'] ) {
-			return new WP_Error( 'provider_consent_invalid', esc_html__( 'Brevo did not accept this double opt-in template.', 'chimpmatic-lite' ), array( 'status' => 409 ) );
+			return new WP_Error( 'provider_consent_invalid', esc_html__( 'Brevo did not accept this double opt-in template.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 409 ) );
 		}
 		$payload                           = self::consent_token_payload( $form_id, $slug, $list_id, $template_id, $redirect );
 		$payload['credential_fingerprint'] = $credential_fingerprint;
@@ -548,7 +556,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			return false;
 		}
 		foreach ( $expected as $key => $value ) {
-			if ( ! array_key_exists( $key, $payload ) || (string) $payload[ $key ] !== (string) $value ) {
+			if ( ! array_key_exists( $key, $payload ) || self::scalar_string( $payload[ $key ] ) !== self::scalar_string( $value ) ) {
 				return false;
 			}
 		}
@@ -771,7 +779,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				$success ? '' : $reason['sample']
 			);
 			if ( $recorded ) {
-				\Signls\Sdk\V1\Runtime::relevant_change( 'contact-form-7-mailchimp-extension' );
+				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
 			// Signals must never change a provider REST result.

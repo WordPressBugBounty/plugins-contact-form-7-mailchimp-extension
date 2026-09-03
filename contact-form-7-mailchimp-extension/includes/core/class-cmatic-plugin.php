@@ -148,7 +148,7 @@ final class Cmatic_Plugin {
 		Cmatic_License_Banner::init();
 		Cmatic_Pro_Syncer::init();
 
-		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[Chimpmatic Lite]', 'chimpmatic-lite' );
+		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[Chimpmatic Lite]', 'contact-form-7-mailchimp-extension' );
 
 		Cmatic_Rest_Lists::init();
 		Cmatic_Rest_Settings::init();
@@ -204,19 +204,20 @@ final class Cmatic_Plugin {
 		Cmatic_Admin_Bar_Menu::instance();
 
 		Cmatic_Lite_Signls_Privacy::init();
-		$signls_registered = Signls_Sdk_Loader::register(
-			array(
-				'product_slug'      => 'contact-form-7-mailchimp-extension',
-				'main_file'         => $this->file,
-				'sdk_path'          => $this->dir . 'includes/signls',
-				'sdk_version'       => '1.1.3',
-				'adapter_file'      => $this->dir . 'includes/services/class-cmatic-lite-signls-adapter.php',
-				'adapter_class'     => 'Cmatic_Lite_Signls_Adapter',
-				'consent_reader'    => array( 'Cmatic_Lite_Signls_Privacy', 'consent_status' ),
-				'install_id_reader' => static function (): string {
-					return ( new Cmatic_Lite_Signls_Adapter() )->install_id();
-				},
-			)
+		$signls_descriptor = array(
+			'product_slug'      => 'contact-form-7-mailchimp-extension',
+			'main_file'         => $this->file,
+			'sdk_path'          => $this->dir . 'includes/signls',
+			'sdk_version'       => '1.1.10',
+			'adapter_file'      => $this->dir . 'includes/services/class-cmatic-lite-signls-adapter.php',
+			'adapter_class'     => 'Cmatic_Lite_Signls_Adapter',
+			'consent_reader'    => array( 'Cmatic_Lite_Signls_Privacy', 'consent_status' ),
+			'install_id_reader' => static function (): string {
+				return ( new Cmatic_Lite_Signls_Adapter() )->install_id();
+			},
+		);
+		$signls_registered = Signls_Sdk_Bridge_1_1_7::register(
+			$signls_descriptor
 		);
 		if ( $signls_registered ) {
 			if ( did_action( 'plugins_loaded' ) ) {

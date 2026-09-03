@@ -47,20 +47,20 @@ if ( ! class_exists( 'Cmatic_Test_Submission_Modal' ) ) {
 		}
 
 		protected function get_title() {
-			return __( 'Test Current Form Submission', 'chimpmatic-lite' );
+			return __( 'Test Current Form Submission', 'contact-form-7-mailchimp-extension' );
 		}
 
 		protected function render_header_actions() {
 			?>
 			<button type="button" class="cmatic-modal__submit button button-primary">
-				<?php esc_html_e( 'Submit', 'chimpmatic-lite' ); ?>
+				<?php esc_html_e( 'Submit', 'contact-form-7-mailchimp-extension' ); ?>
 			</button>
 			<?php
 		}
 
 		protected function get_body() {
 			if ( ! $this->contact_form ) {
-				return '<p>' . esc_html__( 'No form available.', 'chimpmatic-lite' ) . '</p>';
+				return '<p>' . esc_html__( 'No form available.', 'contact-form-7-mailchimp-extension' ) . '</p>';
 			}
 
 			ob_start();
@@ -86,10 +86,10 @@ if ( ! class_exists( 'Cmatic_Test_Submission_Modal' ) ) {
 			return array_merge(
 				parent::get_strings(),
 				array(
-					'submit'     => __( 'Submit', 'chimpmatic-lite' ),
-					'submitting' => __( 'Submitting...', 'chimpmatic-lite' ),
-					'success'    => __( 'Success!', 'chimpmatic-lite' ),
-					'error'      => __( 'Error', 'chimpmatic-lite' ),
+					'submit'     => __( 'Submit', 'contact-form-7-mailchimp-extension' ),
+					'submitting' => __( 'Submitting...', 'contact-form-7-mailchimp-extension' ),
+					'success'    => __( 'Success!', 'contact-form-7-mailchimp-extension' ),
+					'error'      => __( 'Error', 'contact-form-7-mailchimp-extension' ),
 				)
 			);
 		}

@@ -101,6 +101,31 @@ final class Scheduler {
 		}
 	}
 
+	public function settle_immediate( array $result, bool $intent_pending ): void {
+		if ( 'enabled' !== $this->state->get( 'consent_status', 'unset' ) ) {
+			return;
+		}
+		if ( ! empty( $result['quarantined'] ) || ! empty( $result['permanent'] ) ) {
+			wp_clear_scheduled_hook( $this->refresh_hook );
+			$this->schedule_next();
+			return;
+		}
+		if ( $intent_pending ) {
+			return;
+		}
+		if ( ! empty( $result['ok'] ) ) {
+			wp_clear_scheduled_hook( $this->refresh_hook );
+			$this->schedule_next();
+			return;
+		}
+
+		$when = in_array( $result['class'], array( 'delivery_busy', 'delivery_lock_unavailable' ), true )
+			? time() + 60
+			: (int) $this->state->get( 'next_retry_at', time() + 900 );
+		wp_clear_scheduled_hook( $this->refresh_hook );
+		wp_schedule_single_event( max( time() + 60, $when ), $this->refresh_hook );
+	}
+
 	public function clear(): void {
 		wp_clear_scheduled_hook( $this->routine_hook );
 		wp_clear_scheduled_hook( $this->refresh_hook );

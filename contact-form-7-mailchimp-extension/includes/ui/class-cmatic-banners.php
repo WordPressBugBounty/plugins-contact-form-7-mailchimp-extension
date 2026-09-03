@@ -72,7 +72,7 @@ class Cmatic_Banners {
 		?>
 		<h2>
 			<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">
-				<?php esc_html_e( 'How to get your Mailchimp API key.', 'chimpmatic-lite' ); ?>
+				<?php esc_html_e( 'How to get your Mailchimp API key.', 'contact-form-7-mailchimp-extension' ); ?>
 			</a>
 		</h2>
 		<?php

@@ -44,8 +44,8 @@ class Cmatic_CF7_Tags {
 
 	public static function populate_referer_tag( array $form_tag ): array {
 		if ( 'referer-page' === $form_tag['name'] ) {
-			$referer = isset( $_SERVER['HTTP_REFERER'] )
-				? esc_url( wp_unslash( $_SERVER['HTTP_REFERER'] ) )
+			$referer = isset( $_SERVER['HTTP_REFERER'] ) && is_string( $_SERVER['HTTP_REFERER'] )
+				? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) )
 				: '';
 
 			$form_tag['values'][] = $referer;
@@ -111,8 +111,8 @@ class Cmatic_CF7_Tags {
 	}
 
 	public static function get_referer_html(): string {
-		$referer_url = isset( $_SERVER['HTTP_REFERER'] ) && ! empty( $_SERVER['HTTP_REFERER'] )
-			? esc_url( wp_unslash( $_SERVER['HTTP_REFERER'] ) )
+		$referer_url = isset( $_SERVER['HTTP_REFERER'] ) && is_string( $_SERVER['HTTP_REFERER'] ) && '' !== $_SERVER['HTTP_REFERER']
+			? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) )
 			: 'Direct Visit';
 
 		$html  = '<p style="display: none !important"><span class="wpcf7-form-control-wrap referer-page">';
