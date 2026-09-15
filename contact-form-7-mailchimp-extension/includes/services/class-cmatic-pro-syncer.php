@@ -28,13 +28,16 @@ class Cmatic_Pro_Syncer {
 
 	public const HEALTH_PREFIX = 'cmatic_lite_pro_health_';
 
-	private const SOURCE_CEILING = '1.7.0';
 
 	private const SUCCESS_THROTTLE = 21600;
 
 	private const LOCK_TTL = 900;
 
 	private const HEALTH_TTL = 120;
+
+	private const HEALTH_INCONCLUSIVE = array( 'token', 'encoding', 'transport', 'http' );
+
+	private const HEALTH_ATTEMPT_CEILING = 5;
 
 	public static function init(): void {
 		add_action( self::CRON_HOOK, array( __CLASS__, 'run_scheduled' ) );
@@ -253,7 +256,7 @@ class Cmatic_Pro_Syncer {
 
 	private static function synchronize(): void {
 		$current = self::installed_version();
-		if ( '0' === $current || version_compare( $current, self::SOURCE_CEILING, '>=' ) ) {
+		if ( '0' === $current ) {
 			return;
 		}
 		if ( self::environment_blocked() ) {
@@ -413,7 +416,7 @@ class Cmatic_Pro_Syncer {
 		$health = self::probe_health( $target, ! empty( $activation['activation_local'] ) || ! empty( $activation['activation_network'] ) );
 		if ( ! $health['healthy'] ) {
 			self::remove_backup_shutdown_hooks( $upgrader );
-			self::rollback_and_record( $upgrader, $target, $prior, 'health_' . $health['reason'], true, $activation );
+			self::rollback_and_record( $upgrader, $target, $prior, 'health_' . $health['reason'], self::health_is_terminal( $health['reason'] ), $activation );
 			return;
 		}
 
@@ -509,6 +512,20 @@ class Cmatic_Pro_Syncer {
 		self::recover_pending();
 		delete_site_option( self::LOCK_OPTION );
 		return add_site_option( self::LOCK_OPTION, $now );
+	}
+
+	/**
+	 * Whether a failed probe is evidence against the package or only against the
+	 * probe itself. A probe that could not be built, sent or answered says nothing
+	 * about an install whose files and version were already verified on disk, so it
+	 * earns a retry rather than a permanent verdict. Repeated failures still
+	 * quarantine, so a site that can never answer stops reinstalling forever.
+	 */
+	private static function health_is_terminal( string $reason ): bool {
+		if ( ! in_array( $reason, self::HEALTH_INCONCLUSIVE, true ) ) {
+			return true;
+		}
+		return self::to_int( self::state()['attempts'] ?? 0 ) + 1 >= self::HEALTH_ATTEMPT_CEILING;
 	}
 
 	/**
