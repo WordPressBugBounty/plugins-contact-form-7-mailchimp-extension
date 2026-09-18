@@ -1,7 +1,5 @@
 <?php
 /**
- * Plugin action and row links.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com

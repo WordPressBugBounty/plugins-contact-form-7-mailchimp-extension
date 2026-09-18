@@ -1,8 +1,9 @@
 <?php
 /**
- * ChimpMatic Lite multi-ESP component.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -137,6 +138,16 @@ final class Cmatic_Lite_Esp_Brevo extends Cmatic_Lite_Esp_Provider {
 			return $prepared;
 		}
 		$merge_vars = $prepared['merge_vars'];
+		$list_ids = array();
+		foreach ( isset( $options['groups'] ) && is_array( $options['groups'] ) ? $options['groups'] : array( $list_id ) as $group ) {
+			if ( is_scalar( $group ) && '' !== (string) $group ) {
+				$list_ids[] = (int) $group;
+			}
+		}
+		$list_ids = array_values( array_unique( $list_ids ) );
+		if ( array() === $list_ids ) {
+			$list_ids = array( (int) $list_id );
+		}
 		$mode       = sanitize_key( (string) ( $options['subscription_mode'] ?? 'single' ) );
 		if ( 'pending' === $status ) {
 			if (
@@ -153,7 +164,7 @@ final class Cmatic_Lite_Esp_Brevo extends Cmatic_Lite_Esp_Provider {
 				array(
 					'email'          => $email,
 					'attributes'     => (object) $merge_vars,
-					'includeListIds' => array( (int) $list_id ),
+					'includeListIds' => $list_ids,
 					'redirectionUrl' => esc_url_raw( (string) $options['doi_redirect_url'] ),
 					'templateId'     => (int) $options['doi_template_id'],
 				),
@@ -168,7 +179,7 @@ final class Cmatic_Lite_Esp_Brevo extends Cmatic_Lite_Esp_Provider {
 			array(
 				'email'            => $email,
 				'attributes'       => (object) $merge_vars,
-				'listIds'          => array( (int) $list_id ),
+				'listIds'          => $list_ids,
 				'emailBlacklisted' => 'unsubscribed' === $status,
 				'updateEnabled'    => true,
 			)

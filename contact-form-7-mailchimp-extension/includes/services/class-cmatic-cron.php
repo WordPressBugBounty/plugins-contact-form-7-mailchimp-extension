@@ -1,7 +1,5 @@
 <?php
 /**
- * Cron job handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -37,6 +35,7 @@ class Cmatic_Cron {
 
 	public static function run_daily_job(): void {
 		self::disable_all_logging();
+		Cmatic_Debug_Log::expire();
 	}
 
 	private static function disable_all_logging(): int {

@@ -1,8 +1,9 @@
 <?php
 /**
- * MailerLite typed field normalization.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -11,8 +12,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Mailerlite_Field_Normalizer {
 	/**
-	 * Adds explicit Boolean values for mapped Contact Form 7 acceptance tags.
-	 *
 	 * @param array $fields      Already-built MailerLite fields.
 	 * @param array $settings    Effective provider settings.
 	 * @param array $posted_data Raw Contact Form 7 submission data.
@@ -36,8 +35,6 @@ final class Cmatic_Mailerlite_Field_Normalizer {
 	}
 
 	/**
-	 * Returns normalized fields and any invalid field keys.
-	 *
 	 * @param array $fields      Mapped submission values.
 	 * @param array $definitions MailerLite field definitions.
 	 */

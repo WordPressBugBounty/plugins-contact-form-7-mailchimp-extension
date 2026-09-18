@@ -1,13 +1,5 @@
 <?php
 /**
- * Groups + GDPR native previews (Pro feature showcase).
- *
- * Mirrors the real Pro sections captured from a live audience so free users
- * see the exact UI an upgrade turns on. Example data on purpose: it renders
- * for every audience with zero extra Mailchimp API calls in Lite, and the
- * footnote says plainly that Pro shows their real categories/permissions.
- * Renders only when Pro is absent (same rule as the Tags showcase).
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com

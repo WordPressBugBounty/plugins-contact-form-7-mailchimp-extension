@@ -1,7 +1,5 @@
 <?php
 /**
- * API response handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -50,8 +48,6 @@ class Cmatic_Response_Handler {
 	}
 
 	/**
-	 * Convert a provider-neutral result into the released feedback/bookkeeping path.
-	 *
 	 * @param array<string,mixed> $result     Normalized provider result.
 	 * @param string              $email      Submitted email.
 	 * @param string              $status     Resolved subscription status.
@@ -117,7 +113,6 @@ class Cmatic_Response_Handler {
 				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
-			// Signals must never change form-submission behavior.
 			return;
 		}
 	}

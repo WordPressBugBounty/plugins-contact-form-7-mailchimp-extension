@@ -1,7 +1,5 @@
 <?php
 /**
- * Debug log viewer component.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -57,6 +55,15 @@ class Cmatic_Log_Viewer {
 							return in_array( $param, array( '0', '1' ), true );
 						},
 					),
+					'source' => array(
+						'required'          => false,
+						'type'              => 'string',
+						'default'           => 'own',
+						'sanitize_callback' => 'sanitize_key',
+						'validate_callback' => function ( $param ) {
+							return in_array( $param, array( 'own', 'site' ), true );
+						},
+					),
 				),
 			)
 		);
@@ -67,6 +74,16 @@ class Cmatic_Log_Viewer {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( static::class, 'clear_logs' ),
+				'permission_callback' => array( static::class, 'check_permission' ),
+			)
+		);
+
+		register_rest_route(
+			self::$namespace,
+			'/logs/download',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( static::class, 'download_logs' ),
 				'permission_callback' => array( static::class, 'check_permission' ),
 			)
 		);
@@ -111,141 +128,74 @@ class Cmatic_Log_Viewer {
 	}
 
 	public static function get_log_path() {
-		if ( defined( 'WP_DEBUG_LOG' ) && is_string( WP_DEBUG_LOG ) ) {
-			return WP_DEBUG_LOG;
-		}
-		return WP_CONTENT_DIR . '/debug.log';
-	}
-
-	private static function filesystem() {
-		global $wp_filesystem;
-
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		if ( ! WP_Filesystem() || ! $wp_filesystem instanceof WP_Filesystem_Base ) {
-			return null;
-		}
-
-		return $wp_filesystem;
+		return Cmatic_Debug_Log::site_log_path();
 	}
 
 	public static function get_logs( $request ) {
-		$log_path     = static::get_log_path();
-		$prefix       = static::get_log_prefix();
 		$apply_filter = '1' === $request->get_param( 'filter' );
-		$filesystem   = self::filesystem();
+		$source       = 'site' === $request->get_param( 'source' ) ? 'site' : 'own';
 
-		if ( ! $filesystem || ! $filesystem->exists( $log_path ) ) {
-			return new WP_REST_Response(
-				array(
-					'success'  => false,
-					'message'  => __( 'Debug log file not found. Ensure WP_DEBUG_LOG is enabled.', 'contact-form-7-mailchimp-extension' ),
-					'logs'     => '',
-					'filtered' => $apply_filter,
-				),
-				200
-			);
-		}
-
-		$lines = static::read_last_lines( $log_path, self::$max_lines );
-
-		if ( $apply_filter ) {
-			$output = array();
-			foreach ( $lines as $line ) {
-				if ( strpos( $line, $prefix ) !== false ) {
-					$output[] = $line;
-				}
-			}
+		if ( 'site' === $source ) {
+			$path  = Cmatic_Debug_Log::site_log_path();
+			$lines = array_map( array( 'Cmatic_Debug_Log', 'redact' ), Cmatic_Debug_Log::site_log_tail( $apply_filter ) );
 		} else {
-			$output = array_filter(
-				$lines,
-				function ( $line ) {
-					return '' !== trim( $line );
-				}
-			);
+			$path  = Cmatic_Debug_Log::path();
+			$lines = Cmatic_Debug_Log::tail();
 		}
+		$exists = '' !== $path && is_file( $path );
 
-		if ( empty( $output ) ) {
-			$message = $apply_filter
-				? sprintf(
-					/* translators: %1$s: prefix, %2$d: number of lines checked */
-					__( 'No %1$s entries found in the recent log data. Note: This viewer only shows the last %2$d lines of the log file.', 'contact-form-7-mailchimp-extension' ),
-					$prefix,
-					self::$max_lines
-				)
-				: __( 'Debug log is empty.', 'contact-form-7-mailchimp-extension' );
-
-			return new WP_REST_Response(
-				array(
-					'success'  => true,
-					'message'  => $message,
-					'logs'     => '',
-					'count'    => 0,
-					'filtered' => $apply_filter,
-				),
-				200
-			);
+		if ( ! $exists ) {
+			$message = 'site' === $source
+				? __( 'This site keeps no PHP error log. Set WP_DEBUG_LOG in wp-config.php while you test, then look here again.', 'contact-form-7-mailchimp-extension' )
+				: __( 'No log yet. Switch the Debug Logger on and submit a form.', 'contact-form-7-mailchimp-extension' );
+		} elseif ( empty( $lines ) ) {
+			$message = __( 'The log is empty.', 'contact-form-7-mailchimp-extension' );
+		} else {
+			$message = '';
 		}
 
 		return new WP_REST_Response(
 			array(
 				'success'  => true,
-				'message'  => '',
-				'logs'     => implode( "\n", $output ),
-				'count'    => count( $output ),
+				'message'  => $message,
+				'logs'     => implode( "\n", $lines ),
+				'count'    => count( $lines ),
 				'filtered' => $apply_filter,
+				'source'   => $source,
+				'exists'   => $exists,
+				'path'     => $exists ? basename( $path ) : '',
+				'size'     => $exists ? (int) filesize( $path ) : 0,
+				'logging'  => Cmatic_Debug_Log::logging(),
 			),
 			200
 		);
 	}
 
 	public static function clear_logs( $request ) {
-		$log_path   = static::get_log_path();
-		$filesystem = self::filesystem();
-
-		if ( ! $filesystem || ! $filesystem->exists( $log_path ) ) {
-			return new WP_REST_Response(
-				array(
-					'success' => true,
-					'cleared' => false,
-					'message' => __( 'Debug log file does not exist.', 'contact-form-7-mailchimp-extension' ),
-				),
-				200
-			);
-		}
-
-		if ( ! $filesystem->is_writable( $log_path ) ) {
-			return new WP_REST_Response(
-				array(
-					'success' => false,
-					'cleared' => false,
-					'message' => __( 'Debug log file is not writable.', 'contact-form-7-mailchimp-extension' ),
-				),
-				500
-			);
-		}
-
-		if ( ! $filesystem->put_contents( $log_path, '', FS_CHMOD_FILE ) ) {
-			return new WP_REST_Response(
-				array(
-					'success' => false,
-					'cleared' => false,
-					'message' => __( 'Failed to clear debug log file.', 'contact-form-7-mailchimp-extension' ),
-				),
-				500
-			);
-		}
-
-		$logger = new Cmatic_File_Logger( 'Log-Viewer', true );
-		$logger->log( 'INFO', 'Debug log cleared by an administrator.', array( 'user_id' => get_current_user_id() ) );
+		$had_file = is_file( Cmatic_Debug_Log::path() );
+		$cleared  = Cmatic_Debug_Log::clear();
 
 		return new WP_REST_Response(
 			array(
-				'success' => true,
-				'cleared' => true,
-				'message' => __( 'Debug log cleared successfully.', 'contact-form-7-mailchimp-extension' ),
+				'success' => $cleared,
+				'cleared' => $cleared && $had_file,
+				'message' => $cleared
+					? ( $had_file ? __( 'Debug log cleared successfully.', 'contact-form-7-mailchimp-extension' ) : __( 'Debug log file does not exist.', 'contact-form-7-mailchimp-extension' ) )
+					: __( 'Failed to clear debug log file.', 'contact-form-7-mailchimp-extension' ),
 			),
-			200
+			$cleared ? 200 : 500
 		);
+	}
+
+	public static function download_logs() {
+		$path = Cmatic_Debug_Log::path();
+		nocache_headers();
+		header( 'Content-Type: text/plain; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="chimpmatic-debug-' . gmdate( 'Ymd-His' ) . '.log"' );
+		if ( is_file( $path ) ) {
+			readfile( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- streaming the plugin's own log file to an administrator.
+		}
+		exit;
 	}
 
 	public static function log_browser_console( $request ) {
@@ -261,24 +211,8 @@ class Cmatic_Log_Viewer {
 			'debug' => 'DEBUG',
 		);
 
-		$wp_level    = $level_map[ $level ] ?? 'INFO';
-		$log_message = sprintf(
-			'[%s] %s [Browser Console - %s] %s',
-			gmdate( 'd-M-Y H:i:s' ) . ' UTC',
-			static::$log_prefix,
-			strtoupper( $level ),
-			$message
-		);
-
-		if ( ! empty( $data ) ) {
-			$log_message .= ' | Data: ' . $data;
-		}
-		if ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			error_log( $log_message );
-		}
-		$logfile_enabled = (bool) get_option( CMATIC_LOG_OPTION, false );
-		$logger          = new Cmatic_File_Logger( 'Browser-Console', $logfile_enabled );
-		$logger->log( $wp_level, 'Browser: ' . $message, $data ? json_decode( $data, true ) : null );
+		$logger = new Cmatic_File_Logger( 'Browser-Console', Cmatic_Debug_Log::logging() );
+		$logger->log( $level_map[ $level ] ?? 'INFO', 'Browser: ' . $message, $data ? json_decode( $data, true ) : null );
 
 		return new WP_REST_Response(
 			array(
@@ -289,26 +223,30 @@ class Cmatic_Log_Viewer {
 		);
 	}
 
-	protected static function read_last_lines( $filepath, $lines = 500 ) {
-		$filesystem = self::filesystem();
-		if ( ! $filesystem ) {
-			return array();
-		}
-
-		$contents = $filesystem->get_contents( $filepath );
-		if ( false === $contents || '' === $contents ) {
-			return array();
-		}
-
-		$result = preg_split( '/\r\n|\r|\n/', $contents );
-		return is_array( $result ) ? array_slice( $result, -absint( $lines ) ) : array();
-	}
-
 	public static function enqueue_assets( $hook ) {
 	}
 
 	protected static function get_inline_js() {
 		return '';
+	}
+
+	public static function render_card(): void {
+		?>
+		<div class="cmatic-adv-viewer" id="cmatic-adv-viewer">
+			<div class="cmatic-adv-tabs" role="tablist">
+				<button type="button" class="button button-small is-active" data-cmatic-log-source="own"><?php esc_html_e( 'Plugin log', 'contact-form-7-mailchimp-extension' ); ?></button>
+				<button type="button" class="button button-small" data-cmatic-log-source="site"><?php esc_html_e( 'Site errors', 'contact-form-7-mailchimp-extension' ); ?></button>
+				<label class="cmatic-adv-auto"><input type="checkbox" id="cmatic-log-auto"> <?php esc_html_e( 'Auto-refresh', 'contact-form-7-mailchimp-extension' ); ?></label>
+			</div>
+			<pre class="cmatic-adv-log" id="log_panel" tabindex="0"><?php esc_html_e( 'Open the log to read it.', 'contact-form-7-mailchimp-extension' ); ?></pre>
+			<p class="description" id="cmatic-log-meta"></p>
+			<div class="cmatic-provider-actions">
+				<button type="button" class="button vc-open-logs"><?php esc_html_e( 'Open', 'contact-form-7-mailchimp-extension' ); ?></button>
+				<button type="button" class="button vc-clear-logs"><?php esc_html_e( 'Clear', 'contact-form-7-mailchimp-extension' ); ?></button>
+				<button type="button" class="button vc-download-logs"><?php esc_html_e( 'Download', 'contact-form-7-mailchimp-extension' ); ?></button>
+			</div>
+		</div>
+		<?php
 	}
 
 	public static function render( $args = array() ) {
@@ -317,21 +255,29 @@ class Cmatic_Log_Viewer {
 			'clear_text'  => __( 'Clear Logs', 'contact-form-7-mailchimp-extension' ),
 			'placeholder' => __( 'Click "View Debug Logs" to fetch the log content.', 'contact-form-7-mailchimp-extension' ),
 			'class'       => '',
+			'visible'     => false,
 		);
 
 		$args = wp_parse_args( $args, $defaults );
 		?>
-		<div id="eventlog-sys" class="vc-logs <?php echo esc_attr( $args['class'] ); ?>" style="margin-top: 1em; margin-bottom: 1em; display: none;">
+		<div id="eventlog-sys" class="vc-logs <?php echo esc_attr( $args['class'] ); ?>"<?php echo $args['visible'] ? '' : ' style="margin-top: 1em; margin-bottom: 1em; display: none;"'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant inline style. ?>>
 			<div class="mce-custom-fields">
 				<div class="vc-logs-header">
 					<span class="vc-logs-title"><?php echo esc_html( $args['title'] ); ?></span>
 					<span class="vc-logs-actions">
-						<a href="#" class="vc-toggle-filter" data-filtered="1"><?php echo esc_html__( 'Show All', 'contact-form-7-mailchimp-extension' ); ?></a>
+						<a href="#" class="vc-open-logs"><?php echo esc_html__( 'Open log', 'contact-form-7-mailchimp-extension' ); ?></a>
+						<span class="vc-logs-separator">|</span>
+						<a href="#" class="vc-log-source" data-source="own"><?php echo esc_html__( 'Site errors', 'contact-form-7-mailchimp-extension' ); ?></a>
+						<span class="vc-logs-separator">|</span>
+						<span class="vc-filter-wrap" style="display:none"><a href="#" class="vc-toggle-filter" data-filtered="1"><?php echo esc_html__( 'Show All', 'contact-form-7-mailchimp-extension' ); ?></a>
+						<span class="vc-logs-separator">|</span></span>
+						<a href="#" class="vc-download-logs"><?php echo esc_html__( 'Download', 'contact-form-7-mailchimp-extension' ); ?></a>
 						<span class="vc-logs-separator">|</span>
 						<a href="#" class="vc-clear-logs"><?php echo esc_html( $args['clear_text'] ); ?></a>
 					</span>
 				</div>
 				<pre><code id="log_panel"><?php echo esc_html( $args['placeholder'] ); ?></code></pre>
+				<span class="description" id="cmatic-log-meta"></span>
 			</div>
 		</div>
 		<?php

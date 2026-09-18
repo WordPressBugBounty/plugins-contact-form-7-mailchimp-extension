@@ -1,7 +1,5 @@
 <?php
 /**
- * Database migration handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -23,8 +21,6 @@ class Cmatic_Migration {
 	);
 
 	/**
-	 * Legacy chimpmatic/cmatic options to migrate and clean up.
-	 *
 	 * @var array
 	 */
 	private const LEGACY_CMATIC_OPTIONS = array(

@@ -1,7 +1,5 @@
 <?php
 /**
- * Plugin uninstall handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -9,6 +7,35 @@
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
+
+wp_clear_scheduled_hook( 'cmatic_daily_cron' );
+wp_clear_scheduled_hook( 'csyncr_weekly_telemetry' );
+wp_clear_scheduled_hook( 'csyncr_metrics_heartbeat' );
+
+$cmatic_signls_product_hash = substr( hash( 'sha256', 'contact-form-7-mailchimp-extension' ), 0, 12 );
+wp_clear_scheduled_hook( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_routine' );
+wp_clear_scheduled_hook( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_refresh' );
+
+$cmatic_uninstall_settings = get_option( 'cmatic', array() );
+if ( ! is_array( $cmatic_uninstall_settings ) || empty( $cmatic_uninstall_settings['purge_on_uninstall'] ) ) {
+	return;
+}
+
+$cmatic_uploads = wp_upload_dir( null, false );
+$cmatic_log_dir = ( is_array( $cmatic_uploads ) && ! empty( $cmatic_uploads['basedir'] ) ? rtrim( (string) $cmatic_uploads['basedir'], '/' ) : WP_CONTENT_DIR . '/uploads' ) . '/chimpmatic';
+if ( is_dir( $cmatic_log_dir ) ) {
+	foreach ( (array) glob( $cmatic_log_dir . '/*' ) as $cmatic_log_file ) {
+		if ( is_string( $cmatic_log_file ) && is_file( $cmatic_log_file ) ) {
+			wp_delete_file( $cmatic_log_file );
+		}
+	}
+	foreach ( array( '.htaccess', 'index.php' ) as $cmatic_guard ) {
+		if ( is_file( $cmatic_log_dir . '/' . $cmatic_guard ) ) {
+			wp_delete_file( $cmatic_log_dir . '/' . $cmatic_guard );
+		}
+	}
+	rmdir( $cmatic_log_dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- removing the plugin's own, now empty, log directory.
+}
 
 delete_option( 'mce_loyalty' );
 delete_option( 'chimpmatic-update' );
@@ -18,14 +45,9 @@ delete_option( 'cmatic_news_retry_count' );
 delete_option( 'csyncr_last_weekly_run' );
 
 delete_option( 'cmatic' );
+delete_option( 'cmatic_sync_stats' );
+delete_transient( 'cmatic_ab_forms' );
 
-wp_clear_scheduled_hook( 'cmatic_daily_cron' );
-wp_clear_scheduled_hook( 'csyncr_weekly_telemetry' );
-wp_clear_scheduled_hook( 'csyncr_metrics_heartbeat' );
-
-$cmatic_signls_product_hash = substr( hash( 'sha256', 'contact-form-7-mailchimp-extension' ), 0, 12 );
-wp_clear_scheduled_hook( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_routine' );
-wp_clear_scheduled_hook( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_refresh' );
 delete_option( 'signls_sdk_v1_' . $cmatic_signls_product_hash );
 delete_metadata( 'user', 0, 'cmatic_signls_consent_notice_dismissed', '', true );
 

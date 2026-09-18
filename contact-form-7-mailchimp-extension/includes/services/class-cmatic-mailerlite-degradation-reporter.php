@@ -1,8 +1,9 @@
 <?php
 /**
- * Records visible, PII-free MailerLite feature degradation.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -13,8 +14,6 @@ final class Cmatic_Mailerlite_Degradation_Reporter {
 	public const META_KEY = '_cmatic_mailerlite_degraded_features';
 
 	/**
-	 * Records the suppressed features observed by a real submission.
-	 *
 	 * @param int   $form_id  Contact Form 7 form ID.
 	 * @param array $features Suppressed feature identifiers.
 	 * @param array $rule_ids Suppressed routing-rule identifiers.

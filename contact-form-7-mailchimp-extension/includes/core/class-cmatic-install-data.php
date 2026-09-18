@@ -1,7 +1,5 @@
 <?php
 /**
- * Installation data handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -96,8 +94,6 @@ class Cmatic_Install_Data {
 	}
 
 	/**
-	 * Three-tier install_id recovery with generation as last resort.
-	 *
 	 * @return array{0: string, 1: bool} The install_id and whether it was newly generated.
 	 */
 	private function recover_or_generate_id(): array {

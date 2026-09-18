@@ -1,7 +1,5 @@
 <?php
 /**
- * PRO plugin syncer.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -38,6 +36,12 @@ class Cmatic_Pro_Syncer {
 	private const HEALTH_INCONCLUSIVE = array( 'token', 'encoding', 'transport', 'http' );
 
 	private const HEALTH_ATTEMPT_CEILING = 5;
+
+	private const STRANDED_CEILING = '1.5.9';
+
+	private const STRANDED_REQUIRES_PHP = '7.4';
+
+	private const STRANDED_REQUIRES_WP = '6.6';
 
 	public static function init(): void {
 		add_action( self::CRON_HOOK, array( __CLASS__, 'run_scheduled' ) );
@@ -309,7 +313,7 @@ class Cmatic_Pro_Syncer {
 				self::record_success( $sync_info->new_version, $current, $activation );
 				return;
 			}
-			if ( self::is_quarantined( $sync_info->new_version ) ) {
+			if ( ! self::is_stranded( $current ) && self::is_quarantined( $sync_info->new_version ) ) {
 				self::record_terminal( $sync_info->new_version, $current, 'quarantined', 'quarantined', $activation );
 				return;
 			}
@@ -326,6 +330,11 @@ class Cmatic_Pro_Syncer {
 	 */
 	private static function perform_sync( $sync_info, string $prior, array $activation ): void {
 		$target = self::version( (string) $sync_info->new_version );
+
+		if ( self::is_stranded( $prior ) && ! self::requirements_met() ) {
+			self::record_deferred( $target, $prior, 'requirements_unmet', $activation, 86400 );
+			return;
+		}
 		self::write_state(
 			array_merge(
 				$activation,
@@ -416,6 +425,12 @@ class Cmatic_Pro_Syncer {
 		$health = self::probe_health( $target, ! empty( $activation['activation_local'] ) || ! empty( $activation['activation_network'] ) );
 		if ( ! $health['healthy'] ) {
 			self::remove_backup_shutdown_hooks( $upgrader );
+			if ( self::is_stranded( $prior ) ) {
+				self::record_success( $target, $actual, $activation );
+				self::write_outcome( 'success', $target, 'health_' . $health['reason'] );
+				wp_clean_plugins_cache();
+				return;
+			}
 			self::rollback_and_record( $upgrader, $target, $prior, 'health_' . $health['reason'], self::health_is_terminal( $health['reason'] ), $activation );
 			return;
 		}
@@ -515,11 +530,7 @@ class Cmatic_Pro_Syncer {
 	}
 
 	/**
-	 * Whether a failed probe is evidence against the package or only against the
-	 * probe itself. A probe that could not be built, sent or answered says nothing
-	 * about an install whose files and version were already verified on disk, so it
-	 * earns a retry rather than a permanent verdict. Repeated failures still
-	 * quarantine, so a site that can never answer stops reinstalling forever.
+	 * @param string $reason Probe failure reason.
 	 */
 	private static function health_is_terminal( string $reason ): bool {
 		if ( ! in_array( $reason, self::HEALTH_INCONCLUSIVE, true ) ) {
@@ -678,8 +689,6 @@ class Cmatic_Pro_Syncer {
 	}
 
 	/**
-	 * WordPress 6.4 and 6.5 cannot restore a named core backup through the public method.
-	 *
 	 * @param array<string, mixed> $activation Activation snapshot.
 	 */
 	private static function restore_backup( string $prior, array $activation ): bool {
@@ -724,6 +733,24 @@ class Cmatic_Pro_Syncer {
 	private static function remove_backup_shutdown_hooks( Plugin_Upgrader $upgrader ): void {
 		remove_action( 'shutdown', array( $upgrader, 'restore_temp_backup' ), 10 );
 		remove_action( 'shutdown', array( $upgrader, 'delete_temp_backup' ), 100 );
+	}
+
+	/**
+	 * @param string $version Version the site is upgrading away from.
+	 */
+	private static function is_stranded( string $version ): bool {
+		return '0' !== $version && '' !== $version && version_compare( $version, self::STRANDED_CEILING, '<' );
+	}
+
+	private static function requirements_met(): bool {
+		global $wp_version;
+
+		if ( version_compare( PHP_VERSION, self::STRANDED_REQUIRES_PHP, '<' ) ) {
+			return false;
+		}
+
+		return ! ( isset( $wp_version ) && is_scalar( $wp_version )
+			&& version_compare( (string) $wp_version, self::STRANDED_REQUIRES_WP, '<' ) );
 	}
 
 	private static function installed_version(): string {
@@ -928,6 +955,7 @@ class Cmatic_Pro_Syncer {
 			'health_activation',
 			'health_runtime',
 			'quarantined',
+			'requirements_unmet',
 			'rollback_failed',
 			'stale_rollback',
 			'stale_committed',

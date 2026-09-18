@@ -1,8 +1,9 @@
 <?php
 /**
- * MailerLite submission application service.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -11,8 +12,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Mailerlite_Submission_Pipeline {
 	/**
-	 * MailerLite provider adapter.
-	 *
 	 * @var Cmatic_Lite_Esp_Provider_Interface
 	 */
 	private Cmatic_Lite_Esp_Provider_Interface $provider;
@@ -22,8 +21,6 @@ final class Cmatic_Mailerlite_Submission_Pipeline {
 	}
 
 	/**
-	 * Validates, routes, normalizes, and submits one CF7 payload.
-	 *
 	 * @param int                $form_id     Contact Form 7 form ID.
 	 * @param array              $settings    Saved provider settings.
 	 * @param array              $posted_data Submitted Contact Form 7 data.

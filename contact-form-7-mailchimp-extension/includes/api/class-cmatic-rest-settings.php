@@ -1,7 +1,5 @@
 <?php
 /**
- * REST API controller for global settings.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -12,38 +10,56 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Rest_Settings {
 
-	/** @var string REST namespace. */
+	/**
+	 * @var string REST namespace.
+	 */
 	protected static $namespace = 'chimpmatic-lite/v1';
 
-	/** @var bool Whether initialized. */
+	/**
+	 * @var bool Whether initialized.
+	 */
 	protected static $initialized = false;
 
-	/** @var array Allowed GLOBAL settings configuration (toggles in Advanced Settings panel). */
+	/**
+	 * @var array Allowed GLOBAL settings configuration (toggles in Advanced Settings panel).
+	 */
 	protected static $allowed_settings = array(
-		'debug'       => array(
+		'debug'              => array(
 			'type' => 'cmatic',
 			'path' => 'debug',
 		),
-		'backlink'    => array(
+		'backlink'           => array(
 			'type' => 'cmatic',
 			'path' => 'backlink',
 		),
-		'auto_update' => array(
+		'auto_update'        => array(
 			'type' => 'cmatic',
 			'path' => 'auto_update',
 		),
-		'telemetry'   => array(
+		'telemetry'          => array(
 			'type' => 'signls',
 			'path' => 'signls.consent_status',
 		),
+		'purge_on_uninstall' => array(
+			'type' => 'cmatic',
+			'path' => 'purge_on_uninstall',
+		),
+		'sender_context'     => array(
+			'type' => 'cmatic',
+			'path' => 'sender_context',
+		),
 	);
 
-	/** @var array Field labels for user messages. */
+	/**
+	 * @var array Field labels for user messages.
+	 */
 	protected static $field_labels = array(
-		'debug'       => 'Debug Logger',
-		'backlink'    => 'Developer Backlink',
-		'auto_update' => 'Auto Update',
-		'telemetry'   => 'Help Us Improve',
+		'debug'              => 'Debug Logger',
+		'backlink'           => 'Developer Backlink',
+		'auto_update'        => 'Auto Update',
+		'telemetry'          => 'Help Us Improve',
+		'purge_on_uninstall' => 'Remove data on uninstall',
+		'sender_context'     => 'Sender context in emails',
 	);
 
 	public static function init() {
@@ -101,6 +117,16 @@ final class Cmatic_Rest_Settings {
 				),
 			)
 		);
+
+		register_rest_route(
+			'chimpmatic-lite/v1',
+			'/system-report',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( self::class, 'system_report' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
+			)
+		);
 	}
 
 	public static function check_admin_permission( $request ) {
@@ -144,16 +170,24 @@ final class Cmatic_Rest_Settings {
 			}
 		} else {
 			Cmatic_Options_Repository::set_option( $field_config['path'], $enabled ? 1 : 0 );
+			if ( 'debug' === $field ) {
+				if ( $enabled ) {
+					Cmatic_Debug_Log::switched_on();
+				} else {
+					Cmatic_Debug_Log::switched_off();
+				}
+			}
 		}
 
 		$label = self::$field_labels[ $field ] ?? ucfirst( str_replace( '_', ' ', $field ) );
 
 		return rest_ensure_response(
 			array(
-				'success' => true,
-				'field'   => $field,
-				'enabled' => $enabled,
-				'message' => $enabled
+				'success'     => true,
+				'field'       => $field,
+				'enabled'     => $enabled,
+				'debug_until' => 'debug' === $field ? Cmatic_Debug_Log::until() : 0,
+				'message'     => $enabled
 					// translators: %s: setting label.
 					? sprintf( __( '%s enabled.', 'contact-form-7-mailchimp-extension' ), $label )
 					// translators: %s: setting label.
@@ -219,8 +253,6 @@ final class Cmatic_Rest_Settings {
 
 		switch ( $notice_id ) {
 			case 'signls_consent':
-				// Compatibility for an already-open pre-removal admin page. The retired notice
-				// disappears on navigation; its stale dismissal request intentionally has no side effects.
 				$message = __( 'Sharing notice retired.', 'contact-form-7-mailchimp-extension' );
 				break;
 
@@ -255,6 +287,15 @@ final class Cmatic_Rest_Settings {
 		);
 	}
 
+
+	public static function system_report() {
+		return rest_ensure_response(
+			array(
+				'success' => true,
+				'report'  => Cmatic_System_Report::build(),
+			)
+		);
+	}
 
 	private function __construct() {}
 }

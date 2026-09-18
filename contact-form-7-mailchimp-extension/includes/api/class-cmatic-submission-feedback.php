@@ -1,7 +1,5 @@
 <?php
 /**
- * Form submission feedback handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -20,6 +18,9 @@ class Cmatic_Submission_Feedback {
 
 	public static function set_result( $result ) {
 		self::$last_result = $result;
+		if ( is_array( $result ) && class_exists( 'Cmatic_Sync_Stats' ) ) {
+			Cmatic_Sync_Stats::observe( $result );
+		}
 	}
 
 	public static function get_result() {

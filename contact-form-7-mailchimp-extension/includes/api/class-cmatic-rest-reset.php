@@ -1,7 +1,5 @@
 <?php
 /**
- * REST API controller for reset operations.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -12,13 +10,19 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Rest_Reset {
 
-	/** @var string REST namespace. */
+	/**
+	 * @var string REST namespace.
+	 */
 	protected static $namespace = 'chimpmatic-lite/v1';
 
-	/** @var bool Whether initialized. */
+	/**
+	 * @var bool Whether initialized.
+	 */
 	protected static $initialized = false;
 
-	/** @var array License options to delete during nuclear reset. */
+	/**
+	 * @var array License options to delete during nuclear reset.
+	 */
 	protected static $license_options = array(
 		'chimpmatic_license_activation',
 		'chimpmatic_license_status',

@@ -114,6 +114,10 @@
 		const lookupButton = document.getElementById('cmatic-provider-mailerlite-lookup-submit');
 		const lookupResults = document.getElementById('cmatic-provider-mailerlite-lookup-results');
 		const testingNotice = document.getElementById('cmatic-provider-testing-notice');
+		const oauthBlock = document.getElementById('cmatic-provider-oauth');
+		const mailchimpOptions = document.getElementById('cmatic-provider-mailchimp-options');
+		const mailchimpDoubleOptin = document.getElementById('cmatic-provider-mailchimp-double-optin');
+		const lockedRows = document.getElementById('cmatic-provider-mappings-locked-rows');
 		let routingSequence = 0;
 		let routingValidationVisible = false;
 		let fieldCreating = false;
@@ -154,7 +158,7 @@
 					fields: [],
 					total_fields: 0,
 					mappings: {}
-					,advanced_consent: false
+					,double_optin_entitled: false
 					,consent_gate: 'none'
 					,consent_field: ''
 					,subscription_mode: slug === 'brevo' ? 'single' : 'provider_managed'
@@ -176,6 +180,9 @@
 					,create_field_supported: false
 					,create_field_entitled: false
 					,lookup_supported: false
+					,double_optin: 'subscribed'
+					,auth_type: ''
+					,locked_fields: []
 				};
 			}
 			const current = state.providers[slug];
@@ -217,7 +224,8 @@
 				}),
 				status_mode: String(current.status_mode || 'legacy_provider_managed'),
 				resubscribe_force: Boolean(current.resubscribe_force),
-				consent_metadata_enabled: Boolean(current.consent_metadata_enabled)
+				consent_metadata_enabled: Boolean(current.consent_metadata_enabled),
+				double_optin: current.double_optin === 'pending' ? 'pending' : 'subscribed'
 			};
 		}
 
@@ -284,16 +292,24 @@
 		}
 
 		function renderRouting(current) {
-			const active = state.activeProvider === 'mailerlite' && current.routing_supported;
+			const active = Boolean(current.routing_supported && current.connected);
 			mailerliteRouting.hidden = !active;
 			if (!active) return;
+			const meta = definition(state.activeProvider);
+			const destinationSingular = String(meta.destination_singular || '').toLowerCase();
+			const destinationPlural = String(meta.destination_plural || '').toLowerCase();
+			const personSingular = String(meta.person_singular || '').toLowerCase();
+			const routingHeading = document.getElementById('cmatic-routing-heading');
+			const routingDescription = document.getElementById('cmatic-routing-description');
+			if (routingHeading) routingHeading.textContent = format(i18n('routingHeadingFor', 'Add each %1$s to %2$s based on form answers'), personSingular, destinationPlural);
+			if (routingDescription) routingDescription.textContent = format(i18n('routingDescriptionFor', 'Optional. A %1$s can match more than one rule. %2$s ticked above are always added.'), personSingular, String(meta.destination_plural || ''));
 			const premiumSaved = (current.additional_groups || []).length > 0 || (current.routing_rules || []).length > 0;
 			const locked = !current.routing_entitled;
 			routingAddRule.disabled = locked || !routingTags().length;
 			routingNotice.hidden = !locked;
 			routingNotice.textContent = premiumSaved
-				? i18n('routingSavedInactive', 'MailerLite group rules are saved but inactive. Subscribers are added only to the group marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.')
-				: i18n('routingRequiresPro', 'Additional MailerLite groups and answer-based rules require Chimpmatic Pro.');
+				? format(i18n('routingSavedInactiveFor', 'Rules are saved but inactive. Submissions go only to the %s marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.'), destinationSingular)
+				: format(i18n('routingRequiresProFor', 'Additional %s and answer-based rules require Chimpmatic Pro.'), destinationPlural);
 
 			const validation = routingValidation(current);
 			const fragment = document.createDocumentFragment();
@@ -427,7 +443,16 @@
 				group.disabled = locked;
 				group.dataset.mailerliteGroupSelected = '';
 				groupLabel.htmlFor = group.id;
-				groupLabel.append(group, document.createTextNode(' ' + String(list.name || id)));
+				const stats = list.stats || {};
+				const contacts = Number(stats.member_count !== undefined ? stats.member_count : list.member_count) || 0;
+				const fields = Number(stats.merge_field_count !== undefined ? stats.merge_field_count : list.merge_field_count) || 0;
+				const parts = [];
+				if (contacts > 0) parts.push(format(i18n('tileContacts', '%s contacts'), contacts.toLocaleString()));
+				if (fields > 0) parts.push(format(i18n('tileFields', '%s fields'), fields.toLocaleString()));
+				const meta = document.createElement('span');
+				meta.className = 'cmatic-provider-tile__meta';
+				meta.textContent = parts.length ? ' (' + parts.join(' · ') + ')' : '';
+				groupLabel.append(group, document.createTextNode(' ' + String(list.name || id)), meta);
 				primary.type = 'radio';
 				primary.id = 'cmatic-mailerlite-primary-' + index;
 				primary.name = 'wpcf7-cmatic-provider[primary_group]';
@@ -530,13 +555,17 @@
 				wrapper.className = 'cmatic-provider-auth-field';
 				label.htmlFor = id;
 				label.textContent = field.label;
-				input.type = field.type || 'password';
+				input.type = 'password' === (field.type || 'password') ? 'text' : field.type;
+				if ('password' === (field.type || 'password')) input.classList.add('cmatic-provider-key');
 				input.id = id;
 				input.value = '';
 				input.placeholder = field.placeholder || '';
 				input.autocomplete = field.autocomplete || 'new-password';
 				input.spellcheck = false;
 				input.dataset.authField = field.id;
+				input.dataset.lpignore = 'true';
+				input.setAttribute('data-1p-ignore', '');
+				input.setAttribute('data-bwignore', '');
 				description.className = 'description';
 				description.textContent = field.description || '';
 				readiness.className = 'cmatic-provider-credential-readiness';
@@ -633,6 +662,32 @@
 					fragment.append(input);
 				});
 			});
+			if (state.activeProvider === 'mailchimp') {
+				const mirror = function(name, value) {
+					const input = document.createElement('input');
+					input.type = 'hidden';
+					input.name = 'wpcf7-mailchimp[' + name + ']';
+					input.value = value;
+					fragment.append(input);
+				};
+				mirror('list', String(current.selected_list || ''));
+				mirror('accept', current.consent_gate === 'required' ? String(current.consent_field || '') : ' ');
+				mirror('confsubs', current.double_optin === 'pending' && !document.querySelector('[data-cmatic-pro-status]') ? '1' : '0');
+				Object.keys(current.mappings || {}).forEach(function(slot) {
+					mirror(slot, String(current.mappings[slot] || ''));
+				});
+				const legacyList = document.getElementById('wpcf7-mailchimp-list');
+				if (legacyList) {
+					legacyList.disabled = true;
+					if (current.selected_list && !Array.from(legacyList.options).some(function(option) { return option.value === String(current.selected_list); })) {
+						const option = document.createElement('option');
+						option.value = String(current.selected_list);
+						option.textContent = String(current.selected_list_name || current.selected_list);
+						legacyList.append(option);
+					}
+					legacyList.value = String(current.selected_list || '');
+				}
+			}
 			fieldState.replaceChildren(fragment);
 		}
 
@@ -688,6 +743,29 @@
 
 			const total = Number(current.total_fields || 0);
 			fieldLimit.hidden = total <= Number(chimpmaticLiteEsp.fieldLimit);
+			if (lockedRows) {
+				const locked = Array.isArray(current.locked_fields) ? current.locked_fields : [];
+				lockedRows.replaceChildren();
+				locked.forEach(function(field) {
+					const row = document.createElement('div');
+					row.className = 'cmatic-provider-mapping-row cmatic-provider-mapping-row--locked';
+					const label = document.createElement('label');
+					const name = document.createElement('span');
+					name.textContent = String(field.name || field.tag || '');
+					const type = document.createElement('span');
+					type.className = 'mce-type';
+					type.textContent = String(field.tag || '') + ' · ' + String(field.type || 'text');
+					label.append(name, ' ', type);
+					const select = document.createElement('select');
+					select.disabled = true;
+					const option = document.createElement('option');
+					option.textContent = i18n('lockedField', 'Available with Chimpmatic Pro');
+					select.append(option);
+					row.append(label, select);
+					lockedRows.append(row);
+				});
+				lockedRows.hidden = 0 === locked.length;
+			}
 			renderFieldState(current);
 		}
 
@@ -708,8 +786,8 @@
 		}
 
 		function consentReady(slug, current) {
-			if (!current.advanced_consent) return true;
 			if (current.consent_gate === 'required' && !current.consent_field) return false;
+			if (!current.double_optin_entitled) return true;
 			if (slug !== 'brevo' || current.subscription_mode !== 'double') return true;
 			return Boolean(current.doi_verification_token);
 		}
@@ -717,7 +795,7 @@
 		function renderConsent(meta, current) {
 			const slug = state.activeProvider;
 			const consentMeta = meta.consent || {};
-			const advanced = Boolean(current.advanced_consent);
+			const advanced = Boolean(current.double_optin_entitled);
 			consentGateTitle.textContent = format(i18n('sendToProvider', 'Send to %s'), meta.label);
 			consentGateExplanation.textContent = format(
 				i18n('consentGateExplanation', 'Choose whether every valid form submission is sent to %s or only submissions with affirmative consent.'),
@@ -727,15 +805,34 @@
 			providerOptinExplanation.textContent = format(i18n('confirmationExplanation', 'Controls whether %s requires confirmation after the form is submitted.'), meta.label);
 			consentDescription.textContent = advanced
 				? String(consentMeta.description || '')
-				: i18n('consentRequiresPro', 'Advanced consent controls are available with an active Chimpmatic Pro license.');
+				: i18n('confirmationRequiresPro', 'The confirmation email needs an active Chimpmatic Pro license. Choosing which submissions are sent is always available.');
+			var gateControls = ['consent_gate', 'consent_field'];
 			Array.from(consentControls.querySelectorAll('input, select, button')).forEach(function(control) {
-				control.disabled = !advanced;
+				var name = String(control.name || '');
+				var isGate = gateControls.some(function(key) { return name.indexOf('[' + key + ']') > -1; });
+				control.disabled = isGate ? false : !advanced;
 			});
 			consentGate.value = current.consent_gate === 'required' ? 'required' : 'none';
 			consentFieldRow.hidden = consentGate.value !== 'required';
+			Array.from(consentField.options).forEach(function(option) {
+				if (!option.value) return;
+				option.hidden = ['acceptance', 'checkbox'].indexOf(String(option.dataset.basetype || '')) === -1;
+			});
 			consentField.value = String(current.consent_field || '');
 			brevoOptin.hidden = slug !== 'brevo';
 			managedOptin.hidden = slug === 'brevo';
+			const proStatusRow = document.querySelector('[data-cmatic-pro-status]');
+			if (mailchimpOptions) mailchimpOptions.hidden = slug !== 'mailchimp' || Boolean(proStatusRow);
+			if (proStatusRow && slug === 'mailchimp') current.double_optin = 'subscribed';
+			if (mailchimpDoubleOptin) mailchimpDoubleOptin.value = current.double_optin === 'pending' ? 'pending' : 'subscribed';
+			const consentFieldName = consentFieldRow.querySelector('.cmatic-consent-policy-name strong');
+			const consentFieldPlaceholder = consentField.options[0];
+			const consentFieldExplanation = consentFieldRow.querySelector('.cmatic-consent-policy-explanation');
+			if (consentFieldName) consentFieldName.textContent = i18n('consentFieldMailchimp', 'Consent field');
+			if (consentFieldPlaceholder) consentFieldPlaceholder.textContent = i18n('chooseConsentField', 'Choose a checkbox or acceptance field');
+			if (consentFieldExplanation) consentFieldExplanation.textContent = slug === 'mailchimp'
+				? i18n('consentFieldMailchimpExplanation', 'Ticked sends the contact to Mailchimp, unticked leaves them out. Mark the box optional in your form, or nobody can submit without ticking it.')
+				: i18n('acceptanceFieldExplanation', 'Only Contact Form 7 acceptance fields can provide the affirmative consent required by this policy.');
 			if (slug === 'brevo') {
 				subscriptionMode.value = current.subscription_mode === 'double' ? 'double' : 'single';
 				brevoDoi.hidden = subscriptionMode.value !== 'double';
@@ -746,6 +843,9 @@
 					? i18n('doiVerified', 'DOI settings verified.')
 					: '';
 				doiVerify.disabled = !advanced || !doiTemplate.value || !doiRedirect.value || current.doi_verifying;
+			} else if (slug === 'mailchimp') {
+				managedOptinTitle.textContent = i18n('managedByMailchimp', 'Managed by Mailchimp');
+				managedOptinCopy.textContent = i18n('mailchimpOptin', 'Double opt-in is set per audience in Mailchimp. Contact status below decides whether this form asks for confirmation first.');
 			} else if (slug === 'mailerlite') {
 				managedOptinTitle.textContent = i18n('managedByMailerLite', 'Managed by MailerLite');
 				managedOptinCopy.textContent = i18n('mailerLiteOptin', 'MailerLite uses the Double opt-in for API and integrations setting in your account.');
@@ -810,6 +910,7 @@
 			authRow.hidden = !editing || current.busy;
 			connectedSummary.hidden = !current.connected || current.replacing;
 			recoverySummary.hidden = !recovering;
+			if (oauthBlock) oauthBlock.hidden = !(editing && !current.busy && state.activeProvider === 'mailchimp' && Boolean((meta.features || {}).oauth));
 
 			if (editing) {
 				renderAuthFields(meta);
@@ -836,10 +937,12 @@
 			}
 
 			connectedTitle.textContent = format(i18n('connected', '%s connected'), meta.label);
-			credentialStorage.textContent = format(
-				i18n('credentialStored', '%s stored securely'),
-				String(((meta.auth_fields || [])[0] || {}).label || i18n('credential', 'Credential'))
-			);
+			credentialStorage.textContent = current.auth_type === 'oauth'
+				? i18n('signedInWithMailchimp', 'Signed in with Mailchimp')
+				: format(
+					i18n('credentialStored', '%s stored securely'),
+					String(((meta.auth_fields || [])[0] || {}).label || i18n('credential', 'Credential'))
+				);
 			refreshButton.textContent = current.lists_loading || current.refreshing
 				? format(i18n('loadingDestinations', 'Loading %s...'), String(meta.destination_plural || '').toLowerCase())
 				: format(i18n('refreshDestinations', 'Refresh %s'), String(meta.destination_plural || '').toLowerCase());
@@ -850,10 +953,15 @@
 		}
 
 		function renderDestination(meta, current) {
+			const refreshTitle = document.querySelector('[data-cmatic-refresh-row] [data-cmatic-row-title]');
+			if (refreshTitle) refreshTitle.textContent = format(i18n('refreshFrom', 'Refresh from %s'), meta.label);
 			destinationHeading.textContent = state.activeProvider === 'mailerlite'
 				? i18n('groupsForEverySubscriber', 'Groups for every subscriber')
-				: format(i18n('chooseDestination', 'Choose a %s'), String(meta.destination_singular || '').toLowerCase());
+				: format(i18n('destinationsForEvery', '%s for every submission'), String(meta.destination_plural || ''));
 			destinationLabel.textContent = meta.label + ' ' + String(meta.destination_singular || '').toLowerCase();
+			if (state.activeProvider === 'mailchimp') {
+				document.querySelectorAll('.audience-name').forEach(function(el) { el.textContent = String(current.selected_list_name || ''); });
+			}
 			if (!current.connected || current.lists_loading) {
 				destinationLocked.hidden = false;
 				destinationRow.hidden = true;
@@ -868,14 +976,22 @@
 			destinationLocked.hidden = true;
 			renderDestinations(meta, current);
 			const isMailerLite = state.activeProvider === 'mailerlite';
-			destinationRow.hidden = isMailerLite;
-			destinationSelect.disabled = isMailerLite;
-			mailerliteGroups.hidden = !isMailerLite;
-			if (isMailerLite) renderMailerLiteGroups(current);
+			destinationRow.hidden = true;
+			destinationSelect.disabled = false;
+			mailerliteGroups.hidden = false;
+			renderMailerLiteGroups(current);
 			renderRouting(current);
 			const listCount = (current.lists || []).length;
 			if (isMailerLite) {
 				destinationDescription.textContent = i18n('mailerLiteGroupsHelp', 'Every subscriber successfully sent to MailerLite is added to each selected group. Mark one selected group “Use when Pro is inactive.”');
+				return;
+			}
+			if (listCount > 1) {
+				destinationDescription.textContent = format(
+					i18n('destinationsHelp', '%1$s from this form are added to every ticked %2$s. Mark one ticked %2$s “Use when Pro is inactive.”'),
+					String(meta.person_plural || ''),
+					String(meta.destination_singular || '').toLowerCase()
+				);
 				return;
 			}
 			if (1 === listCount && current.selected_list) {
@@ -971,16 +1087,15 @@
 
 			const current = providerState(slug);
 			setHeaderStatus(slug, current);
-			if ('mailchimp' === slug) {
-				root.hidden = true;
-				mailchimpView.hidden = false;
-				return;
-			}
 
 			const meta = definition(slug);
 			root.hidden = false;
 			root.dataset.provider = slug;
-			mailchimpView.hidden = true;
+			mailchimpView.hidden = 'mailchimp' !== slug;
+			if ('mailchimp' === slug && mailchimpView.previousElementSibling !== root) root.insertAdjacentElement('afterend', mailchimpView);
+			document.querySelectorAll('[data-cmatic-provider-only]').forEach(function(container) {
+				container.hidden = container.dataset.cmaticProviderOnly !== slug;
+			});
 			renderProgress(meta, current);
 			renderConnection(meta, current);
 			renderDestination(meta, current);
@@ -1038,13 +1153,15 @@
 			current.status_mode = String(baseline.status_mode || 'legacy_provider_managed');
 			current.resubscribe_force = Boolean(baseline.resubscribe_force);
 			current.consent_metadata_enabled = Boolean(baseline.consent_metadata_enabled);
+			current.double_optin = baseline.double_optin === 'pending' ? 'pending' : 'subscribed';
+			current.locked_fields = Array.isArray(baseline.locked_fields) ? JSON.parse(JSON.stringify(baseline.locked_fields)) : [];
 			current.configured = Boolean(baseline.configured);
 			current.dirty = false;
 		}
 
 		function switchProvider(nextSlug) {
 			const previousSlug = state.activeProvider;
-			if (previousSlug && 'mailchimp' !== previousSlug && providerState(previousSlug).dirty) {
+			if (previousSlug && providerState(previousSlug).dirty) {
 				if (!window.confirm(i18n('discardChanges', 'Discard unsaved changes and switch providers?'))) {
 					selector.value = previousSlug;
 					return;
@@ -1062,7 +1179,7 @@
 
 		function autoLoadOnlyDestination() {
 			const slug = state.activeProvider;
-			if (!slug || 'mailchimp' === slug) return;
+			if (!slug) return;
 			const current = providerState(slug);
 			const lists = sortedLists(current);
 			if (current.connected && !current.selected_list && !current.fields_loading && 1 === lists.length) {
@@ -1093,6 +1210,7 @@
 
 				current.connected = true;
 				current.credential_present = true;
+				current.auth_type = String(data.auth_type || current.auth_type || 'api_key');
 				current.lists = Array.isArray(data.lists) ? data.lists : [];
 				if (data.key_changed) {
 					current.selected_list = '';
@@ -1184,6 +1302,7 @@
 				});
 				if (token !== generation || data.provider !== state.activeProvider || String(data.list_id || '') !== String(listId)) return;
 				current.fields = Array.isArray(data.merge_fields) ? data.merge_fields : [];
+				current.locked_fields = Array.isArray(data.locked_fields) ? data.locked_fields : [];
 				current.total_fields = Number(data.total_merge_fields || 0);
 				current.mappings = data.mappings || {};
 				current.fields_loading = false;
@@ -1297,6 +1416,59 @@
 				if (state.activeProvider) render();
 			});
 		});
+
+		const advancedRefresh = document.getElementById('cmatic-advanced-refresh');
+		if (advancedRefresh) {
+			advancedRefresh.addEventListener('click', function() {
+				const feedback = document.getElementById('cmatic-advanced-refresh-feedback');
+				const current = providerState(state.activeProvider);
+				if (!state.activeProvider || !current.connected) return;
+				if (feedback) feedback.textContent = i18n('refreshing', 'Refreshing...');
+				current.refreshing = true;
+				render();
+				connectProvider({ useSaved: true }).then(function() {
+					if (feedback) feedback.textContent = i18n('refreshed', 'Refreshed.');
+					const sync = document.getElementById('mce_fetch_fields');
+					if (sync && state.activeProvider === 'mailchimp') sync.click();
+				}).finally(function() {
+					current.refreshing = false;
+					if (state.activeProvider) render();
+				});
+			});
+		}
+
+		const advancedReset = document.getElementById('cmatic-advanced-form-reset');
+		if (advancedReset) {
+			let armedTimer = 0;
+			advancedReset.addEventListener('click', async function() {
+				const feedback = document.getElementById('cmatic-advanced-form-reset-feedback');
+				if (advancedReset.dataset.armed !== '1') {
+					advancedReset.dataset.armed = '1';
+					advancedReset.textContent = i18n('resetArmed', 'Click again to reset this form');
+					if (feedback) feedback.textContent = i18n('resetWarning', 'Keys, destinations, mappings, consent and status saved for this form will be forgotten.');
+					window.clearTimeout(armedTimer);
+					armedTimer = window.setTimeout(function() {
+						advancedReset.dataset.armed = '0';
+						advancedReset.textContent = i18n('resetThisForm', 'Reset this form');
+						if (feedback) feedback.textContent = '';
+					}, 6000);
+					return;
+				}
+				window.clearTimeout(armedTimer);
+				advancedReset.disabled = true;
+				if (feedback) feedback.textContent = i18n('resetting', 'Resetting...');
+				try {
+					await request('reset', 'reset', { form_id: Number(root.dataset.formId) });
+					if (feedback) feedback.textContent = i18n('resetDone', 'Form reset. Reloading...');
+					window.location.reload();
+				} catch (error) {
+					advancedReset.disabled = false;
+					advancedReset.dataset.armed = '0';
+					advancedReset.textContent = i18n('resetThisForm', 'Reset this form');
+					if (feedback) feedback.textContent = error.message || i18n('resetFailed', 'The form could not be reset.');
+				}
+			});
+		}
 		replaceCredentialButton.addEventListener('click', function() {
 			providerState(state.activeProvider).replacing = true;
 			render();
@@ -1371,6 +1543,14 @@
 			updateDirty(state.activeProvider);
 			render();
 		});
+		if (mailchimpDoubleOptin) {
+			mailchimpDoubleOptin.addEventListener('change', function() {
+				const current = providerState(state.activeProvider);
+				current.double_optin = mailchimpDoubleOptin.value === 'pending' ? 'pending' : 'subscribed';
+				updateDirty(state.activeProvider);
+				render();
+			});
+		}
 		subscriptionMode.addEventListener('change', function() {
 			const current = providerState(state.activeProvider);
 			current.subscription_mode = subscriptionMode.value === 'double' ? 'double' : 'single';
@@ -1476,6 +1656,29 @@
 			document.getElementById(select.id)?.focus();
 		});
 
+		document.querySelectorAll('#submitdiv a[data-cmatic-tab]').forEach(function(link) {
+			link.addEventListener('click', function(event) {
+				const tab = document.getElementById(link.dataset.cmaticTab);
+				if (!tab) return;
+				event.preventDefault();
+				tab.click();
+				const panel = document.getElementById('cmatic_data') || document.getElementById('Chimpmatic');
+				if (panel) panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+			});
+		});
+
+		document.querySelectorAll('.cmatic-provider-section__toggle').forEach(function(toggle) {
+			toggle.addEventListener('click', function() {
+				const body = document.getElementById(toggle.getAttribute('aria-controls'));
+				if (!body) return;
+				const expanded = toggle.getAttribute('aria-expanded') === 'true';
+				toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+				body.hidden = expanded;
+				const section = toggle.closest('.cmatic-provider-section');
+				if (section) section.classList.toggle('is-open', !expanded);
+			});
+		});
+
 		root.addEventListener('click', function(event) {
 			const remove = event.target.closest('[data-routing-remove]');
 			if (!remove) return;
@@ -1558,7 +1761,7 @@
 
 		if (parentForm) {
 			parentForm.addEventListener('submit', function(event) {
-				if (!state.activeProvider || 'mailchimp' === state.activeProvider) return;
+				if (!state.activeProvider) return;
 				const current = providerState(state.activeProvider);
 				if (!current.connected || !current.selected_list || !current.fields.length) {
 					event.preventDefault();

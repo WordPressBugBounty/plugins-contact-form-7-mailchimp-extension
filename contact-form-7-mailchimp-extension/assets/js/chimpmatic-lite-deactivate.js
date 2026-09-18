@@ -2,8 +2,8 @@
  * Deactivation survey modal.
  *
  * @package   contact-form-7-mailchimp-extension
- * @author    renzo.johnson@gmail.com
- * @copyright 2014-2026 https://renzojohnson.com
+ * @author    hello@chimpmatic.com
+ * @copyright 2014-2026 ChimpMatic
  * @license   GPL-3.0+
  */
 

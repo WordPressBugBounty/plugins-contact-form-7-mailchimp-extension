@@ -1,7 +1,5 @@
 <?php
 /**
- * Main plugin class.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -72,9 +70,11 @@ final class Cmatic_Plugin {
 			'utils/class-cmatic-utils.php',
 			'utils/class-cmatic-lite-get-fields.php',
 			'utils/class-cmatic-pursuit.php',
+			'utils/class-cmatic-debug-log.php',
 			'utils/class-cmatic-file-logger.php',
 			'utils/class-cmatic-remote-fetcher.php',
 			'utils/class-cmatic-buster.php',
+			'utils/class-cmatic-system-report.php',
 			'services/class-cmatic-cf7-tags.php',
 			'services/class-cmatic-cron.php',
 			'services/class-cmatic-api-service.php',
@@ -82,6 +82,7 @@ final class Cmatic_Plugin {
 			'providers/class-cmatic-lite-esp-capabilities.php',
 			'providers/abstract-class-cmatic-lite-esp-provider.php',
 			'providers/class-cmatic-lite-esp-mailchimp.php',
+			'providers/class-cmatic-mailchimp-panel-store.php',
 			'providers/class-cmatic-lite-esp-brevo.php',
 			'providers/class-cmatic-lite-esp-mailerlite.php',
 			'providers/class-cmatic-lite-esp-klaviyo.php',
@@ -102,6 +103,7 @@ final class Cmatic_Plugin {
 			'services/class-cmatic-license-state-resolver.php',
 			'services/submission/class-cmatic-mailerlite-submission-pipeline.php',
 			'services/class-cmatic-submission-handler.php',
+			'services/class-cmatic-sender-context.php',
 			'api/class-cmatic-rest-lists.php',
 			'api/class-cmatic-rest-settings.php',
 			'api/class-cmatic-rest-form.php',
@@ -129,6 +131,7 @@ final class Cmatic_Plugin {
 			'ui/class-cmatic-dom-classes.php',
 			'ui/class-cmatic-field-mapper.php',
 			'ui/class-cmatic-sidebar-panel.php',
+			'services/class-cmatic-sync-stats.php',
 			'ui/class-cmatic-license-banner.php',
 			'ui/class-cmatic-advanced-settings.php',
 		);
@@ -167,6 +170,7 @@ final class Cmatic_Plugin {
 		Cmatic_Admin_Panel::init();
 		Cmatic_Lite_Esp_Degrade_Notice::init();
 		Cmatic_Submission_Handler::init();
+		Cmatic_Sender_Context::init();
 		Cmatic_Banners::init();
 		Cmatic_Form_Classes::init();
 		Cmatic_Dom_Classes::init();

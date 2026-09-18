@@ -1,8 +1,9 @@
 <?php
 /**
- * Versioned provider capability contract for compatible add-ons.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -48,7 +49,8 @@ final class Cmatic_Lite_Esp_Capabilities {
 		);
 
 		$paid = array(
-			'advanced_consent',
+			'double_optin',
+			'destination_routing',
 			'mailerlite_routing',
 			'mailerlite_status',
 			'mailerlite_consent_metadata',
@@ -56,9 +58,22 @@ final class Cmatic_Lite_Esp_Capabilities {
 			'mailerlite_resubscribe',
 		);
 
+		if ( ! $enabled && 'double_optin' === $feature ) {
+			$enabled = (bool) apply_filters(
+				'cmatic_lite_esp_feature_enabled',
+				false,
+				'advanced_consent',
+				sanitize_key( $provider ),
+				max( 0, $form_id )
+			);
+		}
+
 		return self::pro_entitled() && in_array( $feature, $paid, true ) && $enabled;
 	}
 
+	public static function routing_feature( string $provider ): string {
+		return 'mailerlite' === sanitize_key( $provider ) ? 'mailerlite_routing' : 'destination_routing';
+	}
 	private static function pro_entitled(): bool {
 		return class_exists( 'Cmatic_Pro_Esp_Bridge' )
 			&& Cmatic_Pro_Esp_Bridge::is_compatible()

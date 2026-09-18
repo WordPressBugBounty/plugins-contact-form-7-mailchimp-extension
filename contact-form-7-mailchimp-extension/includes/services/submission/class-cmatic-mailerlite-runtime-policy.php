@@ -1,8 +1,9 @@
 <?php
 /**
- * MailerLite paid-feature runtime degradation policy.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -11,8 +12,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Mailerlite_Runtime_Policy {
 	/**
-	 * Applies current entitlements and returns suppressed feature identifiers.
-	 *
 	 * @param array $settings     Saved provider settings.
 	 * @param array $entitlements Effective paid-feature grants.
 	 */

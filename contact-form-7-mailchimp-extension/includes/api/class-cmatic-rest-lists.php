@@ -1,7 +1,5 @@
 <?php
 /**
- * REST API controller for Mailchimp lists and merge fields.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -12,10 +10,14 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Rest_Lists {
 
-	/** @var string REST namespace. */
+	/**
+	 * @var string REST namespace.
+	 */
 	protected static $namespace = 'chimpmatic-lite/v1';
 
-	/** @var bool Whether initialized. */
+	/**
+	 * @var bool Whether initialized.
+	 */
 	protected static $initialized = false;
 
 	public static function init() {
@@ -454,7 +456,6 @@ final class Cmatic_Rest_Lists {
 				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
-			// Signals must never change a REST result.
 			return;
 		}
 	}

@@ -1,7 +1,5 @@
 <?php
 /**
- * Sidebar panel components.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -12,40 +10,27 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Sidebar_Panel {
 	public static function render_submit_info( int $post_id ): void {
-		$cf7_mch   = get_option( 'cf7_mch_' . $post_id, array() );
-		$api_valid = (int) ( $cf7_mch['api-validation'] ?? 0 );
-		$sent      = Cmatic_Options_Repository::get_option( 'stats.sent', 0 );
-
-		$has_credentials = ( is_array( $cf7_mch ) && ! empty( $cf7_mch['api'] ) )
-			|| ( isset( $cf7_mch['auth_type'] ) && 'oauth' === $cf7_mch['auth_type'] );
-		if ( 1 === $api_valid ) {
-			$status_text = '<span class="chmm valid">API Connected</span>';
-		} elseif ( ! $has_credentials ) {
-			$status_text = '<span class="chmm neutral">Not Connected</span>';
-		} else {
-			$status_text = '<span class="chmm invalid">API Inactive</span>';
+		$cf7_mch  = get_option( 'cf7_mch_' . $post_id, array() );
+		$cf7_mch  = is_array( $cf7_mch ) ? $cf7_mch : array();
+		$provider = class_exists( 'Cmatic_Lite_Esp_Registry' ) ? (string) Cmatic_Lite_Esp_Registry::get_selected( $cf7_mch ) : '';
+		$label    = __( 'Chimpmatic', 'contact-form-7-mailchimp-extension' );
+		if ( '' !== $provider && class_exists( 'Cmatic_Lite_Esp_Manifest' ) ) {
+			$definition = Cmatic_Lite_Esp_Manifest::get( $provider );
+			if ( isset( $definition['label'] ) && is_scalar( $definition['label'] ) && '' !== (string) $definition['label'] ) {
+				$label = (string) $definition['label'];
+			}
 		}
+		$entry      = class_exists( 'Cmatic_Sync_Stats' ) ? Cmatic_Sync_Stats::get( $post_id ) : array();
+		$failing    = array() !== $entry && Cmatic_Sync_Stats::is_failing( $entry );
+		$last_error = array() !== $entry ? Cmatic_Sync_Stats::str( $entry['last_error'] ?? '' ) : '';
+		$facts      = array() !== $entry ? Cmatic_Sync_Stats::summary( $entry ) : __( 'no syncs yet', 'contact-form-7-mailchimp-extension' );
 		?>
-		<div class="misc-pub-section chimpmatic-info" id="chimpmatic-version-info">
-			<div style="margin-bottom: 3px;">
-				<?php if ( defined( 'CMATIC_VERSION' ) ) : ?>
-					<strong><?php echo esc_html__( 'Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ) . ' ' . esc_html( CMATIC_VERSION ); ?></strong>
-					<div style="color: #646970; font-size: 11px;"><?php echo esc_html__( 'Lite base', 'contact-form-7-mailchimp-extension' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></div>
-				<?php else : ?>
-					<strong><?php echo esc_html__( 'Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ) . ' ' . esc_html( SPARTAN_MCE_VERSION ); ?></strong>
-				<?php endif; ?>
-			</div>
-			<div style="margin-top: 5px;">
-				<div class="mc-stats" style="color: #646970; font-size: 12px; margin-bottom: 3px;">
-					<?php
-					echo esc_html( $sent ) . ' synced contacts in ' .
-						esc_html( Cmatic_Utils::get_days_since( (int) Cmatic_Options_Repository::get_option( 'install.quest', time() ) ) ) . ' days';
-					?>
-				</div>
-				<div style="margin-bottom: 3px;">
-					<?php echo wp_kses_post( $status_text ); ?>
-				</div>
-			</div>
+		<div class="misc-pub-section cmatic-status<?php echo $failing ? ' cmatic-status--failing' : ''; ?>">
+			<a href="#Chimpmatic" data-cmatic-tab="Chimpmatic-tab" class="cmatic-status__name"><?php echo esc_html( $label ); ?></a>
+			<span class="cmatic-status__facts"><?php echo esc_html( $facts ); ?></span>
+			<?php if ( $failing && '' !== $last_error ) : ?>
+				<span class="cmatic-status__error"><?php echo esc_html( $last_error ); ?></span>
+			<?php endif; ?>
 		</div>
 		<?php
 	}

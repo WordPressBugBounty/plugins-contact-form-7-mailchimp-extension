@@ -1,7 +1,5 @@
 <?php
 /**
- * Admin bar menu integration.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -10,8 +8,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-class Cmatic_Admin_Bar_Menu {
-	const MENU_IDENTIFIER    = 'chimpmatic-menu';
+final class Cmatic_Admin_Bar_Menu {
+	private const MENU        = 'chimpmatic-menu';
+	private const FORMS_CACHE = 'cmatic_ab_forms';
+	private const CACHE_TTL   = 300;
+	private const MAX_FORMS   = 30;
+
 	private static $instance = null;
 
 	public static function instance() {
@@ -22,15 +24,17 @@ class Cmatic_Admin_Bar_Menu {
 	}
 
 	private function __construct() {
-		$this->register_hooks();
-	}
-
-	private function register_hooks() {
 		add_action( 'admin_bar_menu', array( $this, 'add_menu' ), 95 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'admin_footer', array( $this, 'render_upgrade_click_script' ) );
 		add_action( 'wp_footer', array( $this, 'render_upgrade_click_script' ) );
+		add_action( 'save_post_wpcf7_contact_form', array( __CLASS__, 'forget_forms' ) );
+		add_action( 'deleted_post', array( __CLASS__, 'forget_forms' ) );
+	}
+
+	public static function forget_forms(): void {
+		delete_transient( self::FORMS_CACHE );
 	}
 
 	private function can_show_menu() {
@@ -42,154 +46,187 @@ class Cmatic_Admin_Bar_Menu {
 	}
 
 	private function is_pro_installed_not_licensed() {
-		if ( ! defined( 'CMATIC_VERSION' ) ) {
-			return false;
-		}
-		return ! $this->is_pro_active();
+		return defined( 'CMATIC_VERSION' ) && ! $this->is_pro_active();
 	}
 
-	private function has_plugin_update() {
+	/**
+	 * @return array<string,string>
+	 */
+	private function updates(): array {
 		$updates = get_site_transient( 'update_plugins' );
-		if ( ! $updates || ! isset( $updates->response ) ) {
-			return false;
+		if ( ! is_object( $updates ) || ! isset( $updates->response ) || ! is_array( $updates->response ) ) {
+			return array();
 		}
-		return isset( $updates->response['contact-form-7-mailchimp-extension/chimpmatic-lite.php'] )
-			|| isset( $updates->response['chimpmatic/chimpmatic.php'] );
+		$found = array();
+		foreach ( array( 'contact-form-7-mailchimp-extension/chimpmatic-lite.php' => __( 'Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ), 'chimpmatic/chimpmatic.php' => __( 'Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ) ) as $file => $name ) {
+			if ( isset( $updates->response[ $file ] ) ) {
+				$item           = $updates->response[ $file ];
+				$version        = is_object( $item ) && isset( $item->new_version ) && is_scalar( $item->new_version ) ? (string) $item->new_version : '';
+				$found[ $file ] = trim( $name . ' ' . $version );
+			}
+		}
+		return $found;
 	}
 
 	private function should_show_upgrade_badge() {
 		return ! Cmatic_Options_Repository::get_option( 'ui.upgrade_clicked', false );
 	}
 
-	private function get_license_activation_url() {
-		return admin_url( 'admin.php?page=wpcf7-integration&service=0_chimpmatic&action=setup' );
-	}
-
-	private function get_update_url() {
-		return admin_url( 'plugins.php?plugin_status=upgrade' );
-	}
-
 	public function add_menu( WP_Admin_Bar $wp_admin_bar ) {
 		if ( ! $this->can_show_menu() ) {
 			return;
 		}
-
-		$this->add_root_menu( $wp_admin_bar );
-		$this->add_submenu_items( $wp_admin_bar );
-	}
-
-	private function add_root_menu( WP_Admin_Bar $wp_admin_bar ) {
-		$badge_count = 0;
-
-		if ( $this->has_plugin_update() ) {
-			++$badge_count;
-		}
-
-		if ( ! $this->is_pro_active() && $this->should_show_upgrade_badge() ) {
-			++$badge_count;
-		}
-
-		$icon_svg    = 'data:image/svg+xml;base64,' . $this->get_icon_base64();
-		$icon_styles = 'width:26px;height:30px;float:left;background:url(\'' . esc_attr( $icon_svg ) . '\') center/20px no-repeat;';
-
-		$title  = '<div id="cmatic-ab-icon" class="ab-item cmatic-logo svg" style="' . esc_attr( $icon_styles ) . '">';
-		$title .= '<span class="screen-reader-text">' . esc_html__( 'Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ) . '</span>';
-		$title .= '</div>';
-
-		if ( $badge_count > 0 ) {
-			$title .= $this->get_notification_counter( $badge_count );
+		$stats   = class_exists( 'Cmatic_Sync_Stats' ) ? Cmatic_Sync_Stats::all() : array();
+		$forms   = self::forms();
+		$updates = $this->updates();
+		$failing = 0;
+		foreach ( array_keys( $forms ) as $form_id ) {
+			if ( isset( $stats[ $form_id ] ) && Cmatic_Sync_Stats::is_failing( $stats[ $form_id ] ) ) {
+				++$failing;
+			}
 		}
 
 		$wp_admin_bar->add_menu(
 			array(
-				'id'    => self::MENU_IDENTIFIER,
-				'title' => $title,
+				'id'    => self::MENU,
+				'title' => '<span class="cmatic-ab-icon"></span>'
+					. '<span class="screen-reader-text">' . esc_html__( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ) . '</span>'
+					. self::failing_counter( $failing )
+					. self::update_counter( count( $updates ) ),
 				'href'  => false,
+				'meta'  => array( 'title' => esc_attr__( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ) ),
 			)
 		);
+
+		$edition = defined( 'CMATIC_VERSION' )
+			/* translators: %s: version number */
+			? sprintf( __( 'Chimpmatic Pro %s', 'contact-form-7-mailchimp-extension' ), CMATIC_VERSION )
+			/* translators: %s: version number */
+			: sprintf( __( 'Chimpmatic Lite %s', 'contact-form-7-mailchimp-extension' ), SPARTAN_MCE_VERSION );
+		$wp_admin_bar->add_menu(
+			array(
+				'parent' => self::MENU,
+				'id'     => 'chimpmatic-brand',
+				'title'  => '<span class="cmatic-ab-brand">' . esc_html__( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ) . '</span>'
+					. '<span class="cmatic-ab-plugin">' . esc_html( $edition ) . '</span>',
+				'href'   => false,
+				'meta'   => array( 'class' => 'cmatic-ab-header' ),
+			)
+		);
+
+		$this->add_updates( $wp_admin_bar, $updates );
+		$this->add_forms( $wp_admin_bar, $forms, $stats );
+		$this->add_links( $wp_admin_bar );
 	}
 
-	private function add_submenu_items( WP_Admin_Bar $wp_admin_bar ) {
-		if ( $this->has_plugin_update() ) {
+	/**
+	 * @param array<string,string> $updates
+	 */
+	private function add_updates( WP_Admin_Bar $wp_admin_bar, array $updates ) {
+		foreach ( $updates as $file => $label ) {
 			$wp_admin_bar->add_menu(
 				array(
-					'parent' => self::MENU_IDENTIFIER,
-					'id'     => 'chimpmatic-update',
-					'title'  => esc_html__( 'Update Available', 'contact-form-7-mailchimp-extension' ) . ' ' . $this->get_notification_counter( 1 ),
-					'href'   => $this->get_update_url(),
+					'parent' => self::MENU,
+					'id'     => 'chimpmatic-update-' . sanitize_key( basename( dirname( $file ) ) ),
+					/* translators: %s: plugin name and version */
+					'title'  => esc_html( sprintf( __( 'Update available: %s', 'contact-form-7-mailchimp-extension' ), $label ) ),
+					'href'   => admin_url( 'plugins.php?plugin_status=upgrade' ),
 					'meta'   => array(
-						'title' => esc_attr__( 'Update strongly recommended', 'contact-form-7-mailchimp-extension' ),
+						'class' => 'cmatic-ab-update',
+						'title' => esc_attr__( 'Open the plugin updates', 'contact-form-7-mailchimp-extension' ),
 					),
 				)
 			);
 		}
-
 		if ( $this->is_pro_installed_not_licensed() ) {
 			$wp_admin_bar->add_menu(
 				array(
-					'parent' => self::MENU_IDENTIFIER,
+					'parent' => self::MENU,
 					'id'     => 'chimpmatic-activate-license',
-					'title'  => esc_html__( 'Activate License', 'contact-form-7-mailchimp-extension' ),
-					'href'   => $this->get_license_activation_url(),
+					'title'  => esc_html__( 'Activate your Pro license', 'contact-form-7-mailchimp-extension' ),
+					'href'   => admin_url( 'admin.php?page=wpcf7-integration&service=0_chimpmatic&action=setup' ),
+					'meta'   => array( 'class' => 'cmatic-ab-update' ),
 				)
 			);
 		}
+	}
 
-		$this->add_forms_submenu( $wp_admin_bar );
-
-		$wp_admin_bar->add_menu(
-			array(
-				'parent' => self::MENU_IDENTIFIER,
-				'id'     => 'chimpmatic-docs',
-				'title'  => esc_html__( 'Documentation', 'contact-form-7-mailchimp-extension' ),
-				'href'   => Cmatic_Pursuit::adminbar( 'help', 'menu_docs' ),
-				'meta'   => array(
-					'target' => '_blank',
-					'rel'    => 'noopener noreferrer',
-				),
-			)
-		);
-
-		$wp_admin_bar->add_menu(
-			array(
-				'parent' => self::MENU_IDENTIFIER,
-				'id'     => 'chimpmatic-support',
-				'title'  => esc_html__( 'Support', 'contact-form-7-mailchimp-extension' ),
-				'href'   => Cmatic_Pursuit::adminbar( 'support', 'menu_support' ),
-				'meta'   => array(
-					'target' => '_blank',
-					'rel'    => 'noopener noreferrer',
-				),
-			)
-		);
-
-		$wp_admin_bar->add_menu(
-			array(
-				'parent' => self::MENU_IDENTIFIER,
-				'id'     => 'chimpmatic-reviews',
-				'title'  => esc_html__( 'Reviews', 'contact-form-7-mailchimp-extension' ),
-				'href'   => 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/',
-				'meta'   => array(
-					'target' => '_blank',
-					'rel'    => 'noopener noreferrer',
-				),
-			)
-		);
-
-		if ( ! $this->is_pro_active() ) {
-			$upgrade_title = esc_html__( 'Upgrade to Pro', 'contact-form-7-mailchimp-extension' );
-
-			if ( $this->should_show_upgrade_badge() ) {
-				$upgrade_title .= ' ' . $this->get_notification_counter( 1 );
-			}
-
+	/**
+	 * @param array<int,string>                $forms
+	 * @param array<int,array<string,mixed>>   $stats
+	 */
+	private function add_forms( WP_Admin_Bar $wp_admin_bar, array $forms, array $stats ) {
+		if ( array() === $forms ) {
 			$wp_admin_bar->add_menu(
 				array(
-					'parent' => self::MENU_IDENTIFIER,
+					'parent' => self::MENU,
+					'id'     => 'chimpmatic-noforms',
+					'title'  => esc_html__( 'No forms found', 'contact-form-7-mailchimp-extension' ),
+					'href'   => false,
+				)
+			);
+			return;
+		}
+		$wp_admin_bar->add_menu(
+			array(
+				'parent' => self::MENU,
+				'id'     => 'chimpmatic-group-cf7',
+				'title'  => esc_html__( 'Contact Form 7', 'contact-form-7-mailchimp-extension' ),
+				'href'   => false,
+				'meta'   => array( 'class' => 'cmatic-ab-group' ),
+			)
+		);
+		foreach ( $forms as $form_id => $title ) {
+			$entry = isset( $stats[ $form_id ] ) ? $stats[ $form_id ] : null;
+			$wp_admin_bar->add_menu(
+				array(
+					'parent' => self::MENU,
+					'id'     => 'chimpmatic-form-' . $form_id,
+					'title'  => '<span class="cmatic-ab-name">' . esc_html( $title ) . '</span>' . self::pill( $entry ),
+					'href'   => admin_url( 'admin.php?page=wpcf7&post=' . $form_id . '&action=edit&active-tab=Chimpmatic' ),
+					'meta'   => array(
+						'class' => 'cmatic-ab-form',
+						'title' => self::tooltip( $entry ),
+					),
+				)
+			);
+		}
+	}
+
+	private function add_links( WP_Admin_Bar $wp_admin_bar ) {
+		$links = array(
+			'docs'    => array( __( 'Documentation', 'contact-form-7-mailchimp-extension' ), Cmatic_Pursuit::adminbar( 'help', 'menu_docs' ) ),
+			'support' => array( __( 'Support', 'contact-form-7-mailchimp-extension' ), Cmatic_Pursuit::adminbar( 'support', 'menu_support' ) ),
+			'reviews' => array( __( 'Review Chimpmatic', 'contact-form-7-mailchimp-extension' ), 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/' ),
+		);
+		foreach ( $links as $id => $link ) {
+			$wp_admin_bar->add_menu(
+				array(
+					'parent' => self::MENU,
+					'id'     => 'chimpmatic-' . $id,
+					'title'  => esc_html( $link[0] ),
+					'href'   => $link[1],
+					'meta'   => array(
+						'class'  => 'cmatic-ab-link',
+						'target' => '_blank',
+						'rel'    => 'noopener noreferrer',
+					),
+				)
+			);
+		}
+		if ( ! $this->is_pro_active() ) {
+			$title = esc_html__( 'Upgrade to Pro', 'contact-form-7-mailchimp-extension' );
+			if ( $this->should_show_upgrade_badge() ) {
+				$title .= ' ' . self::counter( 1, __( '1 notification', 'contact-form-7-mailchimp-extension' ), 'cmatic-ab-count--update' );
+			}
+			$wp_admin_bar->add_menu(
+				array(
+					'parent' => self::MENU,
 					'id'     => 'chimpmatic-upgrade',
-					'title'  => $upgrade_title,
+					'title'  => $title,
 					'href'   => Cmatic_Pursuit::adminbar( 'pricing', 'menu_upgrade' ),
 					'meta'   => array(
+						'class'  => 'cmatic-ab-upgrade',
 						'target' => '_blank',
 						'rel'    => 'noopener noreferrer',
 					),
@@ -198,219 +235,140 @@ class Cmatic_Admin_Bar_Menu {
 		}
 	}
 
-	private function add_forms_submenu( WP_Admin_Bar $wp_admin_bar ) {
-		if ( ! class_exists( 'WPCF7_ContactForm' ) ) {
-			return;
+	/**
+	 * @return array<int,string>
+	 */
+	private static function forms(): array {
+		$cached = get_transient( self::FORMS_CACHE );
+		if ( is_array( $cached ) ) {
+			$forms = array();
+			foreach ( $cached as $id => $title ) {
+				if ( is_numeric( $id ) && is_scalar( $title ) ) {
+					$forms[ (int) $id ] = (string) $title;
+				}
+			}
+			return $forms;
 		}
-
-		$forms = WPCF7_ContactForm::find( array( 'posts_per_page' => -1 ) );
-
-		if ( empty( $forms ) ) {
-			return;
+		$forms = array();
+		if ( class_exists( 'WPCF7_ContactForm' ) ) {
+			foreach ( (array) WPCF7_ContactForm::find( array( 'posts_per_page' => self::MAX_FORMS ) ) as $form ) {
+				if ( is_object( $form ) && method_exists( $form, 'id' ) && method_exists( $form, 'title' ) ) {
+					$id = Cmatic_Sync_Stats::int( $form->id() );
+					if ( $id > 0 ) {
+						$title        = Cmatic_Sync_Stats::str( $form->title() );
+						$forms[ $id ] = '' !== $title ? $title : sprintf( /* translators: %d: form id */ __( 'Form %d', 'contact-form-7-mailchimp-extension' ), $id );
+					}
+				}
+			}
 		}
-
-		$wp_admin_bar->add_menu(
-			array(
-				'parent' => self::MENU_IDENTIFIER,
-				'id'     => 'chimpmatic-forms-header',
-				'title'  => esc_html__( 'Form Settings', 'contact-form-7-mailchimp-extension' ),
-				'href'   => false,
-			)
-		);
-
-		foreach ( $forms as $form ) {
-			$form_url = admin_url(
-				sprintf(
-					'admin.php?page=wpcf7&post=%d&action=edit&active-tab=Chimpmatic',
-					$form->id()
-				)
-			);
-
-			$api_status = $this->get_form_api_status( $form->id() );
-
-			$wp_admin_bar->add_menu(
-				array(
-					'parent' => self::MENU_IDENTIFIER,
-					'id'     => 'chimpmatic-form-' . $form->id(),
-					'title'  => '&nbsp;&nbsp;' . esc_html( $form->title() ) . $api_status,
-					'href'   => $form_url,
-					'meta'   => array(
-						'class' => 'cmatic-form-item',
-					),
-				)
-			);
-		}
+		set_transient( self::FORMS_CACHE, $forms, self::CACHE_TTL );
+		return $forms;
 	}
 
-	private function get_form_api_status( $form_id ) {
-		$cf7_mch = get_option( 'cf7_mch_' . $form_id, array() );
-
-		$is_connected = ! empty( $cf7_mch['api-validation'] )
-				&& 1 === (int) $cf7_mch['api-validation']
-			&& ! empty( $cf7_mch['list'] );
-
-		if ( $is_connected ) {
-			return '<span class="cmatic-api-status cmatic-api-connected" title="' . esc_attr__( 'Connected to Mailchimp API', 'contact-form-7-mailchimp-extension' ) . '">' . esc_html__( 'API', 'contact-form-7-mailchimp-extension' ) . '</span>';
+	/**
+	 * @param array<string,mixed>|null $entry
+	 */
+	private static function pill( $entry ): string {
+		if ( null === $entry || ! Cmatic_Sync_Stats::has_counts( $entry ) ) {
+			return '<span class="cmatic-ab-pill cmatic-ab-idle">' . esc_html__( 'no syncs yet', 'contact-form-7-mailchimp-extension' ) . '</span>';
 		}
-
-		return '<span class="cmatic-api-status cmatic-api-disconnected" title="' . esc_attr__( 'Not connected to Mailchimp API', 'contact-form-7-mailchimp-extension' ) . '">' . esc_html__( 'API', 'contact-form-7-mailchimp-extension' ) . '</span>';
+		$parts = array();
+		$ok     = Cmatic_Sync_Stats::int( $entry['ok'] ?? 0 );
+		$failed = Cmatic_Sync_Stats::int( $entry['failed'] ?? 0 );
+		if ( $ok > 0 ) {
+			$parts[] = '<span class="cmatic-ab-ok">' . esc_html( number_format_i18n( $ok ) ) . '&nbsp;&#10003;</span>';
+		}
+		if ( Cmatic_Sync_Stats::is_failing( $entry ) ) {
+			$parts[] = '<span class="cmatic-ab-fail">' . esc_html( number_format_i18n( $failed ) ) . '&nbsp;&#10007;</span>';
+		}
+		return '<span class="cmatic-ab-pill">' . implode( ' ', $parts ) . '</span>';
 	}
 
-	private function get_notification_counter( $count ) {
+	/**
+	 * @param array<string,mixed>|null $entry
+	 */
+	private static function tooltip( $entry ): string {
+		if ( null === $entry || ! Cmatic_Sync_Stats::has_counts( $entry ) ) {
+			return esc_attr__( 'No submissions have synced yet.', 'contact-form-7-mailchimp-extension' );
+		}
+		if ( Cmatic_Sync_Stats::is_failing( $entry ) ) {
+			$error = Cmatic_Sync_Stats::str( $entry['last_error'] ?? '' );
+			$error = '' !== $error ? $error : __( 'unknown', 'contact-form-7-mailchimp-extension' );
+			/* translators: %s: the error the provider returned */
+			return esc_attr( sprintf( __( 'Last error: %s', 'contact-form-7-mailchimp-extension' ), $error ) );
+		}
+		return esc_attr__( 'Syncing normally.', 'contact-form-7-mailchimp-extension' );
+	}
+
+	private static function failing_counter( int $count ): string {
 		if ( $count < 1 ) {
 			return '';
 		}
-
-		$screen_reader_text = sprintf(
-			/* translators: %s: number of notifications */
-			_n( '%s notification', '%s notifications', $count, 'contact-form-7-mailchimp-extension' ),
-			number_format_i18n( $count )
-		);
-
-		return sprintf(
-			'<div class="wp-core-ui wp-ui-notification cmatic-issue-counter"><span aria-hidden="true">%1$d</span><span class="screen-reader-text">%2$s</span></div>',
-			(int) $count,
-			esc_html( $screen_reader_text )
-		);
+		/* translators: %s: number of forms failing to sync */
+		return self::counter( $count, sprintf( _n( '%s form is failing to sync', '%s forms are failing to sync', $count, 'contact-form-7-mailchimp-extension' ), number_format_i18n( $count ) ), '' );
 	}
 
-	private function get_settings_url() {
-		if ( class_exists( 'Cmatic_Plugin_Links' ) ) {
-			$url = Cmatic_Plugin_Links::get_settings_url();
-			if ( ! empty( $url ) ) {
-				return $url;
-			}
+	private static function update_counter( int $count ): string {
+		if ( $count < 1 ) {
+			return '';
 		}
+		/* translators: %s: number of plugin updates */
+		return self::counter( $count, sprintf( _n( '%s plugin update', '%s plugin updates', $count, 'contact-form-7-mailchimp-extension' ), number_format_i18n( $count ) ), 'cmatic-ab-count--update' );
+	}
 
-		return admin_url( 'admin.php?page=wpcf7' );
+	private static function counter( int $count, string $label, string $extra_class ): string {
+		return sprintf(
+			'<span class="wp-core-ui wp-ui-notification cmatic-ab-count %3$s"><span aria-hidden="true">%1$d</span><span class="screen-reader-text">%2$s</span></span>',
+			$count,
+			esc_html( $label ),
+			esc_attr( $extra_class )
+		);
 	}
 
 	public function enqueue_assets() {
 		if ( ! $this->can_show_menu() ) {
 			return;
 		}
-
-		$css = $this->get_inline_css();
-		wp_add_inline_style( 'admin-bar', $css );
+		wp_add_inline_style( 'admin-bar', $this->css() );
 	}
 
-	private function get_inline_css() {
-		$icon_base64 = $this->get_icon_base64();
-
-		$css = '
-			#wpadminbar .cmatic-logo.svg {
-				background-image: url("data:image/svg+xml;base64,' . $icon_base64 . '");
-				background-position: center;
-				background-repeat: no-repeat;
-				background-size: 20px;
-				float: left;
-				height: 30px;
-				width: 26px;
-				margin-top: 2px;
-			}
-			#wpadminbar #wp-admin-bar-chimpmatic-menu .cmatic-form-item .ab-item {
-				background-color: rgba(255,255,255,0.04) !important;
-				padding-left: 20px !important;
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-			}
-			#wpadminbar #wp-admin-bar-chimpmatic-menu .cmatic-form-item .ab-item:hover {
-				background-color: rgba(255,255,255,0.1) !important;
-			}
-			#wpadminbar .cmatic-api-status {
-				font-size: 10px;
-				font-weight: 600;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				margin-left: 15px;
-				flex-shrink: 0;
-			}
-			#wpadminbar .cmatic-api-connected {
-				color: #00ba37;
-			}
-			#wpadminbar .cmatic-api-disconnected {
-				color: #787c82;
-			}
-			#wpadminbar .cmatic-issue-counter {
-				background-color: #d63638;
-				border-radius: 9px;
-				color: #fff;
-				display: inline;
-				padding: 1px 7px 1px 6px !important;
-			}
-			#wpadminbar .quicklinks #wp-admin-bar-chimpmatic-menu #wp-admin-bar-chimpmatic-menu-default li#wp-admin-bar-chimpmatic-upgrade {
-				display: flex;
-			}
-			#wpadminbar .quicklinks #wp-admin-bar-chimpmatic-menu #wp-admin-bar-chimpmatic-menu-default li#wp-admin-bar-chimpmatic-upgrade .ab-item {
-				align-items: center;
-				border-color: transparent;
-				border-radius: 6px;
-				cursor: pointer;
-				display: inline-flex;
-				justify-content: center;
-				margin: 8px 12px;
-				background-color: #00be28;
-				font-size: 13px;
-				font-weight: 500;
-				padding: 6px 10px;
-				text-align: center;
-				text-decoration: none;
-				color: #fff !important;
-        width: 100%;
-			}
-			#wpadminbar .quicklinks #wp-admin-bar-chimpmatic-menu #wp-admin-bar-chimpmatic-menu-default li#wp-admin-bar-chimpmatic-upgrade .ab-item:hover {
-				background-color: #00a522;
-				color: #fff !important;
-			}
-			#wpadminbar #wp-admin-bar-chimpmatic-upgrade .cmatic-issue-counter {
-				width: 18px;
-				height: 18px;
-				min-width: 18px;
-				border-radius: 50%;
-				padding: 0 !important;
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				margin-left: 6px;
-				font-size: 11px;
-				line-height: 1;
-			}
-			@media screen and (max-width: 782px) {
-				#wpadminbar .cmatic-logo.svg {
-					background-position: center 8px;
-					background-size: 30px;
-					height: 46px;
-					width: 52px;
-				}
-				#wpadminbar .cmatic-logo + .cmatic-issue-counter {
-					margin-left: -5px;
-					margin-right: 10px;
-				}
-			}
+	private function css(): string {
+		$icon = 'data:image/svg+xml;base64,' . base64_encode( // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode -- Inline icon, not code.
+			'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff">'
+			. '<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>'
+		);
+		$root = '#wpadminbar #wp-admin-bar-' . self::MENU;
+		return '
+		' . $root . ' .cmatic-ab-icon{background:url("' . $icon . '") center/18px no-repeat;width:26px;height:30px;float:left;margin-top:2px}
+		' . $root . ' .cmatic-ab-count{background-color:#d63638;border-radius:9px;color:#fff;display:inline;margin-left:7px;padding:1px 7px 1px 6px!important}
+		' . $root . ' .cmatic-ab-count--update{background-color:#2271b1}
+		' . $root . ' .cmatic-ab-header>.ab-item{height:auto;line-height:1.5;padding:11px 12px 10px!important;border-bottom:1px solid rgba(255,255,255,.14);pointer-events:none}
+		' . $root . ' .cmatic-ab-brand{color:#fff;font-weight:600;display:block}
+		' . $root . ' .cmatic-ab-plugin{display:block;font-size:11px;color:#a7aaad;line-height:1.3}
+		' . $root . ' .cmatic-ab-group>.ab-item{height:auto;line-height:1.4;padding:13px 12px 2px!important;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#8f9296!important;pointer-events:none}
+		' . $root . ' .cmatic-ab-form>.ab-item{display:flex;justify-content:space-between;align-items:center;gap:18px;padding-left:20px!important;background:rgba(255,255,255,.04)}
+		' . $root . ' .cmatic-ab-form>.ab-item:hover{background:rgba(255,255,255,.1)}
+		' . $root . ' .cmatic-ab-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px}
+		' . $root . ' .cmatic-ab-pill{font-size:11px;font-weight:600;flex-shrink:0;white-space:nowrap}
+		' . $root . ' .cmatic-ab-ok{color:#00ba37}
+		' . $root . ' .cmatic-ab-fail{color:#ff6b6b}
+		' . $root . ' .cmatic-ab-idle{color:#787c82;font-weight:400}
+		' . $root . ' .cmatic-ab-update>.ab-item{color:#fff!important;font-weight:600}
+		' . $root . ' .cmatic-ab-update>.ab-item:hover{background:rgba(255,255,255,.1)}
+		' . $root . ' .cmatic-ab-link>.ab-item{border-top:1px solid rgba(255,255,255,.1)}
+		' . $root . ' li.cmatic-ab-upgrade{display:flex}
+		' . $root . ' li.cmatic-ab-upgrade>.ab-item{display:inline-flex;align-items:center;justify-content:center;width:100%;margin:8px 12px;padding:6px 10px;border-radius:6px;background-color:#00be28;color:#fff!important;font-size:13px;font-weight:500;text-align:center;text-decoration:none;cursor:pointer;height:auto;line-height:1.4}
+		' . $root . ' li.cmatic-ab-upgrade>.ab-item:hover{background-color:#00a522;color:#fff!important}
+		@media screen and (max-width:782px){
+			' . $root . ' .cmatic-ab-icon{background-size:24px;width:52px;height:46px;margin-top:0}
+		}
 		';
-
-		return $css;
-	}
-
-	private function get_icon_base64() {
-		$svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2382878c">'
-			. '<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>'
-			. '</svg>';
-
-		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-		return base64_encode( $svg );
 	}
 
 	public function render_upgrade_click_script() {
-		if ( ! $this->can_show_menu() ) {
+		if ( ! $this->can_show_menu() || $this->is_pro_active() || ! $this->should_show_upgrade_badge() ) {
 			return;
 		}
-
-		if ( $this->is_pro_active() || ! $this->should_show_upgrade_badge() ) {
-			return;
-		}
-
 		?>
 		<script>
 		(function() {

@@ -1,8 +1,9 @@
 <?php
 /**
- * Provider-facing admin UI metadata.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -20,13 +21,27 @@ final class Cmatic_Lite_Esp_Manifest {
 				'person_plural'        => __( 'Contacts', 'contact-form-7-mailchimp-extension' ),
 				'data_singular'        => __( 'Merge field', 'contact-form-7-mailchimp-extension' ),
 				'data_plural'          => __( 'Merge fields', 'contact-form-7-mailchimp-extension' ),
-				'uses_legacy_panel'    => true,
+				'uses_legacy_panel'    => false,
 				'supports_fields'      => true,
-				'auth_fields'          => array(),
+				'features'             => array(
+					'double_optin'        => true,
+					'oauth'               => true,
+					'multi_group_routing' => true,
+				),
+				'auth_fields'          => array(
+					array(
+						'id'           => 'api_key',
+						'label'        => __( 'Mailchimp API key', 'contact-form-7-mailchimp-extension' ),
+						'placeholder'  => __( 'Paste your Mailchimp API key', 'contact-form-7-mailchimp-extension' ),
+						'description'  => __( 'Create a key in Mailchimp under Account, Extras, API keys. It is stored in your WordPress database and never displayed again.', 'contact-form-7-mailchimp-extension' ),
+						'type'         => 'password',
+						'autocomplete' => 'new-password',
+					),
+				),
 				'consent'              => array(
-					'mode'        => 'legacy',
+					'mode'        => 'mailchimp',
 					'docs_url'    => 'https://mailchimp.com/help/about-double-opt-in/',
-					'description' => __( 'Mailchimp opt-in and marketing permissions are managed in the existing Pro settings.', 'contact-form-7-mailchimp-extension' ),
+					'description' => __( 'Choose which submissions reach Mailchimp and whether a confirmation email goes out first.', 'contact-form-7-mailchimp-extension' ),
 				),
 			),
 			'brevo'      => array(
@@ -38,6 +53,9 @@ final class Cmatic_Lite_Esp_Manifest {
 				'data_plural'          => __( 'Contact attributes', 'contact-form-7-mailchimp-extension' ),
 				'uses_legacy_panel'    => false,
 				'supports_fields'      => true,
+				'features'             => array(
+					'multi_group_routing' => true,
+				),
 				'auth_fields'          => array(
 					array(
 						'id'           => 'api_key',
@@ -95,6 +113,9 @@ final class Cmatic_Lite_Esp_Manifest {
 				'data_plural'          => __( 'Profile properties', 'contact-form-7-mailchimp-extension' ),
 				'uses_legacy_panel'    => false,
 				'supports_fields'      => true,
+				'features'             => array(
+					'multi_group_routing' => true,
+				),
 				'auth_fields'          => array(
 					array(
 						'id'           => 'api_key',

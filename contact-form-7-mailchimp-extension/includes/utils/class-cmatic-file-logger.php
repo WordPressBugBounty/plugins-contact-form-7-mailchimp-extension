@@ -1,7 +1,5 @@
 <?php
 /**
- * Debug file logger.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -17,25 +15,22 @@ class Cmatic_File_Logger implements Cmatic_Logger_Interface {
 	private $log_prefix;
 
 	public function __construct( $context = 'Chimpmatic', $enabled = false ) {
-
-		$this->is_write_enabled = (bool) $enabled && ( defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG );
+		$this->is_write_enabled = (bool) $enabled;
 		$this->log_prefix       = '[' . sanitize_key( $context ) . ']';
 	}
 
 	public function log( string $level, string $message, $context = null ): void {
-		if ( ! $this->is_write_enabled ) {
+		if ( ! $this->is_write_enabled || ! Cmatic_Debug_Log::logging() ) {
 			return;
 		}
 
-		$level_str   = strtoupper( $level );
-		$log_message = "[Chimpmatic Lite] {$this->log_prefix} [{$level_str}] " . trim( $message );
+		$log_message = $this->log_prefix . ' ' . trim( $message );
 
 		if ( ! is_null( $context ) ) {
-			$context_string = $this->format_data( $context );
-			$log_message   .= ' | Data: ' . $context_string;
+			$log_message .= ' | Data: ' . $this->format_data( $context );
 		}
 
-		error_log( $log_message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		Cmatic_Debug_Log::write( $level, $log_message );
 	}
 
 	private function format_data( $data ) {
@@ -76,22 +71,5 @@ class Cmatic_File_Logger implements Cmatic_Logger_Interface {
 		}
 
 		return substr( $json, 0, 1000 ) . '... [truncated]';
-	}
-
-	private function map_numeric_level_to_string( $numeric_level ) {
-		switch ( (int) $numeric_level ) {
-			case 1:
-				return 'INFO';
-			case 2:
-				return 'DEBUG';
-			case 3:
-				return 'WARNING';
-			case 4:
-				return 'ERROR';
-			case 5:
-				return 'CRITICAL';
-			default:
-				return 'UNKNOWN';
-		}
 	}
 }

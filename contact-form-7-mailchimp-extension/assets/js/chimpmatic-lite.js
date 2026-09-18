@@ -2,8 +2,8 @@
  * Console logging handler.
  *
  * @package   contact-form-7-mailchimp-extension
- * @author    renzo.johnson@gmail.com
- * @copyright 2014-2026 https://renzojohnson.com
+ * @author    hello@chimpmatic.com
+ * @copyright 2014-2026 ChimpMatic
  * @license   GPL-3.0+
  */
 
@@ -86,10 +86,10 @@ function chimpmaticLiteInit() {
 		return data;
 	}
 
+	let cmaticLogSource = 'own';
+
 	async function getDebugLog(filtered = true) {
-		const url = filtered
-			? `${chimpmaticLite.restUrl}logs`
-			: `${chimpmaticLite.restUrl}logs?filter=0`;
+		const url = `${chimpmaticLite.restUrl}logs?filter=${filtered ? '1' : '0'}&source=${cmaticLogSource}`;
 
 		const response = await fetch(url, {
 			method: 'GET',
@@ -98,6 +98,8 @@ function chimpmaticLiteInit() {
 
 		const data = await response.json();
 		if (!response.ok) throw new Error(data.message || 'Failed to fetch log');
+		const meta = document.getElementById('cmatic-log-meta');
+		if (meta) meta.textContent = data.exists ? `${data.path} · ${Math.round((data.size || 0) / 1024)} KB · ${data.count || 0} lines shown` : '';
 		return data;
 	}
 
@@ -557,8 +559,8 @@ function chimpmaticLiteInit() {
 	}
 
 	function initToggleAutoSave() {
-		const globalFields = ['debug', 'backlink', 'auto_update', 'telemetry'];
-		const toggles = document.querySelectorAll('.cmatic-toggle input[data-field]');
+		const globalFields = ['debug', 'backlink', 'auto_update', 'telemetry', 'purge_on_uninstall', 'sender_context'];
+		const toggles = document.querySelectorAll('.cmatic-toggle input[data-field], .cmatic-adv-toggle input[data-field]');
 		if (toggles.length === 0) return;
 
 		toggles.forEach(function(toggle) {
@@ -568,7 +570,7 @@ function chimpmaticLiteInit() {
 				if (!globalFields.includes(field)) return;
 
 				const enabled = this.checked;
-				const wrapper = this.closest('.cmatic-toggle');
+				const wrapper = this.closest('.cmatic-toggle, .cmatic-adv-toggle');
 
 				if (wrapper) wrapper.classList.add('is-saving');
 
@@ -587,6 +589,7 @@ function chimpmaticLiteInit() {
 					if (data.success) {
 						this.checked = enabled;
 						this.defaultChecked = enabled;
+						if (field === 'debug') updateDebugState(parseInt(data.debug_until || 0, 10));
 					} else {
 						this.checked = !enabled;
 					}
@@ -659,6 +662,151 @@ function chimpmaticLiteInit() {
 	}
 
 	initSelectAutoSave();
+
+	function updateDebugState(until) {
+		const toggle = document.getElementById('wpcf7-mailchimp-logfileEnabled');
+		if (!toggle) return;
+		const placed = document.getElementById('cmatic-debug-state');
+		if (placed && !toggle.closest('fieldset')) {
+			if (placed.dataset.server === '1') {
+				delete placed.dataset.server;
+				return;
+			}
+			const words = chimpmaticLite.i18n || {};
+			placed.textContent = until > 0
+				? (words.debugOnUntil || 'On until %s, then off by itself.').replace('%s', new Date(until * 1000).toLocaleString())
+				: (words.debugOff || 'Off. When on, every request to the provider and every sync outcome is written to a private file for 14 days.');
+			return;
+		}
+		const label = toggle.closest('fieldset')?.querySelector('.cmatic-toggle-label');
+		if (!label) return;
+		let state = document.getElementById('cmatic-debug-state');
+		if (!state) {
+			state = document.createElement('span');
+			state.id = 'cmatic-debug-state';
+			state.className = 'description';
+			state.style.display = 'block';
+			label.insertAdjacentElement('afterend', state);
+		}
+		const i18n = chimpmaticLite.i18n || {};
+		state.textContent = until > 0
+			? (i18n.debugOnUntil || 'On until %s, then off by itself.').replace('%s', new Date(until * 1000).toLocaleString())
+			: (i18n.debugOff || 'Off. When on, every request to the provider and every sync outcome is written to a private file for 14 days.');
+	}
+	updateDebugState(parseInt(chimpmaticLite.debugUntil || 0, 10));
+
+	document.addEventListener('click', async function(event) {
+		const download = event.target.closest('.vc-download-logs');
+		if (download) {
+			event.preventDefault();
+			window.open(`${chimpmaticLite.restUrl}logs/download?_wpnonce=${encodeURIComponent(chimpmaticLite.restNonce)}`, '_blank');
+			return;
+		}
+		const open = event.target.closest('.vc-open-logs');
+		if (open) {
+			event.preventDefault();
+			const logPanel = document.getElementById('log_panel');
+			if (!logPanel) return;
+			const i18n = chimpmaticLite.i18n || {};
+			logPanel.textContent = i18n.loading || 'Loading...';
+			try {
+				const filterLink = document.querySelector('.vc-toggle-filter');
+				const data = await getDebugLog(!filterLink || filterLink.getAttribute('data-filtered') !== '0');
+				logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
+			} catch (error) {
+				logPanel.textContent = i18n.error || 'Error loading logs';
+			}
+			return;
+		}
+		const tab = event.target.closest('[data-cmatic-log-source]');
+		if (tab) {
+			event.preventDefault();
+			cmaticLogSource = tab.dataset.cmaticLogSource === 'site' ? 'site' : 'own';
+			tab.parentElement.querySelectorAll('[data-cmatic-log-source]').forEach(function(button) { button.classList.toggle('is-active', button === tab); });
+			const panel = document.getElementById('log_panel');
+			if (!panel) return;
+			panel.textContent = (chimpmaticLite.i18n || {}).loading || 'Loading...';
+			try {
+				const data = await getDebugLog(true);
+				panel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
+			} catch (error) {
+				panel.textContent = (chimpmaticLite.i18n || {}).error || 'Error loading logs';
+			}
+			return;
+		}
+		const source = event.target.closest('.vc-log-source');
+		if (!source) return;
+		event.preventDefault();
+		cmaticLogSource = cmaticLogSource === 'own' ? 'site' : 'own';
+		const i18n = chimpmaticLite.i18n || {};
+		source.textContent = cmaticLogSource === 'own' ? (i18n.logSourceSite || 'Site errors') : (i18n.logSourceOwn || 'Plugin log');
+		const filterWrap = document.querySelector('.vc-filter-wrap');
+		if (filterWrap) filterWrap.style.display = cmaticLogSource === 'site' ? '' : 'none';
+		const logPanel = document.getElementById('log_panel');
+		if (!logPanel) return;
+		logPanel.textContent = i18n.loading || 'Loading...';
+		try {
+			const filterLink = document.querySelector('.vc-toggle-filter');
+			const filtered = !filterLink || filterLink.getAttribute('data-filtered') !== '0';
+			const data = await getDebugLog(filtered);
+			logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
+		} catch (error) {
+			logPanel.textContent = i18n.error || 'Error loading logs';
+		}
+	});
+
+	(function initLogAutoRefresh() {
+		const auto = document.getElementById('cmatic-log-auto');
+		if (!auto) return;
+		let timer = 0;
+		auto.addEventListener('change', function() {
+			window.clearInterval(timer);
+			if (!auto.checked) return;
+			timer = window.setInterval(async function() {
+				const panel = document.getElementById('log_panel');
+				if (!panel) return;
+				try {
+					const data = await getDebugLog(true);
+					panel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
+				} catch (error) {
+					window.clearInterval(timer);
+				}
+			}, 5000);
+		});
+	})();
+
+	(function initSystemReport() {
+		const build = document.getElementById('cmatic-report-build');
+		const copy = document.getElementById('cmatic-report-copy');
+		const box = document.getElementById('cmatic-system-report');
+		const feedback = document.getElementById('cmatic-report-feedback');
+		if (!build || !box) return;
+		const i18n = chimpmaticLite.i18n || {};
+		build.addEventListener('click', async function() {
+			build.disabled = true;
+			if (feedback) feedback.textContent = i18n.reportBuilding || 'Building...';
+			try {
+				const response = await fetch(`${chimpmaticLite.restUrl}system-report`, { headers: { 'X-WP-Nonce': chimpmaticLite.restNonce } });
+				const data = await response.json();
+				if (!response.ok || !data.success) throw new Error(data.message || 'failed');
+				box.value = data.report;
+				if (copy) copy.disabled = false;
+				if (feedback) feedback.textContent = '';
+			} catch (error) {
+				if (feedback) feedback.textContent = i18n.reportFailed || 'Could not build the report.';
+			}
+			build.disabled = false;
+		});
+		if (copy) copy.addEventListener('click', async function() {
+			try {
+				await navigator.clipboard.writeText(box.value);
+				if (feedback) feedback.textContent = i18n.reportCopied || 'Copied.';
+			} catch (error) {
+				box.select();
+				if (feedback) feedback.textContent = i18n.reportSelectCopy || 'Selected. Press Ctrl+C or Cmd+C.';
+			}
+		});
+	})();
 
 	const debugLogButton = document.querySelector('.cme-trigger-log:not(.cmatic-accordion-btn)');
 	if (debugLogButton) {
@@ -830,13 +978,13 @@ function chimpmaticLiteInit() {
 				}
 
 				setTimeout(() => {
-					this.textContent = 'Clear Logs';
+					this.textContent = originalText;
 					this.disabled = false;
 				}, 2000);
 			} catch (error) {
 				this.textContent = 'Clearing Log Error';
 				setTimeout(() => {
-					this.textContent = 'Clear Logs';
+					this.textContent = originalText;
 					this.disabled = false;
 				}, 3000);
 			}
@@ -1560,7 +1708,6 @@ function chimpmaticLiteInit() {
 			return;
 		}
 
-		// Escape Mailchimp-supplied values before they hit innerHTML (CVE-2026-15000).
 		function esc(value) {
 			if (value === null || value === undefined) {
 				return '';

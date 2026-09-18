@@ -1,8 +1,9 @@
 <?php
 /**
- * Optional provider subscriber lookup operation.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -11,8 +12,6 @@ defined( 'ABSPATH' ) || exit;
 
 interface Cmatic_Lite_Esp_Lookup_Interface {
 	/**
-	 * Looks up one subscriber without exposing the credential.
-	 *
 	 * @param string $api_key Provider credential.
 	 * @param string $email   Subscriber email address.
 	 */

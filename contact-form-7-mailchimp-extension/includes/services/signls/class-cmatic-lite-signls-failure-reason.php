@@ -1,10 +1,8 @@
 <?php
 /**
- * Deterministic Signls failure classification and scrubbing.
- *
  * @package   contact-form-7-mailchimp-extension
- * @author    renzo.johnson@gmail.com
- * @copyright 2014-2026 https://renzojohnson.com
+ * @author    hello@chimpmatic.com
+ * @copyright 2014-2026 ChimpMatic
  * @license   GPL-3.0+
  */
 
@@ -34,8 +32,6 @@ final class Cmatic_Lite_Signls_Failure_Reason {
 	);
 
 	/**
-	 * Convert any provider failure shape into a closed code and safe sample.
-	 *
 	 * @param mixed  $value    Provider value, result, error or exception.
 	 * @param string $fallback Closed fallback code or safe fallback message.
 	 * @return array{code:string,sample:string}
@@ -59,8 +55,6 @@ final class Cmatic_Lite_Signls_Failure_Reason {
 	}
 
 	/**
-	 * Read only conventional bounded error fields; never serialize a whole payload.
-	 *
 	 * @param mixed $value Candidate failure value.
 	 */
 	private static function extract_text( $value ): string {
@@ -100,8 +94,6 @@ final class Cmatic_Lite_Signls_Failure_Reason {
 	}
 
 	/**
-	 * Extract a conventional HTTP status without inspecting arbitrary members.
-	 *
 	 * @param mixed $value Candidate failure value.
 	 */
 	private static function extract_status( $value ): int {

@@ -1,7 +1,5 @@
 <?php
 /**
- * Form submission handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -77,8 +75,6 @@ final class Cmatic_Submission_Handler {
 	}
 
 	/**
-	 * Process a non-Mailchimp provider submission.
-	 *
 	 * @param WPCF7_ContactForm   $contact_form Contact form being submitted.
 	 * @param array<string,mixed> $config       Complete form integration config.
 	 * @param string              $slug         Selected provider slug.
@@ -113,10 +109,10 @@ final class Cmatic_Submission_Handler {
 			);
 			return;
 		}
-		$advanced = Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id );
+		$advanced = Cmatic_Lite_Esp_Capabilities::feature_enabled( 'double_optin', $slug, $form_id );
 		$runtime  = $settings;
 		if ( ! $advanced ) {
-			foreach ( array( 'consent_gate', 'consent_field', 'subscription_mode', 'doi_template_id', 'doi_redirect_url', 'doi_verified' ) as $premium_key ) {
+			foreach ( array( 'subscription_mode', 'doi_template_id', 'doi_redirect_url', 'doi_verified' ) as $premium_key ) {
 				unset( $runtime[ $premium_key ] );
 			}
 		}
@@ -155,6 +151,18 @@ final class Cmatic_Submission_Handler {
 				'doi_redirect_url'  => esc_url_raw( (string) ( $runtime['doi_redirect_url'] ?? '' ) ),
 			)
 			: array();
+		$groups      = array( $list_id );
+		$routing_on  = Cmatic_Lite_Esp_Capabilities::feature_enabled( Cmatic_Lite_Esp_Capabilities::routing_feature( $slug ), $slug, $form_id );
+		if ( $routing_on && Cmatic_Mailerlite_Routing_Resolver::is_premium_configured( $settings ) ) {
+			$routing = Cmatic_Mailerlite_Routing_Resolver::resolve( $settings, $posted_data, Cmatic_Form_Tags::get_tags_with_types( $contact_form ) );
+			if ( ! $routing['success'] ) {
+				Cmatic_Submission_Feedback::set_result( Cmatic_Submission_Feedback::failure( (string) $routing['reason'], '', $email ) );
+				return;
+			}
+			$groups = $routing['groups'];
+			$logger->log( 'INFO', 'Destinations resolved.', array( 'count' => count( $groups ), 'matched_rules' => count( $routing['matched_rules'] ) ) );
+		}
+		$options['groups'] = $groups;
 		Cmatic_Lite_Esp_Registry::get( $slug )->subscribe( $api_key, $list_id, $email, $status, $merge_vars, $form_id, $options, $logger );
 	}
 

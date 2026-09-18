@@ -1,7 +1,5 @@
 <?php
 /**
- * OAuth credential manager.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -17,8 +15,6 @@ class Cmatic_Lite_Auth_Manager {
 	const CIPHER        = 'aes-256-cbc';
 
 	/**
-	 * Save encrypted OAuth credentials.
-	 *
 	 * @param int    $form_id Form ID.
 	 * @param string $api_key Plain Mailchimp API key from gateway.
 	 * @return true|WP_Error
@@ -54,8 +50,6 @@ class Cmatic_Lite_Auth_Manager {
 	}
 
 	/**
-	 * Get decrypted credentials for a form.
-	 *
 	 * @param int $form_id Form ID.
 	 * @return Cmatic_Lite_Credentials|null
 	 */
@@ -74,8 +68,6 @@ class Cmatic_Lite_Auth_Manager {
 	}
 
 	/**
-	 * Check if a form has OAuth credentials stored.
-	 *
 	 * @param int $form_id Form ID.
 	 * @return bool
 	 */
@@ -84,8 +76,6 @@ class Cmatic_Lite_Auth_Manager {
 	}
 
 	/**
-	 * Disconnect OAuth for a form. Restores backup API key if available.
-	 *
 	 * @param int $form_id Form ID.
 	 */
 	public function disconnect( $form_id ) {
@@ -121,12 +111,6 @@ class Cmatic_Lite_Auth_Manager {
 	}
 
 	/**
-	 * Resolve the credential for a form.
-	 *
-	 * Precedence: explicit key, then the stored manual key, then the OAuth
-	 * envelope. Every OAuth connect clears cf7_mch['api'], so a non-empty
-	 * manual key always postdates the last connect and must win.
-	 *
 	 * @param int    $form_id     Form ID.
 	 * @param string $fallback    Optional explicit API key (from REST param).
 	 * @param array  $cf7_mch     Optional pre-loaded config (avoids duplicate get_option).
@@ -248,8 +232,6 @@ class Cmatic_Lite_Auth_Manager {
 	}
 
 	/**
-	 * Decrypt a raw blob (no version byte) with the given key pair.
-	 *
 	 * @param string $data    Raw binary: HMAC(32) + IV(16) + ciphertext.
 	 * @param array  $keys    [ $enc_key, $mac_key ].
 	 * @return string|false   Plaintext on success, false on failure.

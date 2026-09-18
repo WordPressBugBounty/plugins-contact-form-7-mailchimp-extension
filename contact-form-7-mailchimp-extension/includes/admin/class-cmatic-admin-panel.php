@@ -1,7 +1,5 @@
 <?php
 /**
- * CF7 admin panel integration.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -16,8 +14,6 @@ final class Cmatic_Admin_Panel {
 	private const PANEL_KEY = 'Chimpmatic';
 
 	/**
-	 * Settings captured before another saver runs.
-	 *
 	 * @var array<int, array<string, mixed>>
 	 */
 	private static $settings_before_save = array();
@@ -77,33 +73,49 @@ final class Cmatic_Admin_Panel {
 		wpcf7_chimp_add_mailchimp( $contact_form );
 		$panel = (string) ob_get_clean();
 
-		echo self::inject_help_us_improve_row( $panel ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The trusted Pro callback already escaped its panel; Lite only inserts its own escaped row.
+		echo self::inject_lite_rows( $panel ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The trusted Pro callback already escaped its panel; Lite only inserts its own escaped rows.
 	}
 
-	private static function inject_help_us_improve_row( string $panel ): string {
-		if ( false !== strpos( $panel, 'id="cmatic-telemetry-enabled"' ) ) {
-			return $panel;
+	private static function inject_lite_rows( string $panel ): string {
+		$rows = array(
+			'cmatic-telemetry-enabled'  => static function (): void {
+				Cmatic_Advanced_Settings::render_help_us_improve_row();
+			},
+			'cmatic-purge-on-uninstall' => static function (): void {
+				Cmatic_Advanced_Settings::render_purge_row();
+			},
+			'cmatic-system-report'      => static function (): void {
+				Cmatic_Advanced_Settings::render_report_row();
+			},
+		);
+
+		foreach ( $rows as $marker_id => $renderer ) {
+			if ( false !== strpos( $panel, 'id="' . $marker_id . '"' ) ) {
+				continue;
+			}
+
+			$advanced_start = strpos( $panel, 'id="cme-container"' );
+			$tbody_start    = false === $advanced_start ? false : strpos( $panel, '<tbody>', $advanced_start );
+			$tbody_end      = false === $tbody_start ? false : strpos( $panel, '</tbody>', $tbody_start );
+			if ( false === $advanced_start || false === $tbody_start || false === $tbody_end ) {
+				return $panel;
+			}
+
+			ob_start();
+			$renderer();
+			$row = (string) ob_get_clean();
+
+			$advanced_body = substr( $panel, $tbody_start, $tbody_end - $tbody_start );
+			$license       = strpos( $advanced_body, '<th scope="row">License Reset</th>' );
+			$insert_at     = false === $license ? $tbody_end : strrpos( substr( $panel, 0, $tbody_start + $license ), '<tr>' );
+			if ( false === $insert_at ) {
+				$insert_at = $tbody_end;
+			}
+
+			$panel = substr( $panel, 0, $insert_at ) . $row . substr( $panel, $insert_at );
 		}
 
-		$advanced_start = strpos( $panel, 'id="cme-container"' );
-		$tbody_start    = false === $advanced_start ? false : strpos( $panel, '<tbody>', $advanced_start );
-		$tbody_end      = false === $tbody_start ? false : strpos( $panel, '</tbody>', $tbody_start );
-		if ( false === $advanced_start || false === $tbody_start || false === $tbody_end ) {
-			return $panel;
-		}
-
-		ob_start();
-		Cmatic_Advanced_Settings::render_help_us_improve_row();
-		$row = (string) ob_get_clean();
-
-		$advanced_body = substr( $panel, $tbody_start, $tbody_end - $tbody_start );
-		$license       = strpos( $advanced_body, '<th scope="row">License Reset</th>' );
-		$insert_at     = false === $license ? $tbody_end : strrpos( substr( $panel, 0, $tbody_start + $license ), '<tr>' );
-		if ( false === $insert_at ) {
-			$insert_at = $tbody_end;
-		}
-
-		return substr( $panel, 0, $insert_at ) . $row . substr( $panel, $insert_at );
+		return $panel;
 	}
 
 	public static function render_panel( $contact_form ): void {
@@ -146,19 +158,9 @@ final class Cmatic_Admin_Panel {
 		if ( defined( 'CMATIC_VERSION' ) ) {
 			Cmatic_Lite_Esp_Panel::render_pro_mailchimp_notice();
 		} else {
-			Cmatic_Api_Panel::render( $cf7_mch, (string) $api_valid, $form_id );
-			if ( class_exists( 'Cmatic_Audiences' ) ) {
-				Cmatic_Audiences::render( (string) $api_valid, $list_data, $cf7_mch );
-			}
-			Cmatic_Field_Mapper_UI::render( $api_valid, $list_data, $cf7_mch, $form_tags, $form_id );
-			Cmatic_Panel_Toggles::cmatic_render();
 			if ( class_exists( 'Cmatic_Contact_Lookup' ) ) {
 				Cmatic_Contact_Lookup::cmatic_render( array( 'form_id' => $form_id ) );
 			}
-			Cmatic_Log_Viewer::render();
-			echo '<div id="cme-container" class="mce-custom-fields vc-advanced-settings">';
-			Cmatic_Advanced_Settings::render();
-			echo '</div>';
 			echo '<div class="vc-hidden-start dev-cta mce-cta welcome-panel">';
 			echo '<div class="welcome-panel-content">';
 			echo Cmatic_Banners::get_welcome(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -301,8 +303,6 @@ final class Cmatic_Admin_Panel {
 	}
 
 	/**
-	 * Capture the complete option before Lite or Pro saves it.
-	 *
 	 * @param WPCF7_ContactForm $contact_form Contact form being saved.
 	 */
 	public static function capture_settings( $contact_form ): void {
@@ -312,8 +312,6 @@ final class Cmatic_Admin_Panel {
 	}
 
 	/**
-	 * Restore omitted state and save the provider selector/mappings.
-	 *
 	 * @param WPCF7_ContactForm $contact_form Contact form being saved.
 	 */
 	public static function save_provider_settings( $contact_form ): void {
@@ -344,25 +342,30 @@ final class Cmatic_Admin_Panel {
 		if ( 'mailchimp' !== $slug ) {
 			$current['providers'] = isset( $current['providers'] ) && is_array( $current['providers'] ) ? $current['providers'] : array();
 			$settings             = isset( $current['providers'][ $slug ] ) && is_array( $current['providers'][ $slug ] ) ? $current['providers'][ $slug ] : array();
-			$list                 = 'mailerlite' === $slug
-				? sanitize_text_field( (string) ( $posted['primary_group'] ?? '' ) )
-				: sanitize_text_field( (string) ( $posted['list'] ?? '' ) );
-			if ( 'mailerlite' === $slug && ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_routing', $slug, $form_id ) && Cmatic_Mailerlite_Routing_Resolver::is_premium_configured( $settings ) ) {
+			$routing_feature      = Cmatic_Lite_Esp_Capabilities::routing_feature( $slug );
+			$routing_supported    = ! empty( Cmatic_Lite_Esp_Manifest::get( $slug )['features']['multi_group_routing'] );
+			$list                 = sanitize_text_field( (string) ( $posted['primary_group'] ?? '' ) );
+			if ( '' === $list ) {
+				$list = sanitize_text_field( (string) ( $posted['list'] ?? '' ) );
+			}
+			if ( $routing_supported && ! Cmatic_Lite_Esp_Capabilities::feature_enabled( $routing_feature, $slug, $form_id ) && Cmatic_Mailerlite_Routing_Resolver::is_premium_configured( $settings ) ) {
 				$list = self::stored_primary_group( $settings );
 			}
 				$merge_fields = self::sanitize_provider_fields( $posted['merge_fields'] ?? array(), $field_limit );
 			if ( '' === $list || empty( $merge_fields ) || ! self::provider_list_exists( $settings, $list ) ) {
+				self::remember_provider( $option, $current );
 				return;
 			}
 			$settings['list'] = $list;
-			if ( 'mailerlite' === $slug ) {
-				$routing_entitled = Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_routing', $slug, $form_id );
+			if ( $routing_supported ) {
+				$routing_entitled = Cmatic_Lite_Esp_Capabilities::feature_enabled( $routing_feature, $slug, $form_id );
 				if ( ! $routing_entitled && Cmatic_Mailerlite_Routing_Resolver::is_premium_configured( $settings ) ) {
 					$list             = self::stored_primary_group( $settings );
 					$settings['list'] = $list;
 				} else {
-					$routing = self::sanitize_mailerlite_routing( $list, $posted, $settings, $contact_form );
+					$routing = self::sanitize_routing( $list, $posted, $settings, $contact_form );
 					if ( null === $routing ) {
+						self::remember_provider( $option, $current );
 						return;
 					}
 					$settings['routing_schema'] = 1;
@@ -379,14 +382,24 @@ final class Cmatic_Admin_Panel {
 				}
 			}
 			if ( ! self::has_required_email_mapping( $settings, $field_limit ) ) {
+				self::remember_provider( $option, $current );
 				return;
 			}
 			if ( 'mailerlite' === $slug && ! self::mailerlite_boolean_mappings_valid( $settings, $contact_form, $field_limit ) ) {
+				self::remember_provider( $option, $current );
 				return;
 			}
-			if ( Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id ) ) {
+			$gate = self::sanitize_consent_gate( $posted, $contact_form );
+			if ( null === $gate ) {
+				self::remember_provider( $option, $current );
+				return;
+			}
+			$settings = array_merge( $settings, $gate );
+
+			if ( Cmatic_Lite_Esp_Capabilities::feature_enabled( 'double_optin', $slug, $form_id ) ) {
 				$consent = self::sanitize_provider_consent( $posted, $slug, $contact_form );
 				if ( null === $consent ) {
+					self::remember_provider( $option, $current );
 					return;
 				}
 				if ( 'brevo' === $slug && 'double' === $consent['subscription_mode'] ) {
@@ -400,11 +413,13 @@ final class Cmatic_Admin_Panel {
 					);
 					$current_key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 					if ( '' === $current_key ) {
+						self::remember_provider( $option, $current );
 						return;
 					}
 					$expected['credential_fingerprint'] = Cmatic_Lite_Esp_Rest_Controller::credential_fingerprint( $current_key );
 					unset( $current_key );
 					if ( ! Cmatic_Lite_Esp_Rest_Controller::verify_consent_token( $token, $expected ) ) {
+						self::remember_provider( $option, $current );
 						return;
 					}
 					$consent['doi_verified'] = 1;
@@ -414,6 +429,7 @@ final class Cmatic_Admin_Panel {
 			if ( 'mailerlite' === $slug ) {
 				$settings = self::save_mailerlite_options( $settings, $posted, $contact_form, $form_id );
 				if ( empty( $settings ) ) {
+					self::remember_provider( $option, $current );
 					return;
 				}
 				if ( ! Cmatic_Mailerlite_Runtime_Policy::apply( $settings, self::mailerlite_entitlements( $form_id ) )['degraded'] ) {
@@ -421,6 +437,13 @@ final class Cmatic_Admin_Panel {
 				}
 			}
 				$current['providers'][ $slug ] = $settings;
+		} else {
+			$saved = Cmatic_Mailchimp_Panel_Store::save( $current, $posted, $field_limit, $contact_form );
+			if ( null === $saved ) {
+				self::remember_provider( $option, $current );
+				return;
+			}
+			$current = self::mirror_legacy_mappings( $saved );
 		}
 		update_option( $option, $current );
 		unset( self::$settings_before_save[ $form_id ] );
@@ -458,6 +481,19 @@ final class Cmatic_Admin_Panel {
 		return false;
 	}
 
+	/**
+	 * @param array<string,mixed> $current
+	 */
+	private static function remember_provider( string $option, array $current ): void {
+		$saved = get_option( $option, array() );
+		$saved = is_array( $saved ) ? $saved : array();
+		if ( ( $saved['provider'] ?? '' ) === ( $current['provider'] ?? '' ) ) {
+			return;
+		}
+		$saved['provider'] = $current['provider'];
+		update_option( $option, $saved );
+	}
+
 	private static function stored_primary_group( array $settings ): string {
 		$list = $settings['list'] ?? '';
 		if ( is_array( $list ) ) {
@@ -466,74 +502,11 @@ final class Cmatic_Admin_Panel {
 		return sanitize_text_field( (string) $list );
 	}
 
-	private static function sanitize_mailerlite_routing( string $primary, array $posted, array $settings, $contact_form ): ?array {
-		if ( '' === $primary || ! self::provider_list_exists( $settings, $primary ) ) {
-			return null;
-		}
-		$additional = array();
-		if ( isset( $posted['base_groups'] ) && is_array( $posted['base_groups'] ) ) {
-			$additional = $posted['base_groups'];
-		} elseif ( isset( $posted['additional_groups'] ) && is_array( $posted['additional_groups'] ) ) {
-			$additional = $posted['additional_groups'];
-		}
-		$groups = array( $primary );
-		foreach ( $additional as $group_id ) {
-			$group_id = sanitize_text_field( (string) $group_id );
-			if ( '' !== $group_id && $primary !== $group_id && self::provider_list_exists( $settings, $group_id ) ) {
-				$groups[] = $group_id;
-			}
-		}
-		$groups = array_slice( array_values( array_unique( $groups ) ), 0, 20 );
-
-		$choice_index = array();
-		foreach ( Cmatic_Form_Tags::get_tags_with_types( $contact_form ) as $tag ) {
-			if ( ! is_array( $tag ) || empty( $tag['routing_eligible'] ) || ! isset( $tag['name'] ) || ! is_scalar( $tag['name'] ) ) {
-				continue;
-			}
-			$choices = array();
-			foreach ( isset( $tag['choices'] ) && is_array( $tag['choices'] ) ? $tag['choices'] : array() as $choice ) {
-				if ( is_array( $choice ) && isset( $choice['value'] ) && is_scalar( $choice['value'] ) ) {
-					$choices[] = (string) $choice['value'];
-				}
-			}
-			$choice_index[ (string) $tag['name'] ] = $choices;
-		}
-
-		$rules     = array();
-		$seen      = array();
-		$seen_rule = array();
-		foreach ( array_slice( (array) ( $posted['routing_rules'] ?? array() ), 0, 50 ) as $rule ) {
-			if ( ! is_array( $rule ) ) {
-				return null;
-			}
-			$id       = sanitize_text_field( self::scalar_string( $rule['id'] ?? '' ) );
-			$field    = sanitize_key( self::scalar_string( $rule['field'] ?? '' ) );
-			$value    = sanitize_text_field( self::scalar_string( $rule['value'] ?? '' ) );
-			$group_id = sanitize_text_field( self::scalar_string( $rule['group_id'] ?? '' ) );
-			if ( 1 !== preg_match( '/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5a-f0-9][a-f0-9]{3}-[89ab0-9][a-f0-9]{3}-[a-f0-9]{12}$/i', $id ) || isset( $seen[ $id ] ) ) {
-				return null;
-			}
-			if ( ! isset( $choice_index[ $field ] ) || ! in_array( $value, $choice_index[ $field ], true ) || ! self::provider_list_exists( $settings, $group_id ) ) {
-				return null;
-			}
-			$rule_key = hash( 'sha256', $field . "\0" . $value . "\0" . $group_id );
-			if ( isset( $seen_rule[ $rule_key ] ) ) {
-				return null;
-			}
-			$seen[ $id ]            = true;
-			$seen_rule[ $rule_key ] = true;
-			$rules[]                = compact( 'id', 'field', 'value', 'group_id' );
-		}
-
-		return array(
-			'base_groups'   => $groups,
-			'routing_rules' => $rules,
-		);
+	public static function sanitize_routing( string $primary, array $posted, array $settings, $contact_form ): ?array {
+		return Cmatic_Mailerlite_Routing_Resolver::sanitize( $primary, $posted, $settings, Cmatic_Form_Tags::get_tags_with_types( $contact_form ) );
 	}
 
 	/**
-	 * Ensures MailerLite Boolean fields only map to Contact Form 7 acceptance tags.
-	 *
 	 * @param array $settings     Provider settings being saved.
 	 * @param mixed $contact_form Contact Form 7 form.
 	 * @param int   $field_limit  Effective mapping limit.
@@ -640,19 +613,26 @@ final class Cmatic_Admin_Panel {
 		return false;
 	}
 
-	private static function sanitize_provider_consent( array $posted, string $slug, $contact_form ): ?array {
+	private static function sanitize_consent_gate( array $posted, $contact_form ): ?array {
 		$gate  = isset( $posted['consent_gate'] ) ? sanitize_key( (string) $posted['consent_gate'] ) : 'none';
 		$gate  = in_array( $gate, array( 'none', 'required' ), true ) ? $gate : '';
 		$field = isset( $posted['consent_field'] ) ? sanitize_text_field( (string) $posted['consent_field'] ) : '';
-		if ( '' === $gate || ( 'required' === $gate && ! self::is_acceptance_field( $field, $contact_form ) ) ) {
+		if ( '' === $gate || ( 'required' === $gate && ! self::is_consent_field( $field, $contact_form ) ) ) {
 			return null;
 		}
 
-		$consent = array(
-			'consent_gate'      => $gate,
-			'consent_field'     => 'required' === $gate ? $field : '',
-			'subscription_mode' => 'provider_managed',
+		return array(
+			'consent_gate'  => $gate,
+			'consent_field' => 'required' === $gate ? $field : '',
 		);
+	}
+
+	private static function sanitize_provider_consent( array $posted, string $slug, $contact_form ): ?array {
+		$consent = self::sanitize_consent_gate( $posted, $contact_form );
+		if ( null === $consent ) {
+			return null;
+		}
+		$consent['subscription_mode'] = 'provider_managed';
 		if ( 'brevo' !== $slug ) {
 			return $consent;
 		}
@@ -680,14 +660,14 @@ final class Cmatic_Admin_Panel {
 		return $consent;
 	}
 
-	private static function is_acceptance_field( string $field, $contact_form ): bool {
+	private static function is_consent_field( string $field, $contact_form ): bool {
 		if ( 1 !== preg_match( '/^\[([a-zA-Z_][0-9a-zA-Z:._-]*)\]$/', $field, $match ) ) {
 			return false;
 		}
 		foreach ( Cmatic_Form_Tags::get_tags_with_types( $contact_form ) as $tag ) {
 			if (
 				is_array( $tag )
-				&& 'acceptance' === ( $tag['basetype'] ?? '' )
+				&& in_array( self::scalar_string( $tag['basetype'] ?? '' ), array( 'acceptance', 'checkbox' ), true )
 				&& self::scalar_string( $tag['name'] ?? '' ) === $match[1]
 			) {
 				return true;
@@ -701,8 +681,6 @@ final class Cmatic_Admin_Panel {
 	}
 
 	/**
-	 * Check the Contact Form 7 save nonce and capability.
-	 *
 	 * @param int $form_id Contact form ID.
 	 * @return bool Whether the current request may save the form.
 	 */

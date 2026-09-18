@@ -1,8 +1,9 @@
 <?php
 /**
- * ChimpMatic Lite multi-ESP component.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -115,7 +116,16 @@ final class Cmatic_Lite_Esp_Klaviyo extends Cmatic_Lite_Esp_Provider {
 		);
 	}
 	protected function perform_subscription( string $api_key, string $list_id, string $email, string $status, array $merge_vars, array $options ): array {
-		unset( $options );
+		$list_ids = array();
+		foreach ( isset( $options['groups'] ) && is_array( $options['groups'] ) ? $options['groups'] : array( $list_id ) as $group ) {
+			if ( is_scalar( $group ) && '' !== (string) $group ) {
+				$list_ids[] = (string) $group;
+			}
+		}
+		$list_ids = array_values( array_unique( $list_ids ) );
+		if ( array() === $list_ids ) {
+			$list_ids = array( $list_id );
+		}
 		if ( 'subscribed' !== $status ) {
 			return $this->failure_result( 'configuration_error', 'Klaviyo does not support the requested status in this integration.' );
 		}
@@ -154,43 +164,49 @@ final class Cmatic_Lite_Esp_Klaviyo extends Cmatic_Lite_Esp_Provider {
 			return $this->failure_result( 'api_error', 'Klaviyo profile upsert returned no profile ID.' );
 		}
 
-		$subscription = $this->request(
-			$api_key,
-			'POST',
-			'/profile-subscription-bulk-create-jobs',
-			array(
-				'data' => array(
-					'type'          => 'profile-subscription-bulk-create-job',
-					'attributes'    => array(
-						'profiles' => array(
-							'data' => array(
-								array(
-									'type'       => 'profile',
-									'id'         => $profile_id,
-									'attributes' => array(
-										'email'         => $email,
-										'subscriptions' => array(
-											'email' => array(
-												'marketing' => array( 'consent' => 'SUBSCRIBED' ),
+		$subscription = array();
+		foreach ( $list_ids as $target_list ) {
+			$subscription = $this->request(
+				$api_key,
+				'POST',
+				'/profile-subscription-bulk-create-jobs',
+				array(
+					'data' => array(
+						'type'          => 'profile-subscription-bulk-create-job',
+						'attributes'    => array(
+							'profiles' => array(
+								'data' => array(
+									array(
+										'type'       => 'profile',
+										'id'         => $profile_id,
+										'attributes' => array(
+											'email'         => $email,
+											'subscriptions' => array(
+												'email' => array(
+													'marketing' => array( 'consent' => 'SUBSCRIBED' ),
+												),
 											),
 										),
 									),
 								),
 							),
 						),
-					),
-					'relationships' => array(
-						'list' => array(
-							'data' => array(
-								'type' => 'list',
-								'id'   => $list_id,
+						'relationships' => array(
+							'list' => array(
+								'data' => array(
+									'type' => 'list',
+									'id'   => $target_list,
+								),
 							),
 						),
 					),
 				),
-			),
-			false
-		);
+				false
+			);
+			if ( ! $subscription['success'] ) {
+				break;
+			}
+		}
 		return $this->subscription_result( $subscription, $email, $merge_vars );
 	}
 }

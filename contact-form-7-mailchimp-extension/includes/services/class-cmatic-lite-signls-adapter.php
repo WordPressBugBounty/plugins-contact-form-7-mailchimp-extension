@@ -1,7 +1,5 @@
 <?php
 /**
- * ChimpMatic Lite aggregate Signls adapter.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com

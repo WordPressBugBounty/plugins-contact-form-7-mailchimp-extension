@@ -1,7 +1,5 @@
 <?php
 /**
- * REST API controller for per-form field and setting operations.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -12,16 +10,24 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Rest_Form {
 
-	/** @var string Primary REST namespace. */
+	/**
+	 * @var string Primary REST namespace.
+	 */
 	protected static $namespace = 'chimpmatic-lite/v1';
 
-	/** @var string Secondary REST namespace for form settings. */
+	/**
+	 * @var string Secondary REST namespace for form settings.
+	 */
 	protected static $cmatic_namespace = 'cmatic';
 
-	/** @var bool Whether initialized. */
+	/**
+	 * @var bool Whether initialized.
+	 */
 	protected static $initialized = false;
 
-	/** @var array Field pattern configuration. */
+	/**
+	 * @var array Field pattern configuration.
+	 */
 	protected static $field_patterns = array(
 		'labeltags\\.(.+)'      => array(
 			'type'     => 'boolean',
@@ -333,16 +339,6 @@ final class Cmatic_Rest_Form {
 			),
 		);
 
-		/**
-		 * Filter the allowed per-form setting fields.
-		 *
-		 * Pro can extend this to add GDPR, Groups/Interests, etc.
-		 *
-		 * @since 0.9.69
-		 *
-		 * @param array $allowed_fields Associative array of field_name => config.
-		 * @param int   $form_id        The CF7 form ID.
-		 */
 		$allowed_fields = apply_filters( 'cmatic_form_setting_fields', $allowed_fields, $form_id );
 
 		if ( ! array_key_exists( $field, $allowed_fields ) ) {

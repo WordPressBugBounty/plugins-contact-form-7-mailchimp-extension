@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 0.9.81.13
+Stable tag: 0.9.81.15
 Requires PHP: 7.4
 License: GPL v3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -155,12 +155,17 @@ Start with the [provider integration guides](https://chimpmatic.com/integrations
 
 == Changelog ==
 
+= 0.9.81.15 =
+
+[Version 0.9.81.15 release notes](https://chimpmatic.com/changelog#0.9.81.15)
+
+= 0.9.81.14 =
+
+[Version 0.9.81.14 release notes](https://chimpmatic.com/changelog#0.9.81.14)
+
 = 0.9.81.13 =
 
 [Version 0.9.81.13 release notes](https://chimpmatic.com/changelog#0.9.81.13)
-
-= 0.9.81.13 =
-Restores automatic recovery of outdated Chimpmatic Pro installations.
 
 = 0.9.81.12 =
 

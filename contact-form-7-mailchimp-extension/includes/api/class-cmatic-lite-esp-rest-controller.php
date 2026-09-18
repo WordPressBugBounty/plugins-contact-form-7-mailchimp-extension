@@ -1,8 +1,9 @@
 <?php
 /**
- * ChimpMatic Lite provider REST transitions.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -95,6 +96,22 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		);
 		register_rest_route(
 			self::REST_NAMESPACE,
+			'/providers/reset',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'reset' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
+				'args'                => array(
+					'form_id' => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+		register_rest_route(
+			self::REST_NAMESPACE,
 			'/providers/fields/create',
 			array(
 				'methods'             => 'POST',
@@ -146,7 +163,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 	}
 
 	public static function validate_provider( string $provider ): bool {
-		return 'mailchimp' !== $provider && Cmatic_Lite_Esp_Registry::has( $provider );
+		return Cmatic_Lite_Esp_Registry::has( $provider );
 	}
 
 	public static function permission( $request ) {
@@ -172,6 +189,12 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 	public static function connect( $request ) {
 		$form_id      = (int) $request->get_param( 'form_id' );
 		$slug         = (string) $request->get_param( 'provider' );
+		if ( 'mailchimp' === $slug ) {
+			$answer = Cmatic_Mailchimp_Panel_Store::connect( $form_id, trim( (string) $request->get_param( 'api_key' ) ) );
+			self::record_transition( $slug, 'connect', ! is_wp_error( $answer ), is_wp_error( $answer ) ? 'auth' : 'unknown', is_wp_error( $answer ) ? $answer->get_error_message() : '', 'unknown' );
+
+			return is_wp_error( $answer ) ? $answer : rest_ensure_response( $answer );
+		}
 		$field_limit  = Cmatic_Lite_Esp_Capabilities::field_limit( $slug, $form_id );
 		$submitted    = trim( (string) $request->get_param( 'api_key' ) );
 		$previous_key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
@@ -280,6 +303,12 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$slug        = (string) $request->get_param( 'provider' );
 		$list_id     = trim( (string) $request->get_param( 'list_id' ) );
 		$field_limit = Cmatic_Lite_Esp_Capabilities::field_limit( $slug, $form_id );
+		if ( 'mailchimp' === $slug ) {
+			$answer = Cmatic_Mailchimp_Panel_Store::fields( $form_id, $list_id, $field_limit );
+			self::record_transition( $slug, 'refresh_schema', ! is_wp_error( $answer ), is_wp_error( $answer ) ? 'remote_rejected' : 'unknown', is_wp_error( $answer ) ? $answer->get_error_message() : '', 'unknown' );
+
+			return is_wp_error( $answer ) ? $answer : rest_ensure_response( $answer );
+		}
 
 		if ( '' === $list_id ) {
 			self::record_transition( $slug, 'refresh_schema', true, 'unknown', '', 'unknown' );
@@ -349,9 +378,34 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		);
 	}
 
+	public static function reset( $request ) {
+		$form_id = (int) $request->get_param( 'form_id' );
+		if ( $form_id <= 0 ) {
+			return new WP_Error( 'invalid_form', esc_html__( 'Unknown form.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
+		}
+		foreach ( array( 'brevo', 'mailerlite', 'klaviyo' ) as $slug ) {
+			Cmatic_Lite_Esp_Credentials::delete( $form_id, $slug );
+		}
+		Cmatic_Mailchimp_Panel_Store::disconnect( $form_id );
+		delete_option( 'cf7_mch_' . $form_id );
+		Cmatic_Sync_Stats::forget( $form_id );
+		self::record_transition( 'all', 'reset', true, 'unknown', '', 'unknown' );
+
+		return rest_ensure_response(
+			array(
+				'success' => true,
+				'form_id' => $form_id,
+			)
+		);
+	}
 	public static function disconnect( $request ) {
 		$form_id      = (int) $request->get_param( 'form_id' );
 		$slug         = (string) $request->get_param( 'provider' );
+		if ( 'mailchimp' === $slug ) {
+			self::record_transition( $slug, 'disconnect', true, 'unknown', '', 'unknown' );
+
+			return rest_ensure_response( Cmatic_Mailchimp_Panel_Store::disconnect( $form_id ) );
+		}
 		$previous_key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		Cmatic_Lite_Esp_Credentials::delete( $form_id, $slug );
 
@@ -498,7 +552,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		if (
 			'brevo' !== $slug
 			|| 'double' !== $mode
-			|| ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'advanced_consent', $slug, $form_id )
+			|| ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'double_optin', $slug, $form_id )
 		) {
 			return new WP_Error( 'provider_consent_forbidden', esc_html__( 'Advanced provider consent is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
@@ -692,6 +746,9 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 	private static function provider_settings( int $form_id, string $slug ): array {
 		$config = get_option( 'cf7_mch_' . $form_id, array() );
 		$config = is_array( $config ) ? $config : array();
+		if ( 'mailchimp' === $slug ) {
+			return $config;
+		}
 		if (
 			! isset( $config['providers'][ $slug ] )
 			|| ! is_array( $config['providers'][ $slug ] )
@@ -782,7 +839,6 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
-			// Signals must never change a provider REST result.
 			return;
 		}
 	}

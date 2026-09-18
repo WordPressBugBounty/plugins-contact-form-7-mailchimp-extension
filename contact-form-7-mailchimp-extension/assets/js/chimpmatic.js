@@ -2,18 +2,11 @@
  * Admin JavaScript.
  *
  * @package   contact-form-7-mailchimp-extension
- * @author    renzo.johnson@gmail.com
- * @copyright 2014-2026 https://renzojohnson.com
+ * @author    hello@chimpmatic.com
+ * @copyright 2014-2026 ChimpMatic
  * @license   GPL-3.0+
  */
 
-/**
- * Fix CF7's beforeunload detection for dynamically populated selects.
- *
- * CF7 compares defaultValue vs value to detect changes. PHP-generated selects
- * with selected="selected" have undefined defaultValue causing false positives.
- * This syncs defaultValue to current value on page load.
- */
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('wpcf7-admin-form-element');
     if (!form) return;
@@ -46,14 +39,6 @@ function getApiValid() {
     return dataContainer?.dataset?.apiValid || '0';
 }
 
-/**
- * Show inline status message near an element (non-invasive alternative to alert).
- *
- * @param {HTMLElement} targetElement Element to show message near.
- * @param {string}      message       Message text.
- * @param {string}      type          'error', 'warning', or 'success'.
- * @param {number}      duration      Auto-hide after ms (0 = manual close).
- */
 function showInlineMessage(targetElement, message, type = 'warning', duration = 5000) {
     const existingMsg = targetElement.parentNode.querySelector('.cmatic-inline-msg');
     if (existingMsg) existingMsg.remove();
@@ -95,11 +80,6 @@ function showInlineMessage(targetElement, message, type = 'warning', duration = 
     }
 }
 
-/**
- * Get a newly entered API key. Stored credentials resolve server-side and
- * never enter JavaScript.
- * @returns {Promise<string>} The API key.
- */
 async function getApiKey() {
     const apiInput = document.getElementById('cmatic-api');
     if (!apiInput) return '';

@@ -2,8 +2,8 @@
  * Admin panel styles.
  *
  * @package   contact-form-7-mailchimp-extension
- * @author    renzo.johnson@gmail.com
- * @copyright 2014-2026 https://renzojohnson.com
+ * @author    hello@chimpmatic.com
+ * @copyright 2014-2026 ChimpMatic
  * @license   GPL-3.0+
  */
 
@@ -473,20 +473,6 @@ span.invalid {
 	color: #fff;
 }
 
-.misc-pub-section.chimpmatic-info {
-	line-height: 1.6;
-}
-
-.chimpmatic-info .chmm {
-	font-weight: 500;
-	font-size: 13px;
-	margin-left: 0;
-}
-
-.chimpmatic-info .chmm.valid {
-	color: #00a32a;
-	background-color: transparent;
-}
 
 .chimpmatic-info .chmm.invalid {
 	color: #d63638;
@@ -2803,4 +2789,319 @@ tr.cmatic-not-pro:hover,
 		scroll-behavior: auto;
 		transition-duration: .001ms !important;
 	}
+}
+
+.cmatic-provider-oauth {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1 1 100%;
+	margin-top: 4px;
+}
+
+.cmatic-provider-oauth__or {
+	color: #646970;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: .04em;
+}
+
+.cmatic-provider-oauth .cmatic-oauth-status {
+	margin-left: 8px;
+	font-size: 12px;
+}
+
+.cmatic-provider-mapping-grid--locked {
+	margin-top: 16px;
+}
+
+.cmatic-provider-mapping-row--locked {
+	opacity: .55;
+}
+
+.cmatic-provider-mapping-row--locked select {
+	width: 100%;
+	max-width: 100%;
+}
+
+.cmatic-provider-tool-row[hidden],
+.cmatic-provider-mapping-row[hidden] {
+	display: none;
+}
+
+.cmatic-provider-section .cmatic-pro-rows {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px 24px;
+}
+
+.cmatic-provider-section .cmatic-pro-rows .mcee-container {
+	margin: 0;
+	padding: 12px 14px;
+	border: 1px solid #e5e5e5;
+	border-radius: 6px;
+	background: #fbfcfe;
+}
+
+.cmatic-provider-section .cmatic-pro-rows .mcee-container label {
+	display: block;
+	margin-bottom: 6px;
+}
+
+.cmatic-provider-section .cmatic-pro-rows .mcee-container select {
+	width: 100%;
+	max-width: 100%;
+}
+
+.cmatic-provider-section .cmatic-pro-rows .mcee-container .glocks {
+	float: right;
+}
+
+.cmatic-provider-section .cmatic-title-with-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.cmatic-provider-section .cmatic-tags-grid {
+	margin: 8px 0 14px;
+}
+
+.cmatic-provider-section .atags {
+	display: block;
+	margin-top: 6px;
+}
+
+.cmatic-provider-section .atags input[type="text"] {
+	width: 100%;
+	max-width: 100%;
+}
+
+.cmatic-consent-policy-row .cmatic-toggle {
+	vertical-align: middle;
+}
+
+.cmatic-consent-policy-row .checkemail-options {
+	margin-top: 8px;
+}
+
+.cmatic-consent-policy-row .checkemail-options input[type="text"] {
+	width: 100%;
+	max-width: 100%;
+}
+
+[data-cmatic-provider-only][hidden] {
+	display: none;
+}
+
+.cmatic-provider-section__heading {
+	margin: 0;
+}
+
+.cmatic-provider-section--collapsible.is-open .cmatic-provider-section__heading {
+	margin-bottom: 12px;
+}
+
+.cmatic-provider-section__toggle {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #1d2327;
+	font: inherit;
+	cursor: pointer;
+	text-align: left;
+}
+
+.cmatic-provider-section__toggle:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 4px;
+}
+
+.cmatic-provider-section__chevron {
+	width: 9px;
+	height: 9px;
+	margin-left: 2px;
+	border-right: 2px solid #50575e;
+	border-bottom: 2px solid #50575e;
+	transform: rotate(-45deg);
+	transition: transform .15s ease;
+}
+
+.cmatic-provider-section__toggle[aria-expanded="true"] .cmatic-provider-section__chevron {
+	transform: rotate(45deg);
+}
+
+#cmatic-provider-advanced-body[hidden] {
+	display: none;
+}
+
+.cmatic-provider-tool-row--wide {
+	grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+}
+
+.cmatic-provider-tool-row--wide .cmatic-provider-tool-control {
+	display: block;
+}
+
+.cmatic-provider-tool-row--wide #mce-export {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+}
+
+.cmatic-provider-tool-row--wide #mce-export .submit {
+	padding: 10px 0 0;
+}
+
+.cmatic-provider-tile__meta {
+	color: #646970;
+	font-weight: 400;
+}
+
+.cmatic-header__support + .cmatic-header__review {
+	margin-left: 14px;
+}
+
+.cmatic-advanced-audiences {
+	display: none;
+}
+
+.cmatic-adv-rows .cmatic-provider-tool-row {
+	grid-template-columns: minmax(190px, 240px) minmax(280px, 1fr);
+}
+
+.cmatic-adv-toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 6px;
+}
+
+.cmatic-adv-control {
+	display: block;
+}
+
+.cmatic-adv-control p {
+	margin: 6px 0 0;
+}
+
+.cmatic-adv-control textarea {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: none;
+}
+
+.cmatic-adv-viewer {
+	margin-top: 10px;
+}
+
+.cmatic-adv-tabs {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+
+.cmatic-adv-tabs .button.is-active {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+}
+
+.cmatic-adv-auto {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: #50575e;
+}
+
+.cmatic-adv-log {
+	margin: 0;
+	max-height: 320px;
+	overflow: auto;
+	padding: 10px 12px;
+	background: #1d2327;
+	color: #f0f0f1;
+	font: 12px/1.6 Menlo, Consolas, monospace;
+	white-space: pre-wrap;
+	word-break: break-word;
+	border-radius: 4px;
+}
+
+.cmatic-adv-viewer .cmatic-provider-actions {
+	margin-top: 8px;
+}
+
+.cmatic-adv-report {
+	width: 100%;
+	font: 12px/1.5 Menlo, Consolas, monospace;
+	white-space: pre;
+	overflow: auto;
+}
+
+.cmatic-adv-sample {
+	margin: 6px 0;
+	padding: 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	font-size: 11px;
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+@media (max-width: 782px) {
+	.cmatic-adv-rows .cmatic-provider-tool-row {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 10px;
+	}
+}
+
+.cmatic-provider-key {
+	-webkit-text-security: disc;
+	text-security: disc;
+}
+
+#cmatic-provider-data [hidden],
+#cmatic-provider-onboarding[hidden],
+#cmatic-provider-data[hidden],
+#cmatic-mailchimp-settings [hidden],
+#cmatic-mailchimp-settings[hidden] {
+	display: none !important;
+}
+
+#submitdiv .cmatic-status {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 2px 10px;
+	align-items: baseline;
+}
+
+#submitdiv .cmatic-status__name {
+	font-weight: 600;
+	text-decoration: none;
+}
+
+#submitdiv .cmatic-status__facts {
+	color: #646970;
+	font-size: 12px;
+}
+
+#submitdiv .cmatic-status__error {
+	grid-column: 1 / -1;
+	color: #b32d2e;
+	font-size: 12px;
+}
+
+#submitdiv .cmatic-status--failing .cmatic-status__facts {
+	color: #b32d2e;
 }

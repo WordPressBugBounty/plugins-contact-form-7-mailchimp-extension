@@ -1,7 +1,5 @@
 <?php
 /**
- * URL tracking and link builder.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -95,7 +93,7 @@ final class Cmatic_Pursuit {
 	}
 
 	public static function promo( string $content = '', ?int $discount = null ): string {
-		if ( null === $discount ) { // Default follows the live promo, not a constant.
+		if ( null === $discount ) {
 			$pricing  = self::pricing();
 			$discount = (int) ( $pricing['discount_percent'] ?? 0 );
 		}

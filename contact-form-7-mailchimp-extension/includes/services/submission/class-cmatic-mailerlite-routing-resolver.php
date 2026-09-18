@@ -1,8 +1,9 @@
 <?php
 /**
- * Deterministic MailerLite group routing.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -28,8 +29,6 @@ final class Cmatic_Mailerlite_Routing_Resolver {
 	}
 
 	/**
-	 * Resolves exact submitted values against current static choices.
-	 *
 	 * @param array $settings    Effective provider settings.
 	 * @param array $posted_data Submitted Contact Form 7 data.
 	 * @param array $form_tags   Current normalized form tags.
@@ -114,6 +113,102 @@ final class Cmatic_Mailerlite_Routing_Resolver {
 			'groups'        => array(),
 			'matched_rules' => array(),
 		);
+	}
+
+	public static function normalize_rules( array $settings ): array {
+		$rules = array();
+		foreach ( (array) ( $settings['routing_rules'] ?? array() ) as $rule ) {
+			if ( ! is_array( $rule ) ) {
+				continue;
+			}
+			$rules[] = array(
+				'id'       => sanitize_text_field( self::scalar_string( $rule['id'] ?? '' ) ),
+				'field'    => sanitize_key( self::scalar_string( $rule['field'] ?? '' ) ),
+				'value'    => sanitize_text_field( self::scalar_string( $rule['value'] ?? '' ) ),
+				'group_id' => sanitize_text_field( self::scalar_string( $rule['group_id'] ?? '' ) ),
+			);
+		}
+		return $rules;
+	}
+
+	/**
+	 * @param array $posted    Posted panel fields (primary_group, base_groups or additional_groups, routing_rules).
+	 * @param array $settings  Provider settings holding lisdata.lists.
+	 * @param array $form_tags Normalized form tags with routing choices.
+	 */
+	public static function sanitize( string $primary, array $posted, array $settings, array $form_tags ): ?array {
+		if ( '' === $primary || ! self::list_exists( $settings, $primary ) ) {
+			return null;
+		}
+		$additional = array();
+		if ( isset( $posted['base_groups'] ) && is_array( $posted['base_groups'] ) ) {
+			$additional = $posted['base_groups'];
+		} elseif ( isset( $posted['additional_groups'] ) && is_array( $posted['additional_groups'] ) ) {
+			$additional = $posted['additional_groups'];
+		}
+		$groups = array( $primary );
+		foreach ( $additional as $group_id ) {
+			$group_id = sanitize_text_field( self::scalar_string( $group_id ) );
+			if ( '' !== $group_id && $primary !== $group_id && self::list_exists( $settings, $group_id ) ) {
+				$groups[] = $group_id;
+			}
+		}
+		$groups = array_slice( array_values( array_unique( $groups ) ), 0, 20 );
+
+		$choice_index = array();
+		foreach ( $form_tags as $tag ) {
+			if ( ! is_array( $tag ) || empty( $tag['routing_eligible'] ) || ! isset( $tag['name'] ) || ! is_scalar( $tag['name'] ) ) {
+				continue;
+			}
+			$choices = array();
+			foreach ( isset( $tag['choices'] ) && is_array( $tag['choices'] ) ? $tag['choices'] : array() as $choice ) {
+				if ( is_array( $choice ) && isset( $choice['value'] ) && is_scalar( $choice['value'] ) ) {
+					$choices[] = (string) $choice['value'];
+				}
+			}
+			$choice_index[ (string) $tag['name'] ] = $choices;
+		}
+
+		$rules     = array();
+		$seen      = array();
+		$seen_rule = array();
+		foreach ( array_slice( (array) ( $posted['routing_rules'] ?? array() ), 0, 50 ) as $rule ) {
+			if ( ! is_array( $rule ) ) {
+				return null;
+			}
+			$id       = sanitize_text_field( self::scalar_string( $rule['id'] ?? '' ) );
+			$field    = sanitize_key( self::scalar_string( $rule['field'] ?? '' ) );
+			$value    = sanitize_text_field( self::scalar_string( $rule['value'] ?? '' ) );
+			$group_id = sanitize_text_field( self::scalar_string( $rule['group_id'] ?? '' ) );
+			if ( 1 !== preg_match( '/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5a-f0-9][a-f0-9]{3}-[89ab0-9][a-f0-9]{3}-[a-f0-9]{12}$/i', $id ) || isset( $seen[ $id ] ) ) {
+				return null;
+			}
+			if ( ! isset( $choice_index[ $field ] ) || ! in_array( $value, $choice_index[ $field ], true ) || ! self::list_exists( $settings, $group_id ) ) {
+				return null;
+			}
+			$rule_key = hash( 'sha256', $field . "\0" . $value . "\0" . $group_id );
+			if ( isset( $seen_rule[ $rule_key ] ) ) {
+				return null;
+			}
+			$seen[ $id ]            = true;
+			$seen_rule[ $rule_key ] = true;
+			$rules[]                = compact( 'id', 'field', 'value', 'group_id' );
+		}
+
+		return array(
+			'base_groups'   => $groups,
+			'routing_rules' => $rules,
+		);
+	}
+
+	private static function list_exists( array $settings, string $list_id ): bool {
+		$lists = isset( $settings['lisdata']['lists'] ) && is_array( $settings['lisdata']['lists'] ) ? $settings['lisdata']['lists'] : array();
+		foreach ( $lists as $list ) {
+			if ( is_array( $list ) && isset( $list['id'] ) && $list_id === self::scalar_string( $list['id'] ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private function __construct() {}

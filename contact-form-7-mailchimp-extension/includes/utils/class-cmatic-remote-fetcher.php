@@ -1,7 +1,5 @@
 <?php
 /**
- * Remote data fetcher with caching.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -18,7 +16,7 @@ class CMatic_Remote_Fetcher {
 		'url'             => '',
 		'cache_key'       => 'cmatic_remote_data',
 		'cache_duration'  => DAY_IN_SECONDS,
-		'retry_interval'  => 600, // 10 minutes in seconds
+		'retry_interval'  => 600,
 		'max_retries'     => 3,
 		'retry_count_key' => 'cmatic_retry_count',
 		'cron_hook'       => 'cmatic_fetch_retry',

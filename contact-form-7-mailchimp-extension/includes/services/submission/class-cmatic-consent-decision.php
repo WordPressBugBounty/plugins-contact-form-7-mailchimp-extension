@@ -1,8 +1,9 @@
 <?php
 /**
- * MailerLite consent decision value object factory.
- *
- * @package contact-form-7-mailchimp-extension
+ * @package   contact-form-7-mailchimp-extension
+ * @author    renzo.johnson@gmail.com
+ * @copyright 2014-2026 https://renzojohnson.com
+ * @license   GPL-3.0+
  */
 
 declare(strict_types=1);
@@ -11,8 +12,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Consent_Decision {
 	/**
-	 * Produces the consent decision consumed by the pipeline.
-	 *
 	 * @param array $settings    Saved provider settings.
 	 * @param array $posted_data Submitted Contact Form 7 data.
 	 * @param array $form_tags   Current normalized form tags.

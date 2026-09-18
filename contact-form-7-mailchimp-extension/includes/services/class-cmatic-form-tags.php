@@ -1,7 +1,5 @@
 <?php
 /**
- * CF7 form tag utilities.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -24,7 +22,9 @@ final class Cmatic_Form_Tags {
 
 		foreach ( $all_tags as $tag ) {
 			if ( is_object( $tag ) && ! empty( $tag->name ) ) {
-				/** @var WPCF7_FormTag $tag */
+				/**
+				 * @var WPCF7_FormTag $tag
+				 */
 				$basetype = sanitize_key( (string) $tag->basetype );
 				$item     = array(
 					'name'             => sanitize_key( (string) $tag->name ),

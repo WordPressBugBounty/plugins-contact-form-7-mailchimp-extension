@@ -1,7 +1,5 @@
 <?php
 /**
- * Plugin activation handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -151,7 +149,6 @@ class Cmatic_Activator {
 				}
 			}
 		} catch ( Throwable $error ) {
-			// Signals must never change the activation result.
 			return;
 		}
 	}
@@ -280,7 +277,6 @@ class Cmatic_Activator {
 				Signls_Sdk_Bridge_1_1_7::deactivate( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
-			// Signals must never change missed-deactivation recovery.
 			return;
 		}
 	}

@@ -1,9 +1,5 @@
 <?php
 /**
- * Admin-wide license state banner.
- *
- * Renders only when ChimpMatic Pro is installed.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -33,7 +29,6 @@ final class Cmatic_License_Banner {
 		add_action( 'admin_notices', array( __CLASS__, 'render' ) );
 	}
 
-	/** Resolve the banner state, or an empty string when no banner applies. */
 	public static function resolve_state(): string {
 		if ( ! class_exists( 'Cmatic_License_State_Resolver' ) ) {
 			return '';
@@ -108,7 +103,9 @@ final class Cmatic_License_Banner {
 		self::print_banner( $state, $view );
 	}
 
-	/** @return array{tone:string,message:string,offer:array{kind:string,percent:int},cta:string,cta_url:string,secondary:?string,secondary_url:?string,dismissible:bool}|null */
+	/**
+	 * @return array{tone:string,message:string,offer:array{kind:string,percent:int},cta:string,cta_url:string,secondary:?string,secondary_url:?string,dismissible:bool}|null
+	 */
 	private static function view_for( string $state ): ?array {
 		$no_offer = array(
 			'kind'    => 'license',
@@ -259,7 +256,6 @@ final class Cmatic_License_Banner {
 			if (!banner) { return; }
 			var state = banner.getAttribute('data-state');
 			var lsKey = 'cmaticBannerDismiss:' + state;
-			// Hide cached markup immediately, then persist the dismissal server-side.
 			try {
 				var until = parseInt(window.localStorage.getItem(lsKey) || '0', 10);
 				if (until > Date.now()) {
@@ -285,7 +281,6 @@ final class Cmatic_License_Banner {
 		<?php
 	}
 
-	/** Snooze a banner state for the current administrator. */
 	public static function handle_dismiss( string $state ) {
 		if ( ! isset( self::SNOOZE[ $state ] ) ) {
 			return false;

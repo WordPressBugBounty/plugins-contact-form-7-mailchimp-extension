@@ -1,7 +1,5 @@
 <?php
 /**
- * Admin asset loader.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -89,6 +87,7 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 					'formId'           => $form_settings['form_id'],
 					'mergeFields'      => $form_settings['merge_fields'],
 					'loggingEnabled'   => $form_settings['logging_enabled'],
+					'debugUntil'       => Cmatic_Debug_Log::until(),
 					'totalMergeFields' => $form_settings['totalMergeFields'],
 					'liteFieldsLimit'  => $form_settings['liteFieldsLimit'],
 					'lists'            => $form_settings['lists'],
@@ -115,6 +114,21 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 					'i18n'       => array(
 						/* translators: %s: email provider name. */
 						'connectProvider'            => __( 'Connect %s', 'contact-form-7-mailchimp-extension' ),
+						'signedInWithMailchimp'      => __( 'Signed in with Mailchimp', 'contact-form-7-mailchimp-extension' ),
+						'managedByMailchimp'         => __( 'Managed by Mailchimp', 'contact-form-7-mailchimp-extension' ),
+						'mailchimpOptin'             => __( 'Double opt-in is set per audience in Mailchimp. Contact status below decides whether this form asks for confirmation first.', 'contact-form-7-mailchimp-extension' ),
+						'lockedField'                => __( 'Available with Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ),
+						'chooseAudience'             => __( 'Choose an audience', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: number of contacts */
+						'tileContacts'               => __( '%s contacts', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: number of fields */
+						'tileFields'                 => __( '%s fields', 'contact-form-7-mailchimp-extension' ),
+						'consentFieldMailchimp'      => __( 'Consent field', 'contact-form-7-mailchimp-extension' ),
+						'acceptanceField'            => __( 'Consent field', 'contact-form-7-mailchimp-extension' ),
+						'chooseConsentField'         => __( 'Choose a checkbox or acceptance field', 'contact-form-7-mailchimp-extension' ),
+						'chooseAcceptanceField'      => __( 'Choose a checkbox or acceptance field', 'contact-form-7-mailchimp-extension' ),
+						'consentFieldMailchimpExplanation' => __( 'Ticked sends the contact to Mailchimp, unticked leaves them out. Mark the box optional in your form, or nobody can submit without ticking it.', 'contact-form-7-mailchimp-extension' ),
+						'acceptanceFieldExplanation' => __( 'Only Contact Form 7 acceptance fields can provide the affirmative consent required by this policy.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
 						'connected'                  => __( '%s connected', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
@@ -187,6 +201,7 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 						/* translators: %d: mapped field count. */
 						'mappedCount'                => __( '%d fields mapped - Saved', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: Contact Form 7 field, 2: form field type, 3: provider field name, 4: provider field type. */
+						'confirmationRequiresPro'    => __( 'The confirmation email needs an active Chimpmatic Pro license. Choosing which submissions are sent is always available.', 'contact-form-7-mailchimp-extension' ),
 						'mappingTypeWarning'         => __( '%1$s is a %2$s field, but %3$s expects %4$s. Review this mapping.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name. */
 						'requestFailed'              => __( '%s could not complete the request. Try again.', 'contact-form-7-mailchimp-extension' ),
@@ -205,6 +220,28 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 						'groupsForEverySubscriber'   => __( 'Groups for every subscriber', 'contact-form-7-mailchimp-extension' ),
 						'mailerLiteGroupsHelp'       => __( 'Every subscriber successfully sent to MailerLite is added to each selected group. Mark one selected group “Use when Pro is inactive.”', 'contact-form-7-mailchimp-extension' ),
 						'useWhenProInactive'         => __( 'Use when Pro is inactive', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: email provider name. */
+						'refreshFrom'                => __( 'Refresh from %s', 'contact-form-7-mailchimp-extension' ),
+						'refreshing'                 => __( 'Refreshing...', 'contact-form-7-mailchimp-extension' ),
+						'refreshed'                  => __( 'Refreshed.', 'contact-form-7-mailchimp-extension' ),
+						'resetThisForm'              => __( 'Reset this form', 'contact-form-7-mailchimp-extension' ),
+						'resetArmed'                 => __( 'Click again to reset this form', 'contact-form-7-mailchimp-extension' ),
+						'resetWarning'               => __( 'Keys, destinations, mappings, consent and status saved for this form will be forgotten.', 'contact-form-7-mailchimp-extension' ),
+						'resetting'                  => __( 'Resetting...', 'contact-form-7-mailchimp-extension' ),
+						'resetDone'                  => __( 'Form reset. Reloading...', 'contact-form-7-mailchimp-extension' ),
+						'resetFailed'                => __( 'The form could not be reset.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: 1: person plural, 2: destination singular, 3: destination singular. */
+						'destinationsHelp'           => __( '%1$s from this form are added to every ticked %2$s. Mark one ticked %2$s “Use when Pro is inactive.”', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: destination plural. */
+						'routingRequiresProFor'      => __( 'Additional %s and answer-based rules require Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: destination singular. */
+						'routingSavedInactiveFor'    => __( 'Rules are saved but inactive. Submissions go only to the %s marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: 1: person singular, 2: destination plural. */
+						'routingHeadingFor'          => __( 'Add each %1$s to %2$s based on form answers', 'contact-form-7-mailchimp-extension' ),
+						/* translators: 1: person singular, 2: destination plural. */
+						'routingDescriptionFor'      => __( 'Optional. A %1$s can match more than one rule. %2$s ticked above are always added.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: destination plural. */
+						'destinationsForEvery'       => __( '%s for every submission', 'contact-form-7-mailchimp-extension' ),
 						'routingRequiresPro'         => __( 'Additional MailerLite groups and answer-based rules require Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
 						'routingSavedInactive'       => __( 'MailerLite group rules are saved but inactive. Subscribers are added only to the group marked “Use when Pro is inactive.” Renew Pro to restore the saved rules.', 'contact-form-7-mailchimp-extension' ),
 						'contactFormField'           => __( 'Contact Form 7 field', 'contact-form-7-mailchimp-extension' ),
@@ -422,6 +459,14 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 		private static function get_i18n_strings(): array {
 			return array(
 				'loading'            => __( 'Loading...', 'contact-form-7-mailchimp-extension' ),
+				'debugOnUntil'       => __( 'On until %s, then off by itself. Keys and addresses are redacted as they are written.', 'contact-form-7-mailchimp-extension' ),
+				'debugOff'           => __( 'Off. When on, every request to the provider and every sync outcome is written to a private file for 14 days.', 'contact-form-7-mailchimp-extension' ),
+				'logSourceSite'      => __( 'Site errors', 'contact-form-7-mailchimp-extension' ),
+				'logSourceOwn'       => __( 'Plugin log', 'contact-form-7-mailchimp-extension' ),
+				'reportBuilding'     => __( 'Building...', 'contact-form-7-mailchimp-extension' ),
+				'reportFailed'       => __( 'Could not build the report.', 'contact-form-7-mailchimp-extension' ),
+				'reportCopied'       => __( 'Copied.', 'contact-form-7-mailchimp-extension' ),
+				'reportSelectCopy'   => __( 'Selected. Press Ctrl+C or Cmd+C.', 'contact-form-7-mailchimp-extension' ),
 				'error'              => __( 'An error occurred. Check the browser console for details.', 'contact-form-7-mailchimp-extension' ),
 				'apiKeyValid'        => __( 'API Connected', 'contact-form-7-mailchimp-extension' ),
 				'apiKeyInvalid'      => __( 'API Inactive', 'contact-form-7-mailchimp-extension' ),

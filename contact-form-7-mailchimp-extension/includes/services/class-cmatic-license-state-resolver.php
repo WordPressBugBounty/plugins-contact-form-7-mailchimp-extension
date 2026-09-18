@@ -1,10 +1,5 @@
 <?php
 /**
- * Resolve ChimpMatic Pro license state across released licensing generations.
- *
- * This is a display-only compatibility boundary for Lite's admin banner. Pro
- * remains the authority for feature access and license enforcement.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -23,10 +18,7 @@ final class Cmatic_License_State_Resolver {
 	private const STATE_NONE    = 'none';
 
 	/**
-	 * Resolve the current Pro license state.
-	 *
 	 * @return string Empty when ChimpMatic Pro is not loaded, otherwise active,
-	 *                expired, invalid, or none.
 	 */
 	public static function resolve(): string {
 		$version = self::pro_version();
@@ -45,9 +37,6 @@ final class Cmatic_License_State_Resolver {
 		return self::resolve_legacy();
 	}
 
-	/**
-	 * Return the current activation expiry as a Unix timestamp.
-	 */
 	public static function expires_at(): int {
 		$value      = null;
 		$activation = self::activation();
@@ -68,9 +57,6 @@ final class Cmatic_License_State_Resolver {
 		return self::timestamp( $value );
 	}
 
-	/**
-	 * Resolve signed-entitlement releases (1.8.0.00+).
-	 */
 	private static function resolve_modern(): string {
 		if ( get_option( 'chimpmatic_test_expired_license' ) ) {
 			return self::STATE_EXPIRED;
@@ -100,9 +86,6 @@ final class Cmatic_License_State_Resolver {
 		return self::STATE_NONE;
 	}
 
-	/**
-	 * Resolve releases that used both an activation object and unified options.
-	 */
 	private static function resolve_transitional(): string {
 		if ( get_option( 'chimpmatic_test_expired_license' ) ) {
 			return self::STATE_EXPIRED;
@@ -148,9 +131,6 @@ final class Cmatic_License_State_Resolver {
 		return self::validated_state( get_option( 'chimpmatic_license_state', self::STATE_NONE ) );
 	}
 
-	/**
-	 * Resolve the WC API Manager generation used by early Pro releases.
-	 */
 	private static function resolve_legacy(): string {
 		$legacy = self::option_string( 'wc_am_client_chimpmatic_activated' );
 		if ( 'activated' === $legacy ) {
@@ -165,9 +145,6 @@ final class Cmatic_License_State_Resolver {
 		return self::STATE_NONE;
 	}
 
-	/**
-	 * Ask Pro's public runtime API before inspecting compatibility options.
-	 */
 	private static function runtime_state(): string {
 		if ( function_exists( 'chimpmatic_get_license_status' ) ) {
 			try {
@@ -212,8 +189,6 @@ final class Cmatic_License_State_Resolver {
 	}
 
 	/**
-	 * Return Pro's activation object when its client is available.
-	 *
 	 * @return object|null
 	 */
 	private static function activation() {
@@ -232,9 +207,6 @@ final class Cmatic_License_State_Resolver {
 		}
 	}
 
-	/**
-	 * Return the stored activation without exposing its license key.
-	 */
 	private static function activation_data(): array {
 		$activation = get_option( 'chimpmatic_license_activation', array() );
 		return is_array( $activation ) ? $activation : array();

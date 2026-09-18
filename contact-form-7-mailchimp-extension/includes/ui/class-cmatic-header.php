@@ -1,7 +1,5 @@
 <?php
 /**
- * Settings page header component.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -89,6 +87,7 @@ class Cmatic_Header {
 					<?php $this->render_provider_selector(); ?>
 					<?php $this->render_api_status(); ?>
 					<div class="cmatic-header__actions">
+						<a href="<?php echo esc_url( Cmatic_Pursuit::url( 'https://chimpmatic.com/contact', 'plugin', 'header_support', 'support' ) ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review cmatic-header__support"><?php esc_html_e( 'Support', 'contact-form-7-mailchimp-extension' ); ?></a>
 						<?php if ( $this->is_pro ) : ?>
 							<a href="<?php echo esc_url( Cmatic_Pursuit::url( 'https://chimpmatic.com/my-account', 'plugin', 'header_account', 'account' ) ); ?>" target="_blank" rel="noopener noreferrer" class="cmatic-header__review">
 								<?php esc_html_e( 'My Account', 'contact-form-7-mailchimp-extension' ); ?>

@@ -1,7 +1,5 @@
 <?php
 /**
- * Plugin deactivation handler.
- *
  * @package   contact-form-7-mailchimp-extension
  * @author    renzo.johnson@gmail.com
  * @copyright 2014-2026 https://renzojohnson.com
@@ -67,7 +65,6 @@ class Cmatic_Deactivator {
 				Signls_Sdk_Bridge_1_1_7::deactivate( 'contact-form-7-mailchimp-extension' );
 			}
 		} catch ( Throwable $error ) {
-			// Signals must never change the deactivation result.
 			return;
 		}
 	}
