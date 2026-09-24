@@ -1760,44 +1760,7 @@
 		});
 
 		if (parentForm) {
-			parentForm.addEventListener('submit', function(event) {
-				if (!state.activeProvider) return;
-				const current = providerState(state.activeProvider);
-				if (!current.connected || !current.selected_list || !current.fields.length) {
-					event.preventDefault();
-					const meta = definition(state.activeProvider);
-					showMessage(format(
-						i18n('missingDestination', 'Connect %1$s and choose a %2$s before saving.'),
-						meta.label,
-						String(meta.destination_singular || '').toLowerCase()
-					), 'error');
-					return;
-				}
-				if (!requiredEmailMapped()) {
-					event.preventDefault();
-					showMessage(i18n('missingEmailMapping', 'Select a Contact Form 7 field for the required email address.'), 'error');
-					const emailRow = root.querySelector('[data-required="1"]:not([hidden])');
-					const emailSelect = emailRow ? emailRow.querySelector('[data-mapping-slot]') : null;
-					if (emailSelect) emailSelect.focus();
-					return;
-				}
-				if (!consentReady(state.activeProvider, current)) {
-					event.preventDefault();
-					showMessage(i18n('consentIncomplete', 'Complete the consent and opt-in settings before saving.'), 'error');
-					return;
-				}
-				if ('mailerlite' === state.activeProvider && current.routing_entitled) {
-					const validation = routingValidation(current);
-					if (validation.size) {
-						event.preventDefault();
-						routingValidationVisible = true;
-						render();
-						showMessage(i18n('routingFixBeforeSave', 'Complete or remove the highlighted routing rules before saving.'), 'error');
-						const firstInvalid = routingRuleList.querySelector('[aria-invalid="true"]');
-						if (firstInvalid) firstInvalid.focus();
-						return;
-					}
-				}
+			parentForm.addEventListener('submit', function() {
 				setBusy(saveButton, true, i18n('saving', 'Saving...'));
 			});
 		}

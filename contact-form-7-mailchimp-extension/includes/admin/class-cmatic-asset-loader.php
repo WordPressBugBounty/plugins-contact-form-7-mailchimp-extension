@@ -194,8 +194,6 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 						'disconnectConfirm'          => __( 'Disconnect %s? Your field mappings will be kept.', 'contact-form-7-mailchimp-extension' ),
 						'readyToVerify'              => __( 'Ready to verify.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider destination name. */
-						'missingDestination'         => __( 'Connect %1$s and choose a %2$s before saving.', 'contact-form-7-mailchimp-extension' ),
-						'missingEmailMapping'        => __( 'Select a Contact Form 7 field for the required email address.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: provider person name, 2: selected destination, 3: email provider name. */
 						'setupOutcome'               => __( 'New %1$s from this form will be added to %2$s in %3$s.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %d: mapped field count. */
@@ -214,7 +212,6 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 						'singleOptin'                => __( 'Single opt-in', 'contact-form-7-mailchimp-extension' ),
 						'optinUnavailable'           => __( 'Opt-in setting unavailable', 'contact-form-7-mailchimp-extension' ),
 						'klaviyoOptin'               => __( 'The selected Klaviyo list controls whether confirmation is required.', 'contact-form-7-mailchimp-extension' ),
-						'consentIncomplete'          => __( 'Complete the consent and opt-in settings before saving.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider group name. */
 						'useGroupWithoutPro'         => __( 'Use %s when Chimpmatic Pro is inactive', 'contact-form-7-mailchimp-extension' ),
 						'groupsForEverySubscriber'   => __( 'Groups for every subscriber', 'contact-form-7-mailchimp-extension' ),
@@ -263,7 +260,6 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 						'routingIncomplete'          => __( 'Choose a field, an answer, and a destination group.', 'contact-form-7-mailchimp-extension' ),
 						'routingInvalid'             => __( 'This rule contains an unavailable field, answer, or group.', 'contact-form-7-mailchimp-extension' ),
 						'routingDuplicate'           => __( 'This rule duplicates another rule.', 'contact-form-7-mailchimp-extension' ),
-						'routingFixBeforeSave'       => __( 'Complete or remove the highlighted routing rules before saving.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: always-used group count, 2: answer-based rule count, 3: mapped subscriber-field count. */
 						'mailerLiteSummary'          => __( 'Always-used groups: %1$d · Answer-based rules: %2$d · Subscriber fields mapped: %3$d · Saved', 'contact-form-7-mailchimp-extension' ),
 						'proOptionsInactive'         => __( 'Saved MailerLite Pro settings are inactive. Subscribers continue with the current Active behavior; renew Pro to restore the saved settings.', 'contact-form-7-mailchimp-extension' ),
