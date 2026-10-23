@@ -8,8 +8,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use Cmatic\Lite\Rest\Args;
-
 final class Cmatic_Rest_Reset {
 
 	/**
@@ -57,16 +55,44 @@ final class Cmatic_Rest_Reset {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( self::class, 'reset_settings' ),
-				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'reset' ),
+				'permission_callback' => array( self::class, 'check_admin_permission' ),
 				'args'                => array(
-					'type'    => Args::of( 'string', 'sanitize_text_field', false ) + array(
-						'default' => 'form',
-						'enum'    => array( 'form', 'nuclear' ),
+					'type'    => array(
+						'required'          => false,
+						'type'              => 'string',
+						'default'           => 'form',
+						'enum'              => array( 'form', 'nuclear' ),
+						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'form_id' => Args::form_id( false ),
+					'form_id' => array(
+						'required'          => false,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
 				),
 			)
 		);
+	}
+
+	public static function check_admin_permission( $request ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+			return new WP_Error(
+				'rest_cookie_invalid_nonce',
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
 	}
 
 	public static function reset_settings( $request ) {
@@ -85,8 +111,8 @@ final class Cmatic_Rest_Reset {
 			);
 		}
 
-		\Cmatic\Lite\Settings\FormSettingsRepository::reset_choices( (int) $form_id );
-		\Cmatic\Lite\Submission\Stats::forget( (int) $form_id );
+		$option_name = 'cf7_mch_' . $form_id;
+		delete_option( $option_name );
 
 		return rest_ensure_response(
 			array(

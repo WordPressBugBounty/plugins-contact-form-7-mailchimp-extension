@@ -61,8 +61,11 @@ final class Cmatic_Debug_Log {
 	}
 
 	public static function dir(): string {
-		$dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/cmatic-private-' . substr( hash( 'sha256', ABSPATH . WP_CONTENT_DIR ), 0, 20 );
-		return rtrim( (string) apply_filters( 'cmatic_debug_log_dir', $dir ), '/\\' );
+		$uploads = wp_upload_dir( null, false );
+		$base    = is_array( $uploads ) && ! empty( $uploads['basedir'] ) ? (string) $uploads['basedir'] : WP_CONTENT_DIR . '/uploads';
+		$dir     = rtrim( $base, '/' ) . '/' . self::DIR_NAME;
+
+		return rtrim( (string) apply_filters( 'cmatic_debug_log_dir', $dir ), '/' );
 	}
 
 	public static function path(): string {
@@ -80,30 +83,8 @@ final class Cmatic_Debug_Log {
 	}
 
 	public static function ensure_dir(): bool {
-		$dir          = self::dir();
-		$uploads      = wp_upload_dir( null, false );
-		$public_roots = array( ABSPATH, WP_CONTENT_DIR, $uploads['basedir'] ?? WP_CONTENT_DIR . '/uploads' );
-		foreach ( $public_roots as $root ) {
-			$root       = rtrim( str_replace( '\\', '/', (string) $root ), '/' );
-			$normalized = str_replace( '\\', '/', $dir );
-			if ( $normalized === $root || 0 === strpos( $normalized, $root . '/' ) ) {
-				return false;
-			}
-		}
-		if ( '' === $dir || is_link( $dir ) || false !== strpos( $dir, '..' ) ) {
-			return false;
-		}
+		$dir = self::dir();
 		if ( ! is_dir( $dir ) && ! wp_mkdir_p( $dir ) ) {
-			return false;
-		}
-		$real = realpath( $dir );
-		foreach ( $public_roots as $root ) {
-			$root = realpath( (string) $root );
-			if ( false !== $root && false !== $real && ( $real === $root || 0 === strpos( $real, rtrim( $root, '/' ) . '/' ) ) ) {
-				return false;
-			}
-		}
-		if ( ! chmod( $dir, 0700 ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- Restrict the private log directory to the PHP worker.
 			return false;
 		}
 		if ( ! is_file( $dir . '/index.php' ) ) {
@@ -114,48 +95,6 @@ final class Cmatic_Debug_Log {
 		}
 
 		return wp_is_writable( $dir );
-	}
-
-	public static function migrate_public_logs(): bool {
-		$uploads = wp_upload_dir( null, false );
-		$old_dir = rtrim( (string) ( $uploads['basedir'] ?? WP_CONTENT_DIR . '/uploads' ), '/' ) . '/' . self::DIR_NAME;
-		$token   = (string) Cmatic_Options_Repository::get_option( 'log_token', '' );
-		if ( ! preg_match( '/^[a-f0-9]{16}$/', $token ) ) {
-			return true;
-		}
-		if ( ! is_file( $old_dir . '/' . self::FILE_STEM . '-' . $token . '.log' ) && ! is_file( $old_dir . '/' . self::FILE_STEM . '-' . $token . '.log.1' ) ) {
-			return true;
-		}
-		if ( ! self::ensure_dir() ) {
-			return false;
-		}
-		$lock = fopen( self::dir() . '/.migration.lock', 'c' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Serialize migration of this installation's logs.
-		if ( false === $lock ) {
-			return false;
-		}
-		try {
-			if ( ! flock( $lock, LOCK_EX ) ) {
-				return false;
-			}
-			foreach ( array( '.log', '.log.1' ) as $suffix ) {
-				$old = $old_dir . '/' . self::FILE_STEM . '-' . $token . $suffix;
-				clearstatcache( true, $old );
-				if ( ! is_file( $old ) ) {
-					continue;
-				}
-				if ( is_link( $old ) ) {
-					return false;
-				}
-				$destination = self::dir() . '/migrated-' . substr( (string) hash_file( 'sha256', $old ), 0, 16 ) . '-' . basename( $old );
-				if ( ! rename( $old, $destination ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- Move this installation's exposed log outside the document root.
-					return false;
-				}
-			}
-		} finally {
-			flock( $lock, LOCK_UN );
-			fclose( $lock ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Release the migration lock on every outcome.
-		}
-		return true;
 	}
 
 	public static function write( string $level, string $message ): void {

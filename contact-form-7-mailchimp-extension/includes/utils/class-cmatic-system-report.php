@@ -10,6 +10,13 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_System_Report {
 
+	const HOSTS = array(
+		'Mailchimp'  => 'https://login.mailchimp.com/',
+		'Brevo'      => 'https://api.brevo.com/',
+		'MailerLite' => 'https://connect.mailerlite.com/',
+		'Klaviyo'    => 'https://a.klaviyo.com/',
+	);
+
 	public static function build(): string {
 		global $wpdb;
 		if ( ! function_exists( 'get_plugins' ) ) {
@@ -20,32 +27,26 @@ final class Cmatic_System_Report {
 			$lines[] = '';
 			$lines[] = '== ' . $title;
 		};
-		$row     = static function ( string $key, $value ) use ( &$lines ): void {
+		$row = static function ( string $key, $value ) use ( &$lines ): void {
 			if ( is_bool( $value ) ) {
 				$value = $value ? 'yes' : 'no';
 			}
 			$lines[] = str_pad( $key . ':', 26 ) . ( is_scalar( $value ) ? (string) $value : '' );
 		};
 
-		$lines[] = 'Contact Form 7 Extension system report, ' . gmdate( 'Y-m-d H:i' ) . ' UTC';
+		$lines[] = 'ChimpMatic system report, ' . gmdate( 'Y-m-d H:i' ) . ' UTC';
 
-		$section( 'Contact Form 7 Extension' );
-		$row( 'Version', SPARTAN_MCE_VERSION );
+		$section( 'ChimpMatic' );
+		$row( 'Lite', SPARTAN_MCE_VERSION );
 		$row( 'Pro', defined( 'CMATIC_VERSION' ) ? (string) constant( 'CMATIC_VERSION' ) . ' (active)' : 'not active' );
 		$row( 'Connected forms', self::connected_forms() );
 		$row( 'Debug log', Cmatic_Debug_Log::logging() ? 'on until ' . gmdate( 'Y-m-d H:i', Cmatic_Debug_Log::until() ) . ' UTC' : 'off' );
 		$row( 'Site log', '' === Cmatic_Debug_Log::site_log_path() ? 'none' : basename( Cmatic_Debug_Log::site_log_path() ) );
 
 		$section( 'Provider reachability' );
-		foreach ( Cmatic_Lite_Esp_Registry::catalog()->probe_urls() as $name => $url ) {
+		foreach ( self::HOSTS as $name => $url ) {
 			$start = microtime( true );
-			$probe = wp_remote_head(
-				$url,
-				array(
-					'timeout'     => 5,
-					'redirection' => 0,
-				)
-			);
+			$probe = wp_remote_head( $url, array( 'timeout' => 5, 'redirection' => 0 ) );
 			$row( $name, is_wp_error( $probe ) ? 'error: ' . $probe->get_error_message() : 'HTTP ' . (int) wp_remote_retrieve_response_code( $probe ) . ' in ' . (int) round( ( microtime( true ) - $start ) * 1000 ) . ' ms' );
 		}
 
@@ -73,8 +74,8 @@ final class Cmatic_System_Report {
 		$row( 'cURL', is_array( $curl ) && isset( $curl['version'] ) && is_string( $curl['version'] ) ? $curl['version'] : 'absent' );
 		$row( 'OpenSSL', defined( 'OPENSSL_VERSION_TEXT' ) ? OPENSSL_VERSION_TEXT : 'absent' );
 		$row( 'Database', $wpdb instanceof wpdb ? $wpdb->db_version() : '' );
-		$software = isset( $_SERVER['SERVER_SOFTWARE'] ) && is_string( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '';
-		$row( 'Web server', $software );
+		$software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) : '';
+		$row( 'Web server', is_string( $software ) ? sanitize_text_field( $software ) : '' );
 
 		$section( 'Active plugins' );
 		$active  = (array) get_option( 'active_plugins', array() );
@@ -108,12 +109,7 @@ final class Cmatic_System_Report {
 		$count = 0;
 		foreach ( (array) $names as $name ) {
 			$config = get_option( (string) $name );
-			if ( ! is_array( $config ) ) {
-				continue;
-			}
-			$settings = new \Cmatic\Lite\Settings\FormSettings( 0, $config );
-			$section  = $settings->section( $settings->provider() );
-			if ( ! empty( $section['api-validation'] ) ) {
+			if ( is_array( $config ) && ! empty( $config['api-validation'] ) ) {
 				++$count;
 			}
 		}

@@ -74,7 +74,7 @@ final class Cmatic_Sender_Context {
 	 * @param object $form
 	 */
 	public static function block( $form, bool $html ): string {
-		$ip    = \Cmatic\Lite\Submission\RequestIp::get();
+		$ip    = Cmatic_Request_Ip::get();
 		$geo   = '' === $ip ? '' : self::GEO_BASE . rawurlencode( $ip );
 		$page  = self::server( 'HTTP_REFERER' );
 		$page  = '' === $page ? '' : esc_url_raw( $page );

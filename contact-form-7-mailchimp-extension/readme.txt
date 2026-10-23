@@ -1,85 +1,159 @@
-=== Connect Contact Form 7 to Mailchimp, Brevo, MailerLite, Klaviyo, GetResponse, EmailOctopus, Campaign Monitor & Moosend ===
+=== Connect Contact Form 7 to Mailchimp, Brevo, MailerLite & Klaviyo ===
 Contributors: rnzo, chimpmatic
 Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 26.10.22.23
+Stable tag: 0.9.81.17
 Requires PHP: 7.4
 License: GPL v3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-Grow your email list from Contact Form 7. Connect to eight email platforms and bring the subscriber details you choose.
+CF7 Mailchimp integration: send Contact Form 7 leads and signup forms to your Mailchimp audience, or to Brevo, MailerLite, and Klaviyo lists.
 
 == Description ==
 
-**Turn every form submission into a new subscriber.** Contact Form 7 Extension connects your forms to Mailchimp, Brevo, MailerLite, Klaviyo, GetResponse, EmailOctopus, Campaign Monitor and Moosend.
+**A [Mailchimp integration for Contact Form 7](https://chimpmatic.com/contact-form-7-mailchimp) that also connects forms to Brevo, MailerLite, and Klaviyo.** Send form submissions to email marketing lists, audiences, or groups without replacing Contact Form 7 or adding a separate automation platform.
 
-Choose an email platform for each form, connect your account, and pick a list. Your next newsletter signup can go to Mailchimp while a separate lead form builds your audience in Klaviyo, all from the Contact Form 7 editor you already use.
+Choose a provider for each form, [connect the account](https://chimpmatic.com/connect-contact-form-7-with-mailchimp), select a destination, and map Contact Form 7 fields to subscriber fields. Existing Mailchimp forms keep their saved audience, field mappings, credentials, and opt-in settings after upgrading.
 
-= Make every signup count =
+New to this? Start with the [basic setup walkthrough](https://chimpmatic.com/mailchimp-contact-form-basic-setup), or read the [2026 guide to Contact Form 7 and Mailchimp automation](https://chimpmatic.com/contact-form-7-mailchimp-automation-a-2026-guide).
 
-* **Grow the list you choose.** Send each form to one audience, list, group or campaign. Every form has its own connection and destination.
-* **Get the details that matter.** Send the email address plus any three fields you choose, such as a name, phone number or birthday.
-* **Welcome confirmed subscribers.** Use double opt-in on all eight platforms, following your platform's confirmation settings.
-* **Respect your visitors' choice.** Add a consent checkbox so only people who opt in join your list.
-* **Get started in a click.** If Contact Form 7 is missing, install it straight from the setup notice. The plugin also helps you activate or update it when needed.
+= Contact Form 7 Email Marketing Integrations =
 
-Already using Mailchimp? Your saved audience, field choices and opt-in settings stay with your forms when you update.
+Choose one provider independently for each Contact Form 7 form. Each integration sends submitted subscriber data directly to the audience, list, or group selected in that form's settings.
 
-[Find your email platform's setup guide](https://chimpmatic.com/integrations) or visit the [Help Center](https://chimpmatic.com/help).
+**[Mailchimp integration for Contact Form 7](https://chimpmatic.com/contact-form-7-mailchimp)** - Connect through one-click OAuth or an [API key](https://chimpmatic.com/how-to-get-your-mailchimp-api-key), choose an audience, map [merge fields](https://chimpmatic.com/mailchimp-audience-fields-and-merge-tags), and select [single or double opt-in](https://chimpmatic.com/mailchimp-double-opt-in). [Read the Mailchimp setup guide](https://chimpmatic.com/integrations/mailchimp).
 
-= Ready to do more with each signup? =
+**[Brevo integration for Contact Form 7](https://chimpmatic.com/contact-form-7-brevo)** - Connect with a Brevo API key, choose a list, map contact attributes, and select direct subscription or a Brevo confirmation email. [Read the Brevo setup guide](https://chimpmatic.com/integrations/brevo).
 
-ChimpMatic Pro sends each signup to several lists, routes people by their answers, adds tags automatically on all eight platforms, and brings along every field your platform supports.
+**[MailerLite integration for Contact Form 7](https://chimpmatic.com/integrations/mailerlite)** - Connect with a MailerLite API token, choose a group, and map subscriber fields. Double opt-in follows the MailerLite account setting. [Read the MailerLite setup guide](https://chimpmatic.com/integrations/mailerlite).
 
-[Explore ChimpMatic Pro](https://chimpmatic.com/pro).
+**[Klaviyo integration for Contact Form 7](https://chimpmatic.com/integrations/klaviyo)** - Connect with a Klaviyo private API key, choose a list, and map profile properties. Confirmation behavior follows the selected Klaviyo list. [Read the Klaviyo setup guide](https://chimpmatic.com/integrations/klaviyo).
 
-= External services =
+= Everything included =
 
-Contact Form 7 Extension sends signup data to your selected email platform and connects to our services for account connections and updates. [See the external services and what is shared](https://chimpmatic.com/external-services).
+* Choose Mailchimp, Brevo, MailerLite, or Klaviyo independently for each Contact Form 7 form.
+* Use different provider accounts and [destinations on different forms](https://chimpmatic.com/sync-cf7-multiple-mailchimp-audiences).
+* Load audiences, lists, or [groups](https://chimpmatic.com/how-to-use-mailchimp-groups) inside the Contact Form 7 editor.
+* Map the [required email address](https://chimpmatic.com/mailchimp-required-email) and up to four additional Contact Form 7 fields.
+* Require an [opt-in checkbox](https://chimpmatic.com/mailchimp-opt-in-checkbox) before subscriber data is sent.
+* Control or respect [provider-specific confirmation behavior](https://chimpmatic.com/help/double-opt-in).
+* Keep existing Mailchimp configurations working after upgrading.
+* Use unlimited Contact Form 7 forms.
+
+= Built for Contact Form 7 =
+
+[ChimpMatic](https://chimpmatic.com) adds a focused integration panel to each Contact Form 7 form. It does not replace your forms, introduce another form builder, or require a generic automation service between WordPress and your email provider.
+
+Wondering how this compares to the alternatives? We set out the trade-offs in our [Mailchimp plugin comparison](https://chimpmatic.com/chimpmatic-vs-mc4wp-mailchimp-plugin-comparison) and our [marketing automation comparison](https://chimpmatic.com/chimpmatic-vs-wp-fusion-mailchimp-plugin-comparison).
+
+= ChimpMatic Pro =
+
+[ChimpMatic Pro](https://chimpmatic.com/pro) is an optional add-on for teams that need advanced provider features, expanded [field mapping](https://chimpmatic.com/help/field-mapping), advanced consent controls, [subscriber tagging](https://chimpmatic.com/how-to-tag-contact-form-7-subscribers-in-mailchimp), and priority support. ChimpMatic Lite remains a complete Contact Form 7 integration on its own.
+
+[Compare ChimpMatic Lite and Pro](https://chimpmatic.com/pro) · [Pricing](https://chimpmatic.com/pricing) · [Installing Pro](https://chimpmatic.com/how-to-install-chimpmatic-pro)
+
+= External Services and Data Disclosure =
+
+ChimpMatic is independently developed and is not affiliated with or endorsed by Mailchimp, Brevo, MailerLite, or Klaviyo. When a configured form is submitted, its email address, mapped fields, destination, and consent choice are sent directly to the provider you selected; an account with that provider is required. Full detail is in our [external services disclosure](https://chimpmatic.com/external-services) and [privacy policy](https://chimpmatic.com/privacy).
+
+= Support =
+
+* [Provider integration guides](https://chimpmatic.com/integrations)
+* [Documentation and Help Center](https://chimpmatic.com/help)
+* [Mailchimp integration FAQ](https://chimpmatic.com/mailchimp-integration-faq)
+* [Contact the ChimpMatic team](https://chimpmatic.com/contact)
 
 == Installation ==
 
-1. Install and activate this plugin. If Contact Form 7 is missing, click **Install Contact Form 7** in the setup notice.
-2. Open a form under **Contact > Contact Forms**, then open its **Contact Form 7 Extension** tab. Choose your email platform, connect your account and select a list.
-3. Choose your fields, consent and confirmation settings. Save the form and send a test signup.
+1. Install and activate Contact Form 7.
+2. Install ChimpMatic Lite from the WordPress Plugin Directory and activate it.
+3. Edit a Contact Form 7 form and open its **Chimpmatic** tab.
+4. Choose Mailchimp, Brevo, MailerLite, or Klaviyo.
+5. Connect the provider, select an audience, list, or group, and map the email field plus any additional fields.
+6. Configure consent behavior, save the form, and submit a test entry.
+
+There is a screenshot-by-screenshot version in the [basic setup guide](https://chimpmatic.com/mailchimp-contact-form-basic-setup).
+
+= Provider Credentials =
+
+Mailchimp supports OAuth or an API key; here is [how to find your Mailchimp API key](https://chimpmatic.com/how-to-get-your-mailchimp-api-key). Brevo uses an API key, MailerLite uses an API token, and Klaviyo uses a private API key. For current screenshots and exact provider navigation, use the [integration setup guides](https://chimpmatic.com/integrations).
 
 == Frequently Asked Questions ==
 
-= Which email platforms can I use? =
+= Which email marketing providers does ChimpMatic Lite support? =
 
-Mailchimp, Brevo, MailerLite, Klaviyo, GetResponse, EmailOctopus, Campaign Monitor and Moosend. Each form can use a different platform and account. You will need an account with your chosen platform; see the [integration guides](https://chimpmatic.com/integrations) for its requirements.
+Version 0.9.81.12 supports Mailchimp, Brevo, MailerLite, and Klaviyo. You select one provider independently for each Contact Form 7 form. See the [integrations overview](https://chimpmatic.com/integrations).
 
-= Which fields can I send? =
+= How do I connect Mailchimp to Contact Form 7? =
 
-The email address plus any three fields you choose from the fields your platform supports. Pick the details you want to use in your next campaign.
+Open the ChimpMatic tab in the Contact Form 7 editor, select Mailchimp, connect with OAuth or an [API key](https://chimpmatic.com/how-to-get-your-mailchimp-api-key), choose an audience, and map the form's email field. You can then configure consent and [single or double opt-in](https://chimpmatic.com/mailchimp-double-opt-in-setup). [Follow the Mailchimp setup guide](https://chimpmatic.com/integrations/mailchimp).
 
-= Can I use double opt-in? =
+= How do I connect Brevo to Contact Form 7? =
 
-Yes, on all eight platforms. Where your platform controls confirmation at the account or list level, those settings apply. See the [double opt-in guide](https://chimpmatic.com/help/double-opt-in).
+Open the ChimpMatic tab, select Brevo, enter a Brevo API key, choose a list, and map the form fields to Brevo contact attributes. You can subscribe the contact directly or use a Brevo confirmation email. [Follow the Brevo setup guide](https://chimpmatic.com/integrations/brevo), or read more about the [Contact Form 7 Brevo integration](https://chimpmatic.com/contact-form-7-brevo).
 
-= Can I require a consent checkbox? =
+= Can Contact Form 7 send subscribers to MailerLite? =
 
-Yes. Choose the checkbox in your form's settings so a signup is sent only when your visitor checks it.
+Yes. Select MailerLite in the ChimpMatic tab, connect with an API token, choose a group, and map the Contact Form 7 email field and subscriber fields. MailerLite applies the account's API double-opt-in setting. [Follow the MailerLite setup guide](https://chimpmatic.com/integrations/mailerlite).
 
-= Where can I get help? =
+= Can Contact Form 7 send leads to Klaviyo? =
 
-Visit the [Help Center](https://chimpmatic.com/help) or [contact our team](https://chimpmatic.com/contact).
+Yes. Select Klaviyo in the ChimpMatic tab, connect with a private API key, choose a list, and map Contact Form 7 fields to Klaviyo profile properties. Consent behavior follows the selected Klaviyo list. [Follow the Klaviyo setup guide](https://chimpmatic.com/integrations/klaviyo).
+
+= My form submits but nothing reaches Mailchimp. What do I check? =
+
+Usually it is the audience selection, a required merge field that is not mapped, or an opt-in checkbox that was never ticked. We walk through the [seven most common causes](https://chimpmatic.com/contact-form-7-not-sending-to-mailchimp-7-common-fixes).
+
+= Will my existing Mailchimp forms keep working? =
+
+Yes. Existing configurations default to Mailchimp and retain their saved audience, field mappings, API credentials, and opt-in behavior.
+
+[Read more about the Contact Form 7 Mailchimp integration](https://chimpmatic.com/integrations/mailchimp).
+
+= Can different forms use different providers? =
+
+Yes. A newsletter form can send to MailerLite while a lead form sends to Brevo, for example. Every form stores its own provider, credentials, destination, mappings, and opt-in configuration. The same applies to [multiple Mailchimp audiences](https://chimpmatic.com/sync-cf7-multiple-mailchimp-audiences).
+
+= Does ChimpMatic support double opt-in? =
+
+Yes, but the control differs by provider. Mailchimp offers [single or double opt-in](https://chimpmatic.com/mailchimp-double-opt-in) per form. Brevo can send a confirmation email. MailerLite follows the account's API double-opt-in setting. Klaviyo follows the selected list's consent behavior.
+
+[Read more about provider-specific double opt-in](https://chimpmatic.com/help/double-opt-in), or the [Mailchimp double opt-in setup](https://chimpmatic.com/mailchimp-double-opt-in-setup).
+
+= How many fields can I map in Lite? =
+
+Lite maps the required email address plus up to four additional form fields. Compatible ChimpMatic Pro features can expand the mapping limit.
+
+[Read more about Contact Form 7 field mapping](https://chimpmatic.com/help/field-mapping), [Mailchimp audience fields and merge tags](https://chimpmatic.com/mailchimp-audience-fields-and-merge-tags), and [the default audience fields](https://chimpmatic.com/mailchimp-default-audience-fields-explained).
+
+= Can I send a subscriber's name or birthday? =
+
+Yes, by mapping those form fields to the matching audience fields. See [sending the subscriber name](https://chimpmatic.com/mailchimp-subscriber-name) and [sending birthday fields](https://chimpmatic.com/sending-birthday-fields-to-mailchimp).
+
+= Can I add subscribers to a Mailchimp group? =
+
+Yes. Choose the group in the form's settings. There is background on [how Mailchimp groups work](https://chimpmatic.com/how-to-use-mailchimp-groups) and on [replacing groups](https://chimpmatic.com/mailchimp-replace-groups-explained).
+
+= How do I handle GDPR consent? =
+
+Require an [opt-in checkbox](https://chimpmatic.com/mailchimp-opt-in-checkbox) before subscriber data is sent, and choose the confirmation behavior your provider offers. We cover the practicalities in [collecting consent with GDPR](https://chimpmatic.com/collect-consent-with-gdpr).
+
+= How does ChimpMatic compare to other Mailchimp plugins? =
+
+We keep honest comparisons, including where the other side is stronger: see our [Mailchimp plugin comparison](https://chimpmatic.com/chimpmatic-vs-mc4wp-mailchimp-plugin-comparison) and our [marketing automation comparison](https://chimpmatic.com/chimpmatic-vs-wp-fusion-mailchimp-plugin-comparison).
+
+= Where do I get help? =
+
+Start with the [provider integration guides](https://chimpmatic.com/integrations), visit the [Help Center](https://chimpmatic.com/help), read the [Mailchimp integration FAQ](https://chimpmatic.com/mailchimp-integration-faq), or [contact the ChimpMatic team](https://chimpmatic.com/contact).
+
+== Screenshots ==
+
+1. Choose Mailchimp, Brevo, MailerLite, or Klaviyo inside a Contact Form 7 form.
+2. Select an audience, list, or group and map Contact Form 7 fields to subscriber fields.
 
 == Changelog ==
-
-= 26.10.18.06 =
-
-[Version 26.10.18.06 release notes](https://chimpmatic.com/changelog#26.10.18.06)
-
-= 26.10.06.20 =
-
-[Version 26.10.06.20 release notes](https://chimpmatic.com/changelog#26.10.06.20)
-
-
-= 0.9.82.00 =
-
-[Version 0.9.82.00 release notes](https://chimpmatic.com/changelog#0.9.82.00)
 
 = 0.9.81.17 =
 
@@ -257,4 +331,4 @@ Visit the [Help Center](https://chimpmatic.com/help) or [contact our team](https
 
 [Version 0.1.2 release notes](https://chimpmatic.com/changelog#0.1.2)
 
-[View the complete release history](https://chimpmatic.com/changelog)
+[View the complete ChimpMatic changelog](https://chimpmatic.com/changelog)

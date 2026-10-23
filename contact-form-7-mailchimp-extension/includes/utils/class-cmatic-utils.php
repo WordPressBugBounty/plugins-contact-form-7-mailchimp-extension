@@ -68,6 +68,15 @@ final class Cmatic_Utils {
 		return ! empty( $forms ) ? (int) $forms[0] : null;
 	}
 
+	public static function get_days_since( int $timestamp ): int {
+		$datetime_now  = new \DateTime( 'now' );
+		$datetime_from = new \DateTime( '@' . $timestamp );
+
+		$diff = date_diff( $datetime_now, $datetime_from );
+
+		return (int) $diff->format( '%a' );
+	}
+
 	private function __construct() {}
 
 	private function __clone() {}

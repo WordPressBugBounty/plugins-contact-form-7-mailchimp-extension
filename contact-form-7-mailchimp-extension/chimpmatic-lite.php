@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name: Connect Contact Form 7 to Mailchimp, Brevo, MailerLite, Klaviyo, GetResponse, EmailOctopus, Campaign Monitor & Moosend
+ * Plugin Name: Connect Contact Form 7 to Mailchimp, Brevo, MailerLite & Klaviyo
  * Plugin URI: https://chimpmatic.com
- * Description: Send Contact Form 7 submissions to Mailchimp, Brevo, MailerLite, Klaviyo, GetResponse, EmailOctopus, Campaign Monitor or Moosend. Pick a list for each form, map your fields, and choose how people opt in.
- * Version: 26.10.22.23
+ * Description: Connect Contact Form 7 to Mailchimp, Brevo, MailerLite, or Klaviyo with per-form destinations, field mapping, and provider-specific opt-in.
+ * Version: 0.9.81.17
  * Author: Renzo Johnson
  * Author URI: https://renzojohnson.com
  * License: GPL v3 or later
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: contact-form-7-mailchimp-extension
- * Domain Path: /languages
+ * Domain Path: /languages/
  * Requires at least: 6.4
  * Requires PHP: 7.4
  */
@@ -29,7 +29,7 @@ if ( ! function_exists( 'add_filter' ) ) {
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'SPARTAN_MCE_VERSION' ) ) {
-	define( 'SPARTAN_MCE_VERSION', '26.10.22.23' );
+	define( 'SPARTAN_MCE_VERSION', '0.9.81.17' );
 	define( 'SPARTAN_MCE_RELEASE_TRAIN', '2026.07.23.20' );
 
 	define( 'SPARTAN_MCE_PLUGIN_FILE', __FILE__ );

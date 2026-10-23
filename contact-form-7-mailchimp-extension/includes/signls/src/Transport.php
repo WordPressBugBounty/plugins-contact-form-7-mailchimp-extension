@@ -14,10 +14,7 @@ final class Transport {
 
 	private const DEFAULT_ENDPOINT = 'https://signls.dev';
 
-	private const SDK_VERSION = '1.1.14';
-
-	/** A second sequence conflict this soon after a resync means two installs share one credential. */
-	private const SHARED_CREDENTIAL_WINDOW = 1800;
+	private const SDK_VERSION = '1.1.10';
 
 	private const CLOCK_SKEW_SECONDS = 300;
 
@@ -47,7 +44,6 @@ final class Transport {
 	}
 
 	public function prepare( ProductAdapterInterface $adapter ) {
-		$this->identity->device_id();
 		$revision = $this->payload_revision( $adapter );
 		$pending  = $this->reconcile_pending_identity( $adapter, $revision );
 		if ( '' === $pending || '' === (string) $this->state->get( 'pending_quarantine_class', '' ) ) {
@@ -73,7 +69,6 @@ final class Transport {
 	}
 
 	public function deliver( ProductAdapterInterface $adapter, array $payload ): array {
-		$this->identity->device_id();
 		$started = time();
 		$this->state->set( 'last_attempt_started_at', $started );
 
@@ -239,7 +234,6 @@ final class Transport {
 				)
 			);
 			$this->state->clear_pending();
-			$this->state->delete_keys( array( 'rekey_unverified_at' ) );
 			return array(
 				'ok'        => true,
 				'class'     => ! empty( $data['duplicate'] ) ? 'duplicate' : 'accepted',
@@ -253,41 +247,10 @@ final class Transport {
 		}
 		if ( 'sequence_conflict' === $response['class'] ) {
 			$response['permanent'] = false;
-			$now                   = time();
-			// A conflict while the post-upgrade re-key is unverified: this install may be a clone made
-			// before the upgrade that kept production's credential. Separate it now.
-			if ( $this->identity->rekey_unverified() && ! $sequence_retry ) {
-				if ( $this->identity->rotation_allowed() ) {
-					$this->identity->rotate_device( 'clone_suspected_after_rekey' );
-					$response['rotated'] = true;
-					return $response;
-				}
-				$this->state->delete_keys( array( 'rekey_unverified_at' ) );
-			}
-			// A second conflict shortly after a resync: two installs are sending on one credential.
-			$last_resync = (int) $this->state->get( 'sequence_resync_at', 0 );
-			if ( ! $sequence_retry && $last_resync > 0 && $now - $last_resync <= self::SHARED_CREDENTIAL_WINDOW && $this->identity->rotation_allowed() ) {
-				$this->identity->rotate_device( 'credential_shared' );
-				$response['rotated'] = true;
-				return $response;
-			}
-			$expected = isset( $response['data']['expected_sequence'] ) && is_int( $response['data']['expected_sequence'] ) ? $response['data']['expected_sequence'] : 0;
+			$expected              = isset( $response['data']['expected_sequence'] ) && is_int( $response['data']['expected_sequence'] ) ? $response['data']['expected_sequence'] : 0;
 			if ( ! $sequence_retry && $expected > 0 ) {
-				$old_body = json_decode( $pending );
-				if ( ! is_object( $old_body ) || ! isset( $old_body->payload ) || ! is_object( $old_body->payload ) || array() === get_object_vars( $old_body->payload ) ) {
-					return $this->quarantine(
-						array(
-							'ok'        => false,
-							'class'     => 'invalid_payload',
-							'status'    => 0,
-							'permanent' => true,
-						)
-					);
-				}
-				if ( $this->state->reconcile_sequence( $expected ) ) {
-					$this->state->set( 'sequence_resync_at', $now );
-					return $this->snapshot( $adapter, get_object_vars( $old_body->payload ), $clock_retry, true );
-				}
+				$this->state->reconcile_sequence( $expected );
+				return $this->snapshot( $adapter, $payload, $clock_retry, true );
 			}
 		}
 		if ( ! empty( $response['permanent'] ) && in_array( $response['class'], self::QUARANTINE_CLASSES, true ) ) {
@@ -391,14 +354,12 @@ final class Transport {
 		$attempt                 = (int) $this->state->get( 'retry_attempt', 0 );
 		$values['retry_attempt'] = $attempt + 1;
 		if ( in_array( $values['failure_class'], array( 'invalid_credential', 'device_already_enrolled' ), true ) ) {
-			if ( $this->identity->rotation_allowed() ) {
-				$this->identity->rotate_device( $values['failure_class'] );
+			$last_rotation = (int) $this->state->get( 'last_device_rotation_at', 0 );
+			if ( time() - $last_rotation >= DAY_IN_SECONDS ) {
+				$this->identity->rotate_device();
+				$values['last_device_rotation_at'] = time();
 			}
 			$result['permanent'] = false;
-		}
-		if ( ! empty( $result['rotated'] ) ) {
-			// The device was just rotated; the next run enrolls afresh. Do not keep a stale retry schedule.
-			$values['retry_attempt'] = 0;
 		}
 		if ( empty( $result['permanent'] ) ) {
 			$values['next_retry_at'] = time() + self::retry_delay( $attempt ) + random_int( 0, 300 );

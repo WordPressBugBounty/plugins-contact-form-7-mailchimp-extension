@@ -70,21 +70,13 @@ final class Cmatic_Lite_Signls_Performance_Collector {
 		if ( ! defined( 'DB_NAME' ) ) {
 			return null;
 		}
-		$found = false;
-		$value = wp_cache_get( 'database_size_mb', 'cmatic_lite', false, $found );
-		if ( $found ) {
-			return is_numeric( $value ) ? (float) $value : null;
-		}
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$value = $wpdb->get_var(
 			$wpdb->prepare(
 				'SELECT SUM(data_length + index_length) / 1024 / 1024 FROM information_schema.TABLES WHERE table_schema = %s',
 				DB_NAME
 			)
-		);
-		$value = is_numeric( $value ) ? round( (float) $value, 2 ) : null;
-		wp_cache_set( 'database_size_mb', $value, 'cmatic_lite', HOUR_IN_SECONDS );
-		return $value;
+		); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One aggregate capacity fact; no table content or query text leaves the site.
+		return is_numeric( $value ) ? round( (float) $value, 2 ) : null;
 	}
 
 	private function object_cache(): array {

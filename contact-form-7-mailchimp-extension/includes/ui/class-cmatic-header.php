@@ -30,7 +30,7 @@ class Cmatic_Header {
 		$this->provider         = isset( $args['provider'] ) && is_string( $args['provider'] ) ? sanitize_key( $args['provider'] ) : 'mailchimp';
 		$this->provider_options = isset( $args['provider_options'] ) && is_array( $args['provider_options'] ) ? $args['provider_options'] : array();
 		$this->review_phrases   = array(
-			__( 'Enjoying Contact Form 7 Extension? Leave a review', 'contact-form-7-mailchimp-extension' ),
+			__( 'Loving Chimpmatic? Leave a review', 'contact-form-7-mailchimp-extension' ),
 		);
 	}
 
@@ -58,7 +58,7 @@ class Cmatic_Header {
 	}
 
 	private function get_default_review_url(): string {
-		return 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews';
+		return 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/';
 	}
 
 	private function get_review_phrase(): string {
@@ -74,12 +74,12 @@ class Cmatic_Header {
 
 	public function render(): void {
 		$badge_class = $this->is_pro ? 'cmatic-header__badge--pro' : 'cmatic-header__badge--lite';
-		$badge_text  = $this->is_pro ? __( 'PRO', 'contact-form-7-mailchimp-extension' ) : __( 'Free', 'contact-form-7-mailchimp-extension' );
+		$badge_text  = $this->is_pro ? __( 'PRO', 'contact-form-7-mailchimp-extension' ) : __( 'Lite', 'contact-form-7-mailchimp-extension' );
 		?>
 		<header class="cmatic-header">
 			<div class="cmatic-header__inner">
 				<div class="cmatic-header__brand">
-					<span class="cmatic-header__title"><?php esc_html_e( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ); ?></span>
+					<span class="cmatic-header__title"><?php esc_html_e( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ); ?></span>
 					<span class="cmatic-header__badge <?php echo esc_attr( $badge_class ); ?>"><?php echo esc_html( $badge_text ); ?></span>
 					<span class="cmatic-header__version">v<?php echo esc_html( $this->version ); ?></span>
 				</div>
@@ -154,6 +154,11 @@ class Cmatic_Header {
 			<span class="cmatic-header__status-text"><?php echo esc_html( $status_text ); ?></span>
 		</div>
 		<?php
+	}
+
+	public function set_api_status( ?string $status ): self {
+		$this->api_status = $status;
+		return $this;
 	}
 
 	public static function output( array $args = array() ): void {

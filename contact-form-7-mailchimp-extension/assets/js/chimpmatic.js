@@ -99,6 +99,13 @@ async function getApiKey() {
     return '';
 }
 
+function setApiValid(value) {
+    const dataContainer = document.getElementById('cmatic_data');
+    if (dataContainer) {
+        dataContainer.dataset.apiValid = value ? '1' : '0';
+    }
+}
+
 function getRestUrl() {
     if (typeof wpApiSettings !== 'undefined' && wpApiSettings.root) {
         return wpApiSettings.root + 'chimpmatic/v1/';
@@ -107,7 +114,15 @@ function getRestUrl() {
 }
 
 const REST_ENDPOINTS = {
-    NOTICES_DISMISS: 'notices/dismiss'
+    SETTINGS_SAVE: 'settings/save',
+    SETTINGS_CONFIG: 'settings/config',
+    AUDIENCES: 'mailchimp/audiences',
+    FIELDS: 'mailchimp/fields',
+    GROUPS: 'mailchimp/groups',
+    INTERESTS: 'mailchimp/interests',
+    EXPORT_USERS: 'export/users',
+    NOTICES_DISMISS: 'notices/dismiss',
+    TELEMETRY_TOGGLE: 'telemetry/toggle'
 };
 
 const actionToEndpoint = {
@@ -494,6 +509,21 @@ document.addEventListener('change', async function(event) {
             });
     }
 });
+
+function togglePanel(panelSelector, buttonElement, showText, hideText) {
+    const panel = typeof panelSelector === 'string' ?
+        (panelSelector.startsWith('.') ? document.querySelector(panelSelector) : document.getElementById(panelSelector)) :
+        panelSelector;
+
+    if (panel) {
+        const isHidden = panel.style.display === 'none' || !panel.style.display || window.getComputedStyle(panel).display === 'none';
+        panel.style.display = isHidden ? 'block' : 'none';
+
+        if (buttonElement && showText && hideText) {
+            buttonElement.textContent = isHidden ? hideText : showText;
+        }
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const connectBtn = document.getElementById('chm_activalist');

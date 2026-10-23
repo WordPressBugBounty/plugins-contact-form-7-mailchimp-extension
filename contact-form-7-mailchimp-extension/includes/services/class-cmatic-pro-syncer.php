@@ -65,7 +65,7 @@ class Cmatic_Pro_Syncer {
 	 * @return mixed
 	 */
 	public static function offer( $transient ) {
-		if ( ! $transient instanceof stdClass || ! empty( $transient->response[ self::PRO_PLUGIN_FILE ] ) ) {
+		if ( ! is_object( $transient ) || ! empty( $transient->response[ self::PRO_PLUGIN_FILE ] ) ) {
 			return $transient;
 		}
 		$installed = self::installed_version();
@@ -243,16 +243,14 @@ class Cmatic_Pro_Syncer {
 	 * @return object{new_version: string, package: string, force_upgrade: bool, tested: string}|null
 	 */
 	private static function release( string $installed ): ?object {
-		$cached       = self::cached_release();
-		$stored       = get_site_option( self::RELEASE_OPTION, array() );
-		$stored       = is_array( $stored ) ? $stored : array();
-		$now          = time();
-		$expires_at   = isset( $stored['expires_at'] ) && is_numeric( $stored['expires_at'] ) ? (int) $stored['expires_at'] : 0;
-		$attempted_at = isset( $stored['attempted_at'] ) && is_numeric( $stored['attempted_at'] ) ? (int) $stored['attempted_at'] : 0;
-		if ( null !== $cached && $now < $expires_at ) {
+		$cached = self::cached_release();
+		$stored = get_site_option( self::RELEASE_OPTION, array() );
+		$stored = is_array( $stored ) ? $stored : array();
+		$now    = time();
+		if ( null !== $cached && $now < (int) ( $stored['expires_at'] ?? 0 ) ) {
 			return $cached;
 		}
-		if ( ( $now - $attempted_at ) < self::RELEASE_FLOOR ) {
+		if ( ( $now - (int) ( $stored['attempted_at'] ?? 0 ) ) < self::RELEASE_FLOOR ) {
 			return $cached;
 		}
 		$stored['attempted_at'] = $now;

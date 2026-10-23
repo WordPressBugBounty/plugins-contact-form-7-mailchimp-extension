@@ -47,14 +47,14 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 				'cmatic-deactivate-modal',
 				SPARTAN_MCE_PLUGIN_URL . 'assets/css/chimpmatic-lite-deactivate.css',
 				array(),
-				Cmatic_Buster::instance()->get_version( SPARTAN_MCE_PLUGIN_DIR . 'assets/css/chimpmatic-lite-deactivate.css' )
+				SPARTAN_MCE_VERSION
 			);
 
 			wp_enqueue_script(
 				'cmatic-deactivate-modal',
 				SPARTAN_MCE_PLUGIN_URL . 'assets/js/chimpmatic-lite-deactivate.js',
 				array(),
-				Cmatic_Buster::instance()->get_version( SPARTAN_MCE_PLUGIN_DIR . 'assets/js/chimpmatic-lite-deactivate.js' ),
+				SPARTAN_MCE_VERSION,
 				true
 			);
 
@@ -147,8 +147,8 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 			return rest_ensure_response( $this->get_plugin_list() );
 		}
 
-		public function check_permissions( $request ) {
-			return Cmatic_Rest_Permissions::admin( $request );
+		public function check_permissions() {
+			return current_user_can( 'install_plugins' );
 		}
 
 		public function handle_feedback_submission( $request ) {
@@ -306,7 +306,7 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 		private function get_strings() {
 			return array(
 				'title'           => __( 'Quick Feedback', 'contact-form-7-mailchimp-extension' ),
-				'description'     => __( 'If you have a moment, please let us know why you are deactivating Contact Form 7 Extension:', 'contact-form-7-mailchimp-extension' ),
+				'description'     => __( 'If you have a moment, please let us know why you are deactivating Chimpmatic Lite:', 'contact-form-7-mailchimp-extension' ),
 				'submitButton'    => __( 'Submit & Deactivate', 'contact-form-7-mailchimp-extension' ),
 				'skipButton'      => __( 'Skip & Deactivate', 'contact-form-7-mailchimp-extension' ),
 				'cancelButton'    => __( 'Cancel', 'contact-form-7-mailchimp-extension' ),

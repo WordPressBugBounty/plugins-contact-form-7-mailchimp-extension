@@ -12,7 +12,7 @@ final class Cmatic_Lite_Signls_Contract {
 
 	private const UINT_MAX = 4294967295;
 
-	private const INTEGRATIONS = \Cmatic\Lite\Provider\Catalog::SLUGS;
+	private const INTEGRATIONS = array( 'mailchimp', 'brevo', 'mailerlite', 'klaviyo' );
 
 	private const FEATURES = array(
 		'advanced_fields',

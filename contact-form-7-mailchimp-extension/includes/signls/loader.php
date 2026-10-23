@@ -146,4 +146,4 @@ require_once __DIR__ . '/bridge-1-1-5.php';
 require_once __DIR__ . '/bridge-1-1-6.php';
 require_once __DIR__ . '/bridge-1-1-7.php';
 
-Signls_Sdk_Loader::add_candidate( '1.1.14', __DIR__ . '/sdk.php', '7.4.0' );
+Signls_Sdk_Loader::add_candidate( '1.1.10', __DIR__ . '/sdk.php', '7.4.0' );

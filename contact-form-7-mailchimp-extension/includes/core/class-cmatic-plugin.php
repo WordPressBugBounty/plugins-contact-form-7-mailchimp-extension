@@ -36,8 +36,6 @@ final class Cmatic_Plugin {
 	}
 
 	private function load_core_dependencies(): void {
-		require_once $this->dir . 'includes/autoload.php';
-		require_once $this->dir . 'includes/aliases.php';
 		require_once $this->dir . 'includes/interfaces/interface-cmatic-options.php';
 		require_once $this->dir . 'includes/interfaces/interface-cmatic-logger.php';
 		require_once $this->dir . 'includes/interfaces/interface-cmatic-api-client.php';
@@ -49,7 +47,6 @@ final class Cmatic_Plugin {
 
 		require_once $this->dir . 'includes/services/class-cmatic-options-repository.php';
 		require_once $this->dir . 'includes/services/class-cmatic-pro-status.php';
-		require_once $this->dir . 'includes/services/class-cmatic-lite-pro-entitlement.php';
 		require_once $this->dir . 'includes/services/class-cmatic-redirect.php';
 		require_once $this->dir . 'includes/core/class-cmatic-install-data.php';
 		require_once $this->dir . 'includes/core/class-cmatic-migration.php';
@@ -57,6 +54,7 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/core/class-cmatic-deactivator.php';
 		require_once $this->dir . 'includes/services/class-cmatic-cf7-dependency.php';
 		require_once $this->dir . 'includes/services/class-cmatic-pro-syncer.php';
+		require_once $this->dir . 'includes/services/class-cmatic-api-key-importer.php';
 
 		require_once $this->dir . 'includes/auth/class-cmatic-lite-credentials.php';
 		require_once $this->dir . 'includes/auth/class-cmatic-lite-auth-manager.php';
@@ -80,16 +78,32 @@ final class Cmatic_Plugin {
 			'services/class-cmatic-cf7-tags.php',
 			'services/class-cmatic-cron.php',
 			'services/class-cmatic-api-service.php',
+			'services/class-cmatic-form-tags.php',
+			'providers/class-cmatic-lite-esp-capabilities.php',
+			'providers/abstract-class-cmatic-lite-esp-provider.php',
+			'providers/class-cmatic-lite-esp-mailchimp.php',
 			'providers/class-cmatic-mailchimp-panel-store.php',
+			'providers/class-cmatic-lite-esp-brevo.php',
+			'providers/class-cmatic-lite-esp-mailerlite.php',
+			'providers/class-cmatic-lite-esp-klaviyo.php',
 			'providers/class-cmatic-lite-esp-credentials.php',
 			'providers/class-cmatic-lite-esp-registry.php',
 			'providers/class-cmatic-lite-esp-manifest.php',
-			'services/signls/class-cmatic-lite-signls-outcome.php',
+			'services/submission/class-cmatic-email-extractor.php',
+			'services/submission/class-cmatic-mailerlite-routing-resolver.php',
+			'services/submission/class-cmatic-mailerlite-runtime-policy.php',
+			'services/submission/class-cmatic-consent-decision.php',
+			'services/submission/class-cmatic-request-ip.php',
+			'services/submission/class-cmatic-mailerlite-field-normalizer.php',
+			'services/submission/class-cmatic-status-resolver.php',
+			'services/submission/class-cmatic-merge-vars-builder.php',
+			'services/submission/class-cmatic-response-handler.php',
 			'services/submission/class-cmatic-mailchimp-subscriber.php',
+			'services/class-cmatic-mailerlite-degradation-reporter.php',
 			'services/class-cmatic-license-state-resolver.php',
+			'services/submission/class-cmatic-mailerlite-submission-pipeline.php',
 			'services/class-cmatic-submission-handler.php',
 			'services/class-cmatic-sender-context.php',
-			'api/class-cmatic-rest-permissions.php',
 			'api/class-cmatic-rest-lists.php',
 			'api/class-cmatic-rest-settings.php',
 			'api/class-cmatic-rest-form.php',
@@ -103,16 +117,21 @@ final class Cmatic_Plugin {
 			'api/class-cmatic-log-viewer.php',
 			'api/class-cmatic-contact-lookup.php',
 			'api/class-cmatic-rest-oauth.php',
+			'api/class-cmatic-submission-feedback.php',
 			'ui/class-cmatic-header.php',
 			'ui/class-cmatic-api-panel.php',
 			'ui/class-cmatic-lite-esp-panel.php',
 			'ui/class-cmatic-audiences.php',
 			'ui/class-cmatic-data-container.php',
 			'ui/class-cmatic-panel-toggles.php',
+			'ui/class-cmatic-tags-preview.php',
+			'ui/class-cmatic-pro-showcase.php',
 			'ui/class-cmatic-banners.php',
 			'ui/class-cmatic-form-classes.php',
 			'ui/class-cmatic-dom-classes.php',
+			'ui/class-cmatic-field-mapper.php',
 			'ui/class-cmatic-sidebar-panel.php',
+			'services/class-cmatic-sync-stats.php',
 			'ui/class-cmatic-license-banner.php',
 			'ui/class-cmatic-advanced-settings.php',
 		);
@@ -127,14 +146,12 @@ final class Cmatic_Plugin {
 
 	private function initialize_components(): void {
 		Cmatic_Lite_Container::boot();
-		Cmatic_Debug_Log::migrate_public_logs();
 
 		Cmatic_CF7_Dependency::init();
-		\Cmatic\Lite\Admin\Notices::boot();
+		Cmatic_License_Banner::init();
 		Cmatic_Pro_Syncer::init();
-		\Cmatic\Lite\Core\StayCurrent::init();
 
-		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[Contact Form 7 Extension]', 'contact-form-7-mailchimp-extension' );
+		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[Chimpmatic Lite]', 'contact-form-7-mailchimp-extension' );
 
 		Cmatic_Rest_Lists::init();
 		Cmatic_Rest_Settings::init();
@@ -144,13 +161,14 @@ final class Cmatic_Plugin {
 
 		Cmatic_Contact_Lookup::init();
 		Cmatic_Rest_OAuth::init();
-		\Cmatic\Lite\Submission\Feedback::init();
+		Cmatic_Submission_Feedback::init();
 
 		Cmatic_Deactivation_Survey::init_lite();
 		Cmatic_Asset_Loader::init();
 
 		Cmatic_CF7_Tags::init();
 		Cmatic_Admin_Panel::init();
+		Cmatic_Lite_Esp_Degrade_Notice::init();
 		Cmatic_Submission_Handler::init();
 		Cmatic_Sender_Context::init();
 		Cmatic_Banners::init();
@@ -194,7 +212,7 @@ final class Cmatic_Plugin {
 			'product_slug'      => 'contact-form-7-mailchimp-extension',
 			'main_file'         => $this->file,
 			'sdk_path'          => $this->dir . 'includes/signls',
-			'sdk_version'       => '1.1.14',
+			'sdk_version'       => '1.1.10',
 			'adapter_file'      => $this->dir . 'includes/services/class-cmatic-lite-signls-adapter.php',
 			'adapter_class'     => 'Cmatic_Lite_Signls_Adapter',
 			'consent_reader'    => array( 'Cmatic_Lite_Signls_Privacy', 'consent_status' ),

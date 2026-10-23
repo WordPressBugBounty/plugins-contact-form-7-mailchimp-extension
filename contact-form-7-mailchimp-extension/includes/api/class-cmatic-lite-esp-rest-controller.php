@@ -10,11 +10,6 @@ declare(strict_types=1);
 
 defined( 'ABSPATH' ) || exit;
 
-use Cmatic\Lite\Rest\Args;
-use Cmatic\Lite\Settings\FormSettings;
-use Cmatic\Lite\Settings\FormSettingsRepository;
-use Cmatic\Lite\Settings\MappingSchema;
-
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing -- Typed signatures follow the existing Lite provider convention.
 final class Cmatic_Lite_Esp_Rest_Controller {
 	private const REST_NAMESPACE = 'chimpmatic-lite/v1';
@@ -31,12 +26,29 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( __CLASS__, $action ),
-					'permission_callback' => array( 'Cmatic_Rest_Permissions', 'fields' === $action ? 'form' : 'admin' ),
+					'permission_callback' => array( __CLASS__, 'permission' ),
 					'args'                => array(
-						'form_id'  => 'disconnect' === $action ? Args::positive_form_id() : Args::form_id(),
-						'provider' => Args::of( 'string', 'sanitize_key' ) + array( 'validate_callback' => array( __CLASS__, 'validate_provider' ) ),
-						'api_key'  => Args::of( 'string', 'sanitize_text_field', false ),
-						'list_id'  => Args::of( 'string', 'sanitize_text_field', false ),
+						'form_id'  => array(
+							'required'          => true,
+							'type'              => 'integer',
+							'sanitize_callback' => 'absint',
+						),
+						'provider' => array(
+							'required'          => true,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_key',
+							'validate_callback' => array( __CLASS__, 'validate_provider' ),
+						),
+						'api_key'  => array(
+							'required'          => false,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'list_id'  => array(
+							'required'          => false,
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
 					),
 				)
 			);
@@ -47,14 +59,38 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'validate_consent' ),
-				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'editor' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
 				'args'                => array(
-					'form_id'           => Args::form_id(),
-					'provider'          => Args::of( 'string', 'sanitize_key' ),
-					'list_id'           => Args::of( 'string', 'sanitize_text_field' ),
-					'subscription_mode' => Args::of( 'string', 'sanitize_key' ),
-					'doi_template_id'   => Args::of( 'integer', 'absint' ),
-					'doi_redirect_url'  => Args::of( 'string', 'esc_url_raw' ),
+					'form_id'           => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+					'provider'          => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_key',
+					),
+					'list_id'           => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'subscription_mode' => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_key',
+					),
+					'doi_template_id'   => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+					'doi_redirect_url'  => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'esc_url_raw',
+					),
 				),
 			)
 		);
@@ -64,50 +100,102 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'reset' ),
-				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'editor' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
 				'args'                => array(
-					'form_id' => Args::form_id(),
+					'form_id' => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
 				),
 			)
 		);
-		$tools = array(
-			'/providers/fields/create' => 'create_field',
-			'/providers/lookup'        => 'lookup',
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/providers/fields/create',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'create_field' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
+				'args'                => self::tool_args(),
+			)
 		);
-		foreach ( $tools as $route => $callback ) {
-			register_rest_route(
-				self::REST_NAMESPACE,
-				$route,
-				array(
-					'methods'             => 'POST',
-					'callback'            => array( __CLASS__, $callback ),
-					'permission_callback' => array( 'Cmatic_Rest_Permissions', 'create_field' === $callback ? 'admin' : 'form' ),
-					'args'                => array(
-						'form_id'  => Args::form_id(),
-						'provider' => Args::of( 'string', 'sanitize_key' ),
-						'name'     => Args::of( 'string', 'sanitize_text_field', false ),
-						'type'     => Args::of( 'string', 'sanitize_key', false ),
-						'email'    => Args::of( 'string', 'sanitize_email', false ),
-					),
-				)
-			);
-		}
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/providers/lookup',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( __CLASS__, 'lookup' ),
+				'permission_callback' => array( __CLASS__, 'permission' ),
+				'args'                => self::tool_args(),
+			)
+		);
+	}
+
+	private static function tool_args(): array {
+		return array(
+			'form_id'  => array(
+				'required'          => true,
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			),
+			'provider' => array(
+				'required'          => true,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'name'     => array(
+				'required'          => false,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_text_field',
+			),
+			'type'     => array(
+				'required'          => false,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'email'    => array(
+				'required'          => false,
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_email',
+			),
+		);
 	}
 
 	public static function validate_provider( string $provider ): bool {
 		return Cmatic_Lite_Esp_Registry::has( $provider );
 	}
 
-	public static function connect( $request ) {
+	public static function permission( $request ) {
 		$form_id = (int) $request->get_param( 'form_id' );
-		$slug    = (string) $request->get_param( 'provider' );
+        // phpcs:ignore WordPress.WP.Capabilities.Unknown -- Contact Form 7 registers this meta capability.
+		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				esc_html__( 'You cannot edit this form.', 'contact-form-7-mailchimp-extension' ),
+				array( 'status' => 403 )
+			);
+		}
+		if ( ! wp_verify_nonce( (string) $request->get_header( 'X-WP-Nonce' ), 'wp_rest' ) ) {
+			return new WP_Error(
+				'rest_cookie_invalid_nonce',
+				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
+				array( 'status' => 403 )
+			);
+		}
+		return true;
+	}
+
+	public static function connect( $request ) {
+		$form_id      = (int) $request->get_param( 'form_id' );
+		$slug         = (string) $request->get_param( 'provider' );
 		if ( 'mailchimp' === $slug ) {
 			$answer = Cmatic_Mailchimp_Panel_Store::connect( $form_id, trim( (string) $request->get_param( 'api_key' ) ) );
 			self::record_transition( $slug, 'connect', ! is_wp_error( $answer ), is_wp_error( $answer ) ? 'auth' : 'unknown', is_wp_error( $answer ) ? $answer->get_error_message() : '', 'unknown' );
 
 			return is_wp_error( $answer ) ? $answer : rest_ensure_response( $answer );
 		}
-		$field_limit  = \Cmatic\Lite\Settings\Entitlements::field_limit( $slug, $form_id );
+		$field_limit  = Cmatic_Lite_Esp_Capabilities::field_limit( $slug, $form_id );
 		$submitted    = trim( (string) $request->get_param( 'api_key' ) );
 		$previous_key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		$key          = '' !== $submitted ? $submitted : $previous_key;
@@ -126,10 +214,9 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$validation = $provider->validate_key( $key, $logging );
 		if ( 1 !== (int) ( $validation['api-validation'] ?? 0 ) ) {
 			self::record_transition( $slug, 'connect', false, 'auth', $validation, 'revoked_credential' );
-			$detail = isset( $validation['_cmatic_error'] ) && is_string( $validation['_cmatic_error'] ) ? sanitize_text_field( $validation['_cmatic_error'] ) : '';
 			return new WP_Error(
-				'' !== $detail ? 'provider_validation_failed' : 'invalid_provider_key',
-				'' !== $detail ? $detail : esc_html__( 'The provider rejected this credential.', 'contact-form-7-mailchimp-extension' ),
+				'invalid_provider_key',
+				esc_html__( 'The provider rejected this credential.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -149,18 +236,18 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			: array();
 		$key_changed = '' !== $submitted
 			&& ( '' === $previous_key || ! hash_equals( $previous_key, $submitted ) );
-		$settings    = FormSettingsRepository::load( $form_id )->section( $slug );
-		$selected    = FormSettings::selected_list( $settings );
-		$changes     = array_merge( $validation, array_diff_key( $lists, array_flip( array( 'merge_fields', 'total_merge_fields' ) ) ) );
+		$settings    = self::provider_settings( $form_id, $slug );
+		$selected    = self::selected_list( $settings );
+		$changes     = array_merge( $validation, $lists );
 
 		if (
 			$key_changed
 			|| (
 				'' !== $selected
-				&& ! FormSettings::list_exists( array( 'lisdata' => array( 'lists' => $list_items ) ), $selected )
+				&& ! self::list_exists( $list_items, $selected )
 			)
 		) {
-			$changes = array_merge( $changes, MappingSchema::cleared_provider_account( $field_limit ) );
+			$changes = array_merge( $changes, self::empty_account_state( $field_limit ) );
 		}
 
 		$credential_replaced = false;
@@ -176,7 +263,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			$credential_replaced = true;
 		}
 
-		if ( ! FormSettingsRepository::merge_section( $form_id, $slug, $changes ) ) {
+		if ( ! self::merge_provider_settings( $form_id, $slug, $changes ) ) {
 			if ( $credential_replaced ) {
 				if ( '' === $previous_key ) {
 					Cmatic_Lite_Esp_Credentials::delete( $form_id, $slug );
@@ -192,7 +279,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			);
 		}
 		if ( $key_changed && 'mailerlite' === $slug ) {
-			\Cmatic\Lite\Submission\Degradation::clear( $form_id );
+			Cmatic_Mailerlite_Degradation_Reporter::clear( $form_id );
 		}
 		if ( ! Cmatic_Options_Repository::get_option( 'api.first_connected' ) ) {
 			Cmatic_Options_Repository::set_option( 'api.first_connected', time() );
@@ -215,7 +302,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$form_id     = (int) $request->get_param( 'form_id' );
 		$slug        = (string) $request->get_param( 'provider' );
 		$list_id     = trim( (string) $request->get_param( 'list_id' ) );
-		$field_limit = PHP_INT_MAX;
+		$field_limit = Cmatic_Lite_Esp_Capabilities::field_limit( $slug, $form_id );
 		if ( 'mailchimp' === $slug ) {
 			$answer = Cmatic_Mailchimp_Panel_Store::fields( $form_id, $list_id, $field_limit );
 			self::record_transition( $slug, 'refresh_schema', ! is_wp_error( $answer ), is_wp_error( $answer ) ? 'remote_rejected' : 'unknown', is_wp_error( $answer ) ? $answer->get_error_message() : '', 'unknown' );
@@ -232,7 +319,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 					'list_id'            => '',
 					'merge_fields'       => array(),
 					'total_merge_fields' => 0,
-					'mappings'           => array(),
+					'mappings'           => self::empty_mappings( $field_limit ),
 				)
 			);
 		}
@@ -256,7 +343,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			);
 		}
 
-		$settings = FormSettingsRepository::load( $form_id )->section( $slug );
+		$settings = self::provider_settings( $form_id, $slug );
 		$result   = Cmatic_Lite_Esp_Registry::get( $slug )->get_merge_fields(
 			$key,
 			$list_id,
@@ -274,7 +361,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$fields   = $result['merge_fields']['merge_fields'] ?? array();
 		$fields   = is_array( $fields ) ? $fields : array();
 		$capped   = array_slice( $fields, 0, $field_limit );
-		$mappings = MappingSchema::reconcile( MappingSchema::previous_mappings( array_slice( isset( $settings['merge_fields'] ) && is_array( $settings['merge_fields'] ) ? $settings['merge_fields'] : array(), 0, $field_limit ), $settings, false ), $capped, $field_limit, false );
+		$mappings = self::reconcile_mappings( $settings, $capped, $field_limit );
 		if ( ! Cmatic_Options_Repository::get_option( 'api.audience_selected' ) ) {
 			Cmatic_Options_Repository::set_option( 'api.audience_selected', time() );
 		}
@@ -296,8 +383,12 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		if ( $form_id <= 0 ) {
 			return new WP_Error( 'invalid_form', esc_html__( 'Unknown form.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
-		FormSettingsRepository::reset_choices( $form_id );
-		\Cmatic\Lite\Submission\Stats::forget( $form_id );
+		foreach ( array( 'brevo', 'mailerlite', 'klaviyo' ) as $slug ) {
+			Cmatic_Lite_Esp_Credentials::delete( $form_id, $slug );
+		}
+		Cmatic_Mailchimp_Panel_Store::disconnect( $form_id );
+		delete_option( 'cf7_mch_' . $form_id );
+		Cmatic_Sync_Stats::forget( $form_id );
 		self::record_transition( 'all', 'reset', true, 'unknown', '', 'unknown' );
 
 		return rest_ensure_response(
@@ -308,11 +399,8 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		);
 	}
 	public static function disconnect( $request ) {
-		$form_id = (int) $request->get_param( 'form_id' );
-		if ( $form_id < 1 || 'wpcf7_contact_form' !== get_post_type( $form_id ) ) {
-			return new WP_Error( 'invalid_form', esc_html__( 'This contact form is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
-		}
-		$slug = (string) $request->get_param( 'provider' );
+		$form_id      = (int) $request->get_param( 'form_id' );
+		$slug         = (string) $request->get_param( 'provider' );
 		if ( 'mailchimp' === $slug ) {
 			self::record_transition( $slug, 'disconnect', true, 'unknown', '', 'unknown' );
 
@@ -321,7 +409,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$previous_key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 		Cmatic_Lite_Esp_Credentials::delete( $form_id, $slug );
 
-		if ( ! FormSettingsRepository::merge_section( $form_id, $slug, array( 'api-validation' => 0 ) ) ) {
+		if ( ! self::merge_provider_settings( $form_id, $slug, array( 'api-validation' => 0 ) ) ) {
 			if ( '' !== $previous_key ) {
 				Cmatic_Lite_Esp_Credentials::save( $form_id, $slug, $previous_key );
 			}
@@ -350,7 +438,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$name     = sanitize_text_field( (string) $request->get_param( 'name' ) );
 		$type     = sanitize_key( (string) $request->get_param( 'type' ) );
 		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
-		if ( 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Field_Creator_Interface || ! \Cmatic\Lite\Settings\Entitlements::feature_enabled( 'mailerlite_create_field', $slug, $form_id ) ) {
+		if ( 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Field_Creator_Interface || ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'mailerlite_create_field', $slug, $form_id ) ) {
 			return new WP_Error( 'provider_field_create_forbidden', esc_html__( 'Field creation is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
 		if ( '' === $name || strlen( $name ) > 255 || ! in_array( $type, array( 'text', 'number', 'date' ), true ) ) {
@@ -406,7 +494,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$slug     = (string) $request->get_param( 'provider' );
 		$email    = sanitize_email( (string) $request->get_param( 'email' ) );
 		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
-		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) || 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Lookup_Interface ) {
+		if ( ! current_user_can( 'manage_options' ) || 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Lookup_Interface ) {
 			return new WP_Error( 'provider_lookup_forbidden', esc_html__( 'Subscriber lookup is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
 		if ( ! is_email( $email ) ) {
@@ -424,8 +512,8 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			return new WP_Error( 'provider_lookup_failed', esc_html__( 'MailerLite lookup failed.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 502 ) );
 		}
 		$data     = isset( $result['data'] ) && is_array( $result['data'] ) ? $result['data'] : array();
-		$settings = FormSettingsRepository::load( $form_id )->section( $slug );
-		$allowed  = MappingSchema::mapped_tags( $settings );
+		$settings = self::provider_settings( $form_id, $slug );
+		$allowed  = self::mapped_field_keys( $settings );
 		$fields   = array_intersect_key( is_array( $data['fields'] ?? null ) ? $data['fields'] : array(), array_flip( $allowed ) );
 		$groups   = array();
 		foreach ( (array) ( $data['groups'] ?? array() ) as $group ) {
@@ -464,7 +552,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		if (
 			'brevo' !== $slug
 			|| 'double' !== $mode
-			|| ! \Cmatic\Lite\Settings\Entitlements::feature_enabled( 'double_optin', $slug, $form_id )
+			|| ! Cmatic_Lite_Esp_Capabilities::feature_enabled( 'double_optin', $slug, $form_id )
 		) {
 			return new WP_Error( 'provider_consent_forbidden', esc_html__( 'Advanced provider consent is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
@@ -566,6 +654,19 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		return base64_decode( strtr( $value, '-_', '+/' ), true );
 	}
 
+	private static function empty_account_state( int $field_limit ): array {
+		return array_merge(
+			array(
+				'list'               => '',
+				'base_groups'        => array(),
+				'routing_rules'      => array(),
+				'routing_schema'     => 1,
+				'merge_fields'       => array(),
+				'total_merge_fields' => 0,
+			),
+			self::empty_mappings( $field_limit )
+		);
+	}
 
 	private static function acquire_lock( string $name, int $ttl ): bool {
 		$expires = time() + $ttl;
@@ -597,23 +698,165 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		return true;
 	}
 
+	private static function mapped_field_keys( array $settings ): array {
+		$keys = array();
+		foreach ( (array) ( $settings['merge_fields'] ?? array() ) as $offset => $field ) {
+			if ( is_array( $field ) && isset( $field['tag'] ) && is_scalar( $field['tag'] ) && ! empty( $settings[ 'field' . ( (int) $offset + 3 ) ] ) ) {
+				$keys[] = (string) $field['tag'];
+			}
+		}
+		return $keys;
+	}
 
+	private static function empty_mappings( int $field_limit ): array {
+		$mappings = array();
+		foreach ( range( 3, $field_limit + 2 ) as $index ) {
+			$mappings[ 'field' . $index ] = '';
+		}
+		return $mappings;
+	}
 
+	private static function reconcile_mappings( array $settings, array $new_fields, int $field_limit ): array {
+		$by_tag     = array();
+		$old_fields = isset( $settings['merge_fields'] ) && is_array( $settings['merge_fields'] )
+			? $settings['merge_fields']
+			: array();
 
+		foreach ( array_slice( $old_fields, 0, $field_limit ) as $offset => $field ) {
+			if ( ! is_array( $field ) || ! isset( $field['tag'] ) || ! is_scalar( $field['tag'] ) || '' === (string) $field['tag'] ) {
+				continue;
+			}
+			$slot                             = 'field' . ( $offset + 3 );
+			$by_tag[ (string) $field['tag'] ] = sanitize_text_field(
+				self::scalar_string( $settings[ $slot ] ?? '' )
+			);
+		}
 
+		$mappings = self::empty_mappings( $field_limit );
+		foreach ( array_slice( $new_fields, 0, $field_limit ) as $offset => $field ) {
+			if ( ! is_array( $field ) || ! isset( $field['tag'] ) || ! is_scalar( $field['tag'] ) || '' === (string) $field['tag'] ) {
+				continue;
+			}
+			$slot              = 'field' . ( $offset + 3 );
+			$mappings[ $slot ] = $by_tag[ (string) $field['tag'] ] ?? '';
+		}
+		return $mappings;
+	}
 
+	private static function provider_settings( int $form_id, string $slug ): array {
+		$config = get_option( 'cf7_mch_' . $form_id, array() );
+		$config = is_array( $config ) ? $config : array();
+		if ( 'mailchimp' === $slug ) {
+			return $config;
+		}
+		if (
+			! isset( $config['providers'][ $slug ] )
+			|| ! is_array( $config['providers'][ $slug ] )
+		) {
+			return array();
+		}
+		return $config['providers'][ $slug ];
+	}
+
+	private static function selected_list( array $settings ): string {
+		$selected = $settings['list'] ?? '';
+		if ( is_array( $selected ) ) {
+			$first    = reset( $selected );
+			$selected = false === $first ? '' : $first;
+		}
+		return sanitize_text_field( (string) $selected );
+	}
+
+	private static function list_exists( array $lists, string $list_id ): bool {
+		foreach ( $lists as $list ) {
+			if (
+				is_array( $list )
+				&& isset( $list['id'] )
+				&& is_scalar( $list['id'] )
+				&& $list_id === (string) $list['id']
+			) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private static function scalar_string( $value ): string {
 		return is_scalar( $value ) ? (string) $value : '';
 	}
 
+	private static function merge_provider_settings( int $form_id, string $slug, array $changes ): bool {
+		$option                       = 'cf7_mch_' . $form_id;
+		$config                       = get_option( $option, array() );
+		$config                       = is_array( $config ) ? $config : array();
+		$config['providers']          = isset( $config['providers'] ) && is_array( $config['providers'] )
+			? $config['providers']
+			: array();
+		$current                      = isset( $config['providers'][ $slug ] ) && is_array( $config['providers'][ $slug ] )
+			? $config['providers'][ $slug ]
+			: array();
+		$config['providers'][ $slug ] = array_merge( $current, $changes );
+		if ( update_option( $option, $config ) ) {
+			return true;
+		}
+
+		$stored = self::provider_settings( $form_id, $slug );
+		foreach ( $changes as $key => $value ) {
+			if ( ! array_key_exists( $key, $stored ) || maybe_serialize( $stored[ $key ] ) !== maybe_serialize( $value ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	private static function is_known_list( int $form_id, string $slug, string $list_id ): bool {
-		return FormSettings::list_exists( FormSettingsRepository::load( $form_id )->section( $slug ), $list_id );
+		$settings = self::provider_settings( $form_id, $slug );
+		$lists    = isset( $settings['lisdata']['lists'] ) && is_array( $settings['lisdata']['lists'] )
+			? $settings['lisdata']['lists']
+			: array();
+		return self::list_exists( $lists, $list_id );
 	}
 
 	private static function record_transition( string $provider, string $operation, bool $success, string $failure_class, $value, string $fallback ): void {
-		Cmatic_Lite_Signls_Outcome::record( $provider, $operation, $success, $failure_class, $value, $fallback );
+		try {
+			$reason        = class_exists( 'Cmatic_Lite_Signls_Failure_Reason' )
+				? Cmatic_Lite_Signls_Failure_Reason::from_value( $value, $fallback )
+				: array(
+					'code'   => $fallback,
+					'sample' => '',
+				);
+			$failure_class = $success ? 'unknown' : self::failure_class_for_reason( $reason['code'], $failure_class );
+			$recorded      = \Signls\Sdk\V1\CounterStore::record_outcome(
+				'contact-form-7-mailchimp-extension',
+				$provider,
+				$operation,
+				$success,
+				$failure_class,
+				$success ? '' : $reason['code'],
+				$success ? '' : $reason['sample']
+			);
+			if ( $recorded ) {
+				Signls_Sdk_Bridge_1_1_7::relevant_change( 'contact-form-7-mailchimp-extension' );
+			}
+		} catch ( Throwable $error ) {
+			return;
+		}
+	}
+
+	private static function failure_class_for_reason( string $reason_code, string $fallback ): string {
+		$map = array(
+			'dns'                => 'transport_dns',
+			'tls'                => 'transport_tls',
+			'timeout'            => 'transport_timeout',
+			'rate_limit'         => 'http_429',
+			'http_4xx'           => 'http_4xx',
+			'http_5xx'           => 'http_5xx',
+			'revoked_credential' => 'auth',
+			'permission'         => 'auth',
+			'configuration'      => 'configuration',
+			'validation'         => 'validation',
+		);
+		return isset( $map[ $reason_code ] ) ? $map[ $reason_code ] : $fallback;
 	}
 
 	private function __construct() {}

@@ -11,35 +11,39 @@ declare(strict_types=1);
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing, Squiz.Commenting.VariableComment.Missing -- Typed signatures follow the existing Lite class convention.
-
 final class Cmatic_Lite_Esp_Registry {
-	private static $fallback;
-
-	public static function catalog(): \Cmatic\Lite\Provider\Catalog {
-		$catalog = Cmatic_Lite_Container::has( 'provider.catalog' ) ? Cmatic_Lite_Container::get( 'provider.catalog' ) : null;
-		if ( $catalog instanceof \Cmatic\Lite\Provider\Catalog ) {
-			return $catalog;
-		}
-		if ( ! self::$fallback instanceof \Cmatic\Lite\Provider\Catalog ) {
-			self::$fallback = new \Cmatic\Lite\Provider\Catalog( new \Cmatic\Lite\Provider\HttpTransport() );
-		}
-		return self::$fallback;
-	}
+	private static $providers = array();
 
 	public static function get_selected( array $settings ): string {
-		return self::catalog()->selected( $settings );
+		$slug = isset( $settings['provider'] ) ? sanitize_key( (string) $settings['provider'] ) : 'mailchimp';
+		return self::has( $slug ) ? $slug : 'mailchimp';
 	}
 
 	public static function has( string $slug ): bool {
-		return self::catalog()->has( $slug );
+		return in_array( $slug, array( 'mailchimp', 'brevo', 'mailerlite', 'klaviyo' ), true );
 	}
 
 	public static function get( string $slug ): Cmatic_Lite_Esp_Provider_Interface {
-		return self::catalog()->get( $slug );
+		$slug = self::has( $slug ) ? $slug : 'mailchimp';
+		if ( ! isset( self::$providers[ $slug ] ) ) {
+			$classes                  = array(
+				'mailchimp'  => 'Cmatic_Lite_Esp_Mailchimp',
+				'brevo'      => 'Cmatic_Lite_Esp_Brevo',
+				'mailerlite' => 'Cmatic_Lite_Esp_Mailerlite',
+				'klaviyo'    => 'Cmatic_Lite_Esp_Klaviyo',
+			);
+			$class                    = $classes[ $slug ];
+			self::$providers[ $slug ] = new $class();
+		}
+		return self::$providers[ $slug ];
 	}
 
 	public static function all(): array {
-		return self::catalog()->all();
+		$result = array();
+		foreach ( array( 'mailchimp', 'brevo', 'mailerlite', 'klaviyo' ) as $slug ) {
+			$result[ $slug ] = self::get( $slug );
+		}
+		return $result;
 	}
 
 	private function __construct() {}

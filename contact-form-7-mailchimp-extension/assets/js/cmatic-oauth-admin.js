@@ -68,7 +68,7 @@
     function openOAuthPopup(popup, authUrl, token, formId) {
         if (!popup || popup.closed) {
             beacon('popup_blocked', { token: token });
-            updateConnectButton('error', 'Pop-up blocked. Allow pop-ups for this site, then click Connect again');
+            updateConnectButton('error', 'Pop-up blocked — allow pop-ups for this site, then click Connect again');
             return;
         }
 
@@ -78,24 +78,11 @@
         var pollCount = 0;
         var maxPolls = 240;
         var finishing = false;
-		let closedPolls = 0;
         var pollInterval = window.setInterval(function() {
-			if ( ! finishing && popup.closed && ++closedPolls > 2 ) {
-				window.clearInterval( pollInterval );
-				beacon( 'finish_failed', {
-					token,
-					reason: 'popup_closed',
-				} );
-				updateConnectButton(
-					'error',
-					'Sign-in window closed. Click Connect again when you are ready.'
-				);
-				return;
-			}
             if (++pollCount > maxPolls) {
                 window.clearInterval(pollInterval);
                 beacon('timeout', { token: token });
-                updateConnectButton('error', 'OAuth timed out. Please try again');
+                updateConnectButton('error', 'OAuth timed out — please try again');
                 return;
             }
 
@@ -131,7 +118,7 @@
                     window.clearInterval(pollInterval);
                     try { popup.close(); } catch(e) {}
                     beacon('finish_failed', { token: token, reason: 'callback_error' });
-                    updateConnectButton('error', 'Mailchimp authorization failed. Please try again');
+                    updateConnectButton('error', 'Mailchimp authorization failed — please try again');
                 }
             }).catch(function() {});
         }, 2500);

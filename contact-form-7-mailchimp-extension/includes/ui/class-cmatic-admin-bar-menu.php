@@ -38,7 +38,7 @@ final class Cmatic_Admin_Bar_Menu {
 	}
 
 	private function can_show_menu() {
-		return current_user_can( 'wpcf7_manage_integration' ) && is_admin_bar_showing();
+		return current_user_can( 'manage_options' ) && is_admin_bar_showing();
 	}
 
 	private function is_pro_active() {
@@ -58,10 +58,7 @@ final class Cmatic_Admin_Bar_Menu {
 			return array();
 		}
 		$found = array();
-		foreach ( array(
-			'contact-form-7-mailchimp-extension/chimpmatic-lite.php' => __( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ),
-			'chimpmatic/chimpmatic.php' => __( 'ChimpMatic Pro', 'contact-form-7-mailchimp-extension' ),
-		) as $file => $name ) {
+		foreach ( array( 'contact-form-7-mailchimp-extension/chimpmatic-lite.php' => __( 'Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ), 'chimpmatic/chimpmatic.php' => __( 'Chimpmatic Pro', 'contact-form-7-mailchimp-extension' ) ) as $file => $name ) {
 			if ( isset( $updates->response[ $file ] ) ) {
 				$item           = $updates->response[ $file ];
 				$version        = is_object( $item ) && isset( $item->new_version ) && is_scalar( $item->new_version ) ? (string) $item->new_version : '';
@@ -79,12 +76,12 @@ final class Cmatic_Admin_Bar_Menu {
 		if ( ! $this->can_show_menu() ) {
 			return;
 		}
-		$stats   = \Cmatic\Lite\Submission\Stats::all();
+		$stats   = class_exists( 'Cmatic_Sync_Stats' ) ? Cmatic_Sync_Stats::all() : array();
 		$forms   = self::forms();
 		$updates = $this->updates();
 		$failing = 0;
 		foreach ( array_keys( $forms ) as $form_id ) {
-			if ( isset( $stats[ $form_id ] ) && \Cmatic\Lite\Submission\Stats::is_failing( $stats[ $form_id ] ) ) {
+			if ( isset( $stats[ $form_id ] ) && Cmatic_Sync_Stats::is_failing( $stats[ $form_id ] ) ) {
 				++$failing;
 			}
 		}
@@ -93,24 +90,24 @@ final class Cmatic_Admin_Bar_Menu {
 			array(
 				'id'    => self::MENU,
 				'title' => '<span class="cmatic-ab-icon"></span>'
-					. '<span class="screen-reader-text">' . esc_html__( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ) . '</span>'
+					. '<span class="screen-reader-text">' . esc_html__( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ) . '</span>'
 					. self::failing_counter( $failing )
 					. self::update_counter( count( $updates ) ),
 				'href'  => false,
-				'meta'  => array( 'title' => esc_attr__( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ) ),
+				'meta'  => array( 'title' => esc_attr__( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ) ),
 			)
 		);
 
 		$edition = defined( 'CMATIC_VERSION' )
 			/* translators: %s: version number */
-			? sprintf( __( 'ChimpMatic Pro %s', 'contact-form-7-mailchimp-extension' ), CMATIC_VERSION )
+			? sprintf( __( 'Chimpmatic Pro %s', 'contact-form-7-mailchimp-extension' ), CMATIC_VERSION )
 			/* translators: %s: version number */
-			: sprintf( __( 'Contact Form 7 Extension %s', 'contact-form-7-mailchimp-extension' ), SPARTAN_MCE_VERSION );
+			: sprintf( __( 'Chimpmatic Lite %s', 'contact-form-7-mailchimp-extension' ), SPARTAN_MCE_VERSION );
 		$wp_admin_bar->add_menu(
 			array(
 				'parent' => self::MENU,
 				'id'     => 'chimpmatic-brand',
-				'title'  => '<span class="cmatic-ab-brand">' . esc_html__( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ) . '</span>'
+				'title'  => '<span class="cmatic-ab-brand">' . esc_html__( 'Chimpmatic', 'contact-form-7-mailchimp-extension' ) . '</span>'
 					. '<span class="cmatic-ab-plugin">' . esc_html( $edition ) . '</span>',
 				'href'   => false,
 				'meta'   => array( 'class' => 'cmatic-ab-header' ),
@@ -200,7 +197,7 @@ final class Cmatic_Admin_Bar_Menu {
 		$links = array(
 			'docs'    => array( __( 'Documentation', 'contact-form-7-mailchimp-extension' ), Cmatic_Pursuit::adminbar( 'help', 'menu_docs' ) ),
 			'support' => array( __( 'Support', 'contact-form-7-mailchimp-extension' ), Cmatic_Pursuit::adminbar( 'support', 'menu_support' ) ),
-			'reviews' => array( __( 'Review Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ), 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews' ),
+			'reviews' => array( __( 'Review Chimpmatic', 'contact-form-7-mailchimp-extension' ), 'https://wordpress.org/support/plugin/contact-form-7-mailchimp-extension/reviews/' ),
 		);
 		foreach ( $links as $id => $link ) {
 			$wp_admin_bar->add_menu(
@@ -218,7 +215,7 @@ final class Cmatic_Admin_Bar_Menu {
 			);
 		}
 		if ( ! $this->is_pro_active() ) {
-			$title = esc_html__( 'Explore our Pro version', 'contact-form-7-mailchimp-extension' );
+			$title = esc_html__( 'Upgrade to Pro', 'contact-form-7-mailchimp-extension' );
 			if ( $this->should_show_upgrade_badge() ) {
 				$title .= ' ' . self::counter( 1, __( '1 notification', 'contact-form-7-mailchimp-extension' ), 'cmatic-ab-count--update' );
 			}
@@ -256,9 +253,9 @@ final class Cmatic_Admin_Bar_Menu {
 		if ( class_exists( 'WPCF7_ContactForm' ) ) {
 			foreach ( (array) WPCF7_ContactForm::find( array( 'posts_per_page' => self::MAX_FORMS ) ) as $form ) {
 				if ( is_object( $form ) && method_exists( $form, 'id' ) && method_exists( $form, 'title' ) ) {
-					$id = \Cmatic\Lite\Submission\Stats::int( $form->id() );
+					$id = Cmatic_Sync_Stats::int( $form->id() );
 					if ( $id > 0 ) {
-						$title        = \Cmatic\Lite\Submission\Stats::str( $form->title() );
+						$title        = Cmatic_Sync_Stats::str( $form->title() );
 						$forms[ $id ] = '' !== $title ? $title : sprintf( /* translators: %d: form id */ __( 'Form %d', 'contact-form-7-mailchimp-extension' ), $id );
 					}
 				}
@@ -272,16 +269,16 @@ final class Cmatic_Admin_Bar_Menu {
 	 * @param array<string,mixed>|null $entry
 	 */
 	private static function pill( $entry ): string {
-		if ( null === $entry || ! \Cmatic\Lite\Submission\Stats::has_counts( $entry ) ) {
+		if ( null === $entry || ! Cmatic_Sync_Stats::has_counts( $entry ) ) {
 			return '<span class="cmatic-ab-pill cmatic-ab-idle">' . esc_html__( 'no syncs yet', 'contact-form-7-mailchimp-extension' ) . '</span>';
 		}
-		$parts  = array();
-		$ok     = \Cmatic\Lite\Submission\Stats::int( $entry['ok'] ?? 0 );
-		$failed = \Cmatic\Lite\Submission\Stats::int( $entry['failed'] ?? 0 );
+		$parts = array();
+		$ok     = Cmatic_Sync_Stats::int( $entry['ok'] ?? 0 );
+		$failed = Cmatic_Sync_Stats::int( $entry['failed'] ?? 0 );
 		if ( $ok > 0 ) {
 			$parts[] = '<span class="cmatic-ab-ok">' . esc_html( number_format_i18n( $ok ) ) . '&nbsp;&#10003;</span>';
 		}
-		if ( \Cmatic\Lite\Submission\Stats::is_failing( $entry ) ) {
+		if ( Cmatic_Sync_Stats::is_failing( $entry ) ) {
 			$parts[] = '<span class="cmatic-ab-fail">' . esc_html( number_format_i18n( $failed ) ) . '&nbsp;&#10007;</span>';
 		}
 		return '<span class="cmatic-ab-pill">' . implode( ' ', $parts ) . '</span>';
@@ -291,11 +288,11 @@ final class Cmatic_Admin_Bar_Menu {
 	 * @param array<string,mixed>|null $entry
 	 */
 	private static function tooltip( $entry ): string {
-		if ( null === $entry || ! \Cmatic\Lite\Submission\Stats::has_counts( $entry ) ) {
+		if ( null === $entry || ! Cmatic_Sync_Stats::has_counts( $entry ) ) {
 			return esc_attr__( 'No submissions have synced yet.', 'contact-form-7-mailchimp-extension' );
 		}
-		if ( \Cmatic\Lite\Submission\Stats::is_failing( $entry ) ) {
-			$error = \Cmatic\Lite\Submission\Stats::str( $entry['last_error'] ?? '' );
+		if ( Cmatic_Sync_Stats::is_failing( $entry ) ) {
+			$error = Cmatic_Sync_Stats::str( $entry['last_error'] ?? '' );
 			$error = '' !== $error ? $error : __( 'unknown', 'contact-form-7-mailchimp-extension' );
 			/* translators: %s: the error the provider returned */
 			return esc_attr( sprintf( __( 'Last error: %s', 'contact-form-7-mailchimp-extension' ), $error ) );

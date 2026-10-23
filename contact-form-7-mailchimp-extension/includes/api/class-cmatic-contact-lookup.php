@@ -8,8 +8,6 @@
 
 defined( 'ABSPATH' ) || exit;
 
-use Cmatic\Lite\Rest\Args;
-
 class Cmatic_Contact_Lookup {
 
 	protected static $namespace   = 'chimpmatic-lite/v1';
@@ -64,7 +62,7 @@ class Cmatic_Contact_Lookup {
 		$fltred = array();
 		foreach ( $arr as $key => $value ) {
 			if ( is_array( $value ) ) {
-				$fltred[ self::cmatic_fltr_value( (string) $key ) ?? '' ] = self::cmatic_fltr_array( $value );
+				$fltred[ self::cmatic_fltr_value( $key ) ] = self::cmatic_fltr_array( $value );
 			} else {
 				$fltred[] = self::cmatic_fltr_value( $value );
 			}
@@ -88,17 +86,35 @@ class Cmatic_Contact_Lookup {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( static::class, 'cmatic_lookup_contact' ),
-				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'form' ),
+				'permission_callback' => array( static::class, 'cmatic_check_permission' ),
 				'args'                => array(
-					'email'   => Args::of( 'string', 'sanitize_email' ) + array(
+					'email'   => array(
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_email',
 						'validate_callback' => function ( $param ) {
 							return is_email( $param );
 						},
 					),
-					'form_id' => Args::form_id(),
+					'form_id' => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
 				),
 			)
 		);
+	}
+
+	public static function cmatic_check_permission() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
+				array( 'status' => 403 )
+			);
+		}
+		return true;
 	}
 
 	public static function cmatic_lookup_contact( $request ) {
@@ -107,10 +123,7 @@ class Cmatic_Contact_Lookup {
 
 		$option_name = 'cf7_mch_' . $form_id;
 		$cf7_mch     = get_option( $option_name, array() );
-		if ( 'mailchimp' !== Cmatic_Lite_Esp_Registry::get_selected( is_array( $cf7_mch ) ? $cf7_mch : array() ) ) {
-			return new WP_Error( 'provider_lookup_unavailable', esc_html__( 'Choose Mailchimp to use this contact lookup.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
-		}
-		$api_key = $cf7_mch['api'] ?? '';
+		$api_key     = $cf7_mch['api'] ?? '';
 
 		if ( empty( $api_key ) ) {
 			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
@@ -164,7 +177,7 @@ class Cmatic_Contact_Lookup {
 			);
 		}
 
-			$subscriber_hash = md5( strtolower( $email ) ); // nosemgrep: weak-crypto -- non-cryptographic identifier: Mailchimp subscriber hash is md5 of the lowercased email
+			$subscriber_hash = md5( strtolower( $email ) ); // nosemgrep
 		$results             = array();
 		$found_count         = 0;
 
