@@ -47,6 +47,14 @@ final class Collector {
 			$observation_source      = isset( $source['observations'] ) && is_array( $source['observations'] ) ? $source['observations'] : array();
 			$observation_schema      = isset( $contract['observation_schema'] ) && is_array( $contract['observation_schema'] ) ? $contract['observation_schema'] : array();
 			$payload['observations'] = ObservationSanitizer::sanitize( $observation_source, $observation_schema );
+			$legacy                  = isset( $payload['observations']['legacy_lifecycle'] ) && is_array( $payload['observations']['legacy_lifecycle'] ) ? $payload['observations']['legacy_lifecycle'] : array();
+			if ( array_key_exists( 'legacy_lifecycle', $payload['observations'] ) && empty( $legacy['site_url'] ) ) {
+				$payload['observations']['legacy_lifecycle']  = (object) array();
+				$missing                                      = isset( $payload['observations']['missing_sections'] ) && is_array( $payload['observations']['missing_sections'] ) ? $payload['observations']['missing_sections'] : array();
+				$missing[]                                    = 'legacy_lifecycle';
+				$payload['observations']['missing_sections']  = array_values( array_unique( array_filter( $missing, 'is_string' ) ) );
+				$payload['observations']['collection_status'] = 'partial';
+			}
 		}
 
 		$payload['active_units'] = min( $payload['active_units'], $payload['configured_units'] );

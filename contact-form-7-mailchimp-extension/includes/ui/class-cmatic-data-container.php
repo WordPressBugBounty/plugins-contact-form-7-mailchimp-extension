@@ -60,8 +60,4 @@ class Cmatic_Data_Container {
 
 		return $attrs_html;
 	}
-
-	public static function get_element_id(): string {
-		return self::ELEMENT_ID;
-	}
 }

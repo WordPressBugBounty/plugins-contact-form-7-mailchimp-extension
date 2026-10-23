@@ -10,39 +10,33 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Lite_Container {
 
-	private static $services = array();
+	private static $instance;
 
-	private static $factories = array();
+	public static function instance(): \Cmatic\Lite\Kernel\Container {
+		if ( ! self::$instance instanceof \Cmatic\Lite\Kernel\Container ) {
+			self::$instance = new \Cmatic\Lite\Kernel\Container();
+		}
+		return self::$instance;
+	}
 
 	public static function set( string $id, $service ): void {
-		self::$services[ $id ] = $service;
+		self::instance()->set( $id, $service );
 	}
 
 	public static function factory( string $id, callable $factory ): void {
-		self::$factories[ $id ] = $factory;
+		self::instance()->factory( $id, $factory );
 	}
 
 	public static function get( string $id ) {
-		if ( isset( self::$services[ $id ] ) ) {
-			return self::$services[ $id ];
-		}
-
-		if ( isset( self::$factories[ $id ] ) ) {
-			self::$services[ $id ] = call_user_func( self::$factories[ $id ] );
-			unset( self::$factories[ $id ] );
-			return self::$services[ $id ];
-		}
-
-		return null;
+		return self::instance()->get( $id );
 	}
 
 	public static function has( string $id ): bool {
-		return isset( self::$services[ $id ] ) || isset( self::$factories[ $id ] );
+		return self::instance()->has( $id );
 	}
 
 	public static function clear(): void {
-		self::$services  = array();
-		self::$factories = array();
+		self::instance()->clear();
 	}
 
 	public static function boot(): void {
@@ -64,6 +58,31 @@ class Cmatic_Lite_Container {
 			'auth.manager',
 			function () {
 				return new Cmatic_Lite_Auth_Manager();
+			}
+		);
+
+		self::factory(
+			'http.transport',
+			function () {
+				return new \Cmatic\Lite\Provider\HttpTransport();
+			}
+		);
+
+		self::factory(
+			'provider.catalog',
+			function ( \Cmatic\Lite\Kernel\Container $container ) {
+				$transport = $container->get( 'http.transport' );
+				if ( ! $transport instanceof \Cmatic\Lite\Provider\HttpTransport ) {
+					$transport = new \Cmatic\Lite\Provider\HttpTransport();
+				}
+				return new \Cmatic\Lite\Provider\Catalog( $transport );
+			}
+		);
+
+		self::factory(
+			'credential.vault',
+			function () {
+				return new \Cmatic\Lite\Provider\CredentialVault();
 			}
 		);
 	}

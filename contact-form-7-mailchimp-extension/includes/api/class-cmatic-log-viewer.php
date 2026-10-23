@@ -8,10 +8,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use Cmatic\Lite\Rest\Args;
+
 class Cmatic_Log_Viewer {
 
 	protected static $namespace   = 'chimpmatic-lite/v1';
-	protected static $log_prefix  = '[Chimpmatic Lite]';
+	protected static $log_prefix  = '[Contact Form 7 Extension]';
 	protected static $text_domain = 'contact-form-7-mailchimp-extension';
 	protected static $max_lines   = 500;
 	protected static $initialized = false;
@@ -32,7 +34,6 @@ class Cmatic_Log_Viewer {
 		}
 
 		add_action( 'rest_api_init', array( static::class, 'register_routes' ) );
-		add_action( 'admin_enqueue_scripts', array( static::class, 'enqueue_assets' ) );
 
 		self::$initialized = true;
 	}
@@ -44,25 +45,15 @@ class Cmatic_Log_Viewer {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( static::class, 'get_logs' ),
-				'permission_callback' => array( static::class, 'check_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 				'args'                => array(
-					'filter' => array(
-						'required'          => false,
-						'type'              => 'string',
+					'filter' => Args::of( 'string', 'sanitize_text_field', false ) + array(
 						'default'           => '1',
-						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
-							return in_array( $param, array( '0', '1' ), true );
-						},
+						'validate_callback' => Args::one_of( array( '0', '1' ) ),
 					),
-					'source' => array(
-						'required'          => false,
-						'type'              => 'string',
+					'source' => Args::of( 'string', 'sanitize_key', false ) + array(
 						'default'           => 'own',
-						'sanitize_callback' => 'sanitize_key',
-						'validate_callback' => function ( $param ) {
-							return in_array( $param, array( 'own', 'site' ), true );
-						},
+						'validate_callback' => Args::one_of( array( 'own', 'site' ) ),
 					),
 				),
 			)
@@ -74,7 +65,7 @@ class Cmatic_Log_Viewer {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( static::class, 'clear_logs' ),
-				'permission_callback' => array( static::class, 'check_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 			)
 		);
 
@@ -84,7 +75,7 @@ class Cmatic_Log_Viewer {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( static::class, 'download_logs' ),
-				'permission_callback' => array( static::class, 'check_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 			)
 		);
 
@@ -94,41 +85,16 @@ class Cmatic_Log_Viewer {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( static::class, 'log_browser_console' ),
-				'permission_callback' => array( static::class, 'check_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 				'args'                => array(
-					'level'   => array(
-						'required'          => true,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-						'validate_callback' => function ( $param ) {
-							return in_array( $param, array( 'log', 'info', 'warn', 'error', 'debug' ), true );
-						},
+					'level'   => Args::of( 'string', 'sanitize_text_field' ) + array(
+						'validate_callback' => Args::one_of( array( 'log', 'info', 'warn', 'error', 'debug' ) ),
 					),
-					'message' => array(
-						'required'          => true,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'data'    => array(
-						'required'          => false,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_textarea_field',
-					),
+					'message' => Args::of( 'string', 'sanitize_text_field' ),
+					'data'    => Args::of( 'string', 'sanitize_textarea_field', false ),
 				),
 			)
 		);
-	}
-
-	public static function check_permission() {
-		return current_user_can( 'manage_options' );
-	}
-
-	public static function get_log_prefix() {
-		return static::$log_prefix;
-	}
-
-	public static function get_log_path() {
-		return Cmatic_Debug_Log::site_log_path();
 	}
 
 	public static function get_logs( $request ) {
@@ -223,17 +189,10 @@ class Cmatic_Log_Viewer {
 		);
 	}
 
-	public static function enqueue_assets( $hook ) {
-	}
-
-	protected static function get_inline_js() {
-		return '';
-	}
-
 	public static function render_card(): void {
 		?>
 		<div class="cmatic-adv-viewer" id="cmatic-adv-viewer">
-			<div class="cmatic-adv-tabs" role="tablist">
+			<div class="cmatic-adv-tabs" role="group" aria-label="<?php esc_attr_e( 'Log controls', 'contact-form-7-mailchimp-extension' ); ?>">
 				<button type="button" class="button button-small is-active" data-cmatic-log-source="own"><?php esc_html_e( 'Plugin log', 'contact-form-7-mailchimp-extension' ); ?></button>
 				<button type="button" class="button button-small" data-cmatic-log-source="site"><?php esc_html_e( 'Site errors', 'contact-form-7-mailchimp-extension' ); ?></button>
 				<label class="cmatic-adv-auto"><input type="checkbox" id="cmatic-log-auto"> <?php esc_html_e( 'Auto-refresh', 'contact-form-7-mailchimp-extension' ); ?></label>

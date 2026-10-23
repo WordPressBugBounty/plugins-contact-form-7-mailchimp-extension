@@ -1341,6 +1341,7 @@ a.helping-field:hover .red-icon::before {
 .cmatic-header__provider-control select {
 	min-width: 150px;
 	max-width: 220px;
+	padding-right: 32px;
 }
 
 .cmatic-header__review {
@@ -2010,10 +2011,6 @@ tr.cmatic-not-pro:hover,
 	padding: 14px;
 }
 
-.cmatic-provider-tool-row + .cmatic-provider-tool-row {
-	border-top: 1px solid #e1e6ec;
-}
-
 .cmatic-provider-tool-row--lookup {
 	grid-template-columns: minmax(190px, 240px) minmax(280px, 1fr);
 }
@@ -2284,7 +2281,7 @@ tr.cmatic-not-pro:hover,
 	display: flex;
 	align-items: center;
 	gap: 9px;
-	color: #7c8796;
+	color: #596777;
 	font-size: 12px;
 }
 
@@ -2479,9 +2476,19 @@ tr.cmatic-not-pro:hover,
 }
 
 .cmatic-consent-policy-list {
+	position: relative;
 	overflow: hidden;
 	border: 1px solid #d8e0e8;
 	border-radius: 10px;
+}
+
+.cmatic-consent-policy-list::after {
+	position: absolute;
+	inset: -1px;
+	border: 1px solid #d8e0e8;
+	border-radius: 10px;
+	content: "";
+	pointer-events: none;
 }
 
 .cmatic-consent-policy-provider {
@@ -3104,4 +3111,168 @@ tr.cmatic-not-pro:hover,
 
 #submitdiv .cmatic-status--failing .cmatic-status__facts {
 	color: #b32d2e;
+}
+.cmatic-destination-choice {
+	display: inline-flex;
+	align-items: center;
+}
+
+.cmatic-destination-choice--locked {
+	cursor: help;
+}
+
+.cmatic-destination-choice--locked input,
+.cmatic-destination-rule--locked {
+	opacity: .45;
+	cursor: help;
+}
+
+.cmatic-destination-choice--locked:focus-visible {
+	outline: 2px solid #3858e9;
+	outline-offset: 3px;
+}
+
+.cmatic-destination-tip {
+	position: fixed;
+	z-index: 100000;
+	box-sizing: border-box;
+	width: 280px;
+	max-width: calc(100vw - 16px);
+	padding: 9px 11px;
+	border-radius: 8px;
+	background: #1e1e1e;
+	color: #fff;
+	font-size: 13px;
+	line-height: 1.5;
+	box-shadow: 0 4px 12px #0003;
+}
+
+.cmatic-destination-tip[hidden] {
+	display: none;
+}
+
+.cmatic-destination-tip a {
+	color: #c9b3ff;
+	white-space: nowrap;
+	text-decoration: underline;
+}
+
+.cmatic-destination-status {
+	margin-top: 16px;
+	color: #50575e;
+}
+
+/**
+ * @package contact-form-7-mailchimp-extension
+ * @author hello@chimpmatic.com
+ * @copyright 2014-2026 ChimpMatic
+ * @license GPL-3.0+
+ */
+.cmatic-lite-preview .cmatic-license-row {
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border: 1px solid #dcdcde;
+    border-left: 4px solid #2271b1;
+    border-radius: 4px;
+    background: #fff;
+}
+.cmatic-lite-preview .cmatic-license-row p { margin: 8px 0; }
+.cmatic-destination__main {
+    color: #1d2327;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.cmatic-lite-preview .cmatic-pro-chip {
+    position: relative;
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #f0e8fa;
+    color: #613b85;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.8;
+    vertical-align: middle;
+    cursor: help;
+}
+.cmatic-pro-chip__trigger {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.cmatic-pro-chip__trigger:focus-visible {
+    outline: 2px solid #613b85;
+    outline-offset: 2px;
+}
+.cmatic-pro-chip .cmatic-pro-chip__help {
+    display: none;
+    position: absolute;
+    z-index: 30;
+    top: 100%;
+    left: 0;
+    right: auto;
+    width: 220px;
+    max-width: 70vw;
+    padding: 10px;
+    border-radius: 4px;
+    background: #1d2327;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: normal;
+}
+.cmatic-pro-chip__help a { color: #a8d6ff; }
+.cmatic-lite-preview__offer { grid-column: 1 / -1; margin: 8px 0 0; }
+.cmatic-pro-chip:hover .cmatic-pro-chip__help,
+.cmatic-pro-chip:focus-within .cmatic-pro-chip__help,
+.cmatic-pro-chip__trigger[aria-expanded="true"] + .cmatic-pro-chip__help { display: block; }
+.cmatic-pro-chip.is-dismissed .cmatic-pro-chip__help { display: none; }
+
+/* Respond to the editor panel's space, including the WordPress sidebar. */
+#cmatic-provider-data { container: cmatic-panel / inline-size; min-width: 0; }
+.cmatic-provider-tool-list,
+.cmatic-consent-policy-list,
+.cmatic-routing-table-list:not(:empty) { overflow: visible; }
+.cmatic-provider-tool-row > *,
+.cmatic-consent-policy-row > * { min-width: 0; overflow-wrap: anywhere; }
+@container cmatic-panel (max-width: 850px) {
+    .cmatic-provider-tool-row,
+    .cmatic-provider-tool-row--lookup,
+    .cmatic-consent-policy-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .cmatic-provider-tool-control { grid-template-columns: minmax(0, 1fr) auto; }
+    .cmatic-provider-tool-row > .cmatic-provider-actions { justify-content: flex-end; }
+    .cmatic-routing-table-header { display: none; }
+    .cmatic-routing-table-row { grid-template-columns: 42px minmax(0, 1fr) 34px; align-items: start; }
+    .cmatic-routing-table-row .cmatic-routing-rule-label { grid-column: 1; grid-row: 1; }
+    .cmatic-routing-table-cell { grid-column: 2; padding: 4px 10px; }
+    .cmatic-routing-table-cell::before { display: block; content: attr(data-routing-column-label); }
+    .cmatic-routing-remove { grid-column: 3; grid-row: 1; }
+    .cmatic-routing-rule-error { grid-column: 2; }
+}
+@container cmatic-panel (max-width: 550px) {
+    .cmatic-adv-rows .cmatic-provider-tool-row { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+@container cmatic-panel (max-width: 450px) {
+    .cmatic-provider-mapping-grid { grid-template-columns: minmax(0, 1fr); }
+    .cmatic-provider-tool-control { grid-template-columns: minmax(0, 1fr); }
+}
+
+.cmatic-provider-tool-row:not([hidden]) ~ .cmatic-provider-tool-row {
+	border-top: 1px solid #e1e6ec;
+}
+
+.cmatic-consent-policy-list .cmatic-consent-policy-offer {
+	margin: 0;
+	padding: 13px 15px;
+	border-top: 1px solid #e7ebef;
+}
+
+.cmatic-provider-details .cmatic-provider-section {
+	margin-top: 16px;
 }

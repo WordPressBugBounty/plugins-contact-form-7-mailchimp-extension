@@ -41,10 +41,11 @@ class Cmatic_Cron {
 	private static function disable_all_logging(): int {
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$option_names = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-				'cf7_mch_%'
+				$wpdb->esc_like( 'cf7_mch_' ) . '%'
 			)
 		);
 
@@ -61,13 +62,5 @@ class Cmatic_Cron {
 		}
 
 		return $updated;
-	}
-
-	public static function is_scheduled(): bool {
-		return (bool) wp_next_scheduled( self::DAILY_HOOK );
-	}
-
-	public static function get_next_run() {
-		return wp_next_scheduled( self::DAILY_HOOK );
 	}
 }

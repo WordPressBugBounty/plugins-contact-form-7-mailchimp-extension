@@ -16,7 +16,6 @@ class Cmatic_CF7_Dependency {
 
 	public static function init() {
 		add_action( 'admin_init', array( __CLASS__, 'maybe_activate_cf7' ), 1 );
-		add_action( 'admin_notices', array( __CLASS__, 'maybe_show_notice' ) );
 	}
 
 	public static function maybe_activate_cf7() {
@@ -41,16 +40,7 @@ class Cmatic_CF7_Dependency {
 		return self::is_installed() && self::is_active();
 	}
 
-	public static function maybe_show_notice() {
-		if ( self::is_satisfied() || self::is_installed() ) {
-			return;
-		}
-
-		$screen = get_current_screen();
-		if ( $screen && 'plugins' === $screen->id ) {
-			self::render_not_installed_notice();
-		}
-	}
+	public static function maybe_show_notice() {}
 
 	public static function activate_cf7() {
 		if ( ! current_user_can( 'activate_plugins' ) ) {
@@ -68,17 +58,5 @@ class Cmatic_CF7_Dependency {
 		$result = activate_plugin( self::CF7_PLUGIN_FILE, '', false, true );
 
 		return ! is_wp_error( $result );
-	}
-
-	private static function render_not_installed_notice() {
-		$install_url = wp_nonce_url(
-			admin_url( 'update.php?action=install-plugin&plugin=contact-form-7' ),
-			'install-plugin_contact-form-7'
-		);
-
-		printf(
-			'<div class="notice notice-error"><p><strong>Chimpmatic Lite</strong> requires <strong>Contact Form 7</strong> to function. <a href="%s">Install Contact Form 7</a></p></div>',
-			esc_url( $install_url )
-		);
 	}
 }

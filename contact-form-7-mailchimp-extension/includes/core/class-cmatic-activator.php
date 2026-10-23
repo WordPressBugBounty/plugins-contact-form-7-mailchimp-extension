@@ -161,14 +161,6 @@ class Cmatic_Activator {
 		return $this->pro_status;
 	}
 
-	public static function is_initialized() {
-		return (bool) get_option( self::INITIALIZED_FLAG );
-	}
-
-	public static function clear_initialized_flag() {
-		return delete_option( self::INITIALIZED_FLAG );
-	}
-
 	public function verify_lifecycle_state(): void {
 		$thinks_active = $this->options->get( 'lifecycle.is_active', false );
 

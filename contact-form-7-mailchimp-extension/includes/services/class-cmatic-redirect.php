@@ -30,6 +30,9 @@ class Cmatic_Redirect {
 		}
 
 		$this->options->set( 'activation_redirect', false );
+		if ( ! Cmatic_CF7_Dependency::is_active() || ! current_user_can( 'wpcf7_edit_contact_forms' ) ) {
+			return;
+		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_GET['activate-multi'] ) ) {

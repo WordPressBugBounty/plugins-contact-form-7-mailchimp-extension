@@ -8,6 +8,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use Cmatic\Lite\Rest\Args;
+
 final class Cmatic_Rest_Form {
 
 	/**
@@ -82,49 +84,14 @@ final class Cmatic_Rest_Form {
 	public static function register_routes() {
 		register_rest_route(
 			self::$namespace,
-			'/tags/toggle',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( self::class, 'toggle_tag' ),
-				'permission_callback' => array( self::class, 'check_admin_permission' ),
-				'args'                => array(
-					'form_id' => array(
-						'required'          => true,
-						'type'              => 'integer',
-						'sanitize_callback' => 'absint',
-					),
-					'tag'     => array(
-						'required'          => true,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'enabled' => array(
-						'required'          => true,
-						'type'              => 'boolean',
-						'sanitize_callback' => 'rest_sanitize_boolean',
-					),
-				),
-			)
-		);
-
-		register_rest_route(
-			self::$namespace,
 			'/form/field',
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( self::class, 'save_field' ),
-				'permission_callback' => array( self::class, 'check_form_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'form' ),
 				'args'                => array(
-					'form_id' => array(
-						'required'          => true,
-						'type'              => 'integer',
-						'sanitize_callback' => 'absint',
-					),
-					'field'   => array(
-						'required'          => true,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
+					'form_id' => Args::form_id(),
+					'field'   => Args::of( 'string', 'sanitize_text_field' ),
 					'value'   => array(
 						'required' => false,
 						'default'  => null,
@@ -139,21 +106,10 @@ final class Cmatic_Rest_Form {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( self::class, 'save_setting' ),
-				'permission_callback' => array( self::class, 'check_admin_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'form' ),
 				'args'                => array(
-					'form_id' => array(
-						'required'          => true,
-						'type'              => 'integer',
-						'sanitize_callback' => 'absint',
-						'validate_callback' => function ( $param ) {
-							return is_numeric( $param ) && $param > 0;
-						},
-					),
-					'field'   => array(
-						'required'          => true,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_key',
-					),
+					'form_id' => Args::positive_form_id(),
+					'field'   => Args::of( 'string', 'sanitize_key' ),
 					'value'   => array(
 						'required'          => true,
 						'type'              => 'boolean',
@@ -162,92 +118,6 @@ final class Cmatic_Rest_Form {
 						},
 					),
 				),
-			)
-		);
-	}
-
-	public static function check_admin_permission( $request ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return new WP_Error(
-				'rest_forbidden',
-				esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		$nonce = $request->get_header( 'X-WP-Nonce' );
-		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-			return new WP_Error(
-				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		return true;
-	}
-
-	public static function check_form_permission( $request ) {
-		$form_id = $request->get_param( 'form_id' );
-
-		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
-			return new WP_Error(
-				'rest_forbidden',
-				esc_html__( 'You do not have permission to access the API key.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		$nonce = $request->get_header( 'X-WP-Nonce' );
-		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-			return new WP_Error(
-				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		return true;
-	}
-
-	public static function toggle_tag( $request ) {
-		$form_id = $request->get_param( 'form_id' );
-		$tag     = $request->get_param( 'tag' );
-		$enabled = $request->get_param( 'enabled' );
-
-		if ( ! $form_id || ! $tag ) {
-			return new WP_Error(
-				'missing_params',
-				__( 'Missing required parameters.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 400 )
-			);
-		}
-
-		$option_name = 'cf7_mch_' . $form_id;
-		$cf7_mch     = get_option( $option_name, array() );
-
-		if ( ! isset( $cf7_mch['labeltags'] ) || ! is_array( $cf7_mch['labeltags'] ) ) {
-			$cf7_mch['labeltags'] = array();
-		}
-
-		if ( $enabled ) {
-			$cf7_mch['labeltags'][ $tag ] = '1';
-		} else {
-			unset( $cf7_mch['labeltags'][ $tag ] );
-		}
-
-		update_option( $option_name, $cf7_mch );
-
-		return rest_ensure_response(
-			array(
-				'success' => true,
-				'tag'     => $tag,
-				'enabled' => $enabled,
-				'message' => $enabled
-					// translators: %s: tag name.
-					? sprintf( __( 'Tag [%s] enabled.', 'contact-form-7-mailchimp-extension' ), $tag )
-					// translators: %s: tag name.
-					: sprintf( __( 'Tag [%s] disabled.', 'contact-form-7-mailchimp-extension' ), $tag ),
 			)
 		);
 	}
@@ -277,10 +147,10 @@ final class Cmatic_Rest_Form {
 			);
 		}
 
-		if ( $matched_config['pro_only'] && ! defined( 'CMATIC_VERSION' ) ) {
+		if ( $matched_config['pro_only'] && ! Cmatic_Lite_Pro_Entitlement::active() ) {
 			return new WP_Error(
 				'pro_required',
-				__( 'This field requires Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
+				__( 'This field requires ChimpMatic Pro.', 'contact-form-7-mailchimp-extension' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -291,8 +161,7 @@ final class Cmatic_Rest_Form {
 			$value = trim( sanitize_text_field( $value ) );
 		}
 
-		$option_name = 'cf7_mch_' . $form_id;
-		$cf7_mch     = get_option( $option_name, array() );
+		$cf7_mch = \Cmatic\Lite\Settings\FormSettingsRepository::load( (int) $form_id )->record();
 
 		if ( isset( $matched_config['nested'] ) ) {
 			$nested_key = $matched_config['nested'];
@@ -311,7 +180,18 @@ final class Cmatic_Rest_Form {
 			$cf7_mch[ $field ] = $value;
 		}
 
-		update_option( $option_name, $cf7_mch );
+		if ( preg_match( '/^field[0-9]+$/', $field ) && '' !== $value && null !== $value ) {
+			$mapped = 0;
+			foreach ( $cf7_mch as $key => $mapping ) {
+				if ( preg_match( '/^field[0-9]+$/', (string) $key ) && is_string( $mapping ) && '' !== trim( $mapping ) ) {
+					++$mapped;
+				}
+			}
+			if ( $mapped > \Cmatic\Lite\Settings\Entitlements::field_limit( 'mailchimp', (int) $form_id ) ) {
+				return new WP_Error( 'mapping_limit', __( 'Choose email and up to three other fields.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
+			}
+		}
+		\Cmatic\Lite\Settings\FormSettingsRepository::store( (int) $form_id, $cf7_mch );
 
 		return rest_ensure_response(
 			array(
@@ -355,28 +235,23 @@ final class Cmatic_Rest_Form {
 
 		$field_config = $allowed_fields[ $field ];
 
-		if ( ! empty( $field_config['pro_only'] ) && ! defined( 'CMATIC_VERSION' ) ) {
+		if ( ! empty( $field_config['pro_only'] ) && ! Cmatic_Lite_Pro_Entitlement::active() ) {
 			return new WP_Error(
 				'pro_required',
 				sprintf(
 					/* translators: %s: field label */
-					__( '%s requires Chimpmatic Pro.', 'contact-form-7-mailchimp-extension' ),
+					__( '%s requires ChimpMatic Pro.', 'contact-form-7-mailchimp-extension' ),
 					$field_config['label']
 				),
 				array( 'status' => 403 )
 			);
 		}
 
-		$option_name = 'cf7_mch_' . $form_id;
-		$cf7_mch     = get_option( $option_name, array() );
-
-		if ( ! is_array( $cf7_mch ) ) {
-			$cf7_mch = array();
-		}
+		$cf7_mch = \Cmatic\Lite\Settings\FormSettingsRepository::load( (int) $form_id )->record();
 
 		$cf7_mch[ $field ] = $value ? 1 : 0;
 
-		update_option( $option_name, $cf7_mch );
+		\Cmatic\Lite\Settings\FormSettingsRepository::store( (int) $form_id, $cf7_mch );
 
 		return rest_ensure_response(
 			array(

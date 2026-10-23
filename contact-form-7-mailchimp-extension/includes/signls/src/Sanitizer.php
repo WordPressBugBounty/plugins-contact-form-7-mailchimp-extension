@@ -79,8 +79,27 @@ final class Sanitizer {
 	}
 
 	public static function url( $value, int $maximum = 500 ): string {
-		$value = self::text( $value, $maximum );
-		if ( '' === $value ) {
+		$candidates = array( $value );
+		if ( function_exists( 'home_url' ) ) {
+			$candidates[] = home_url();
+		}
+		if ( function_exists( 'site_url' ) ) {
+			$candidates[] = site_url();
+		}
+		foreach ( $candidates as $candidate ) {
+			$normalized = self::normalized_url( $candidate, $maximum );
+			if ( '' !== $normalized ) {
+				return $normalized;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * @param mixed $value Candidate site address.
+	 */
+	private static function normalized_url( $value, int $maximum ): string {
+		if ( ! is_string( $value ) || $maximum < 1 || '' === $value || 1 !== preg_match( '//u', $value ) || preg_match( '/[\x00-\x20\x7F]/', $value ) ) {
 			return '';
 		}
 		$parts = wp_parse_url( $value );
@@ -88,7 +107,42 @@ final class Sanitizer {
 			return '';
 		}
 		$scheme = strtolower( (string) $parts['scheme'] );
-		return in_array( $scheme, array( 'http', 'https' ), true ) ? $value : '';
+		$host   = strtolower( rtrim( (string) $parts['host'], '.' ) );
+		if ( ! in_array( $scheme, array( 'http', 'https' ), true ) || '' === $host || preg_match( '/\s/u', $host ) ) {
+			return '';
+		}
+		if ( 1 === preg_match( '/[^\x00-\x7F]/', $host ) ) {
+			$ascii = function_exists( 'idn_to_ascii' ) ? idn_to_ascii( $host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46 ) : false;
+			if ( false === $ascii || '' === $ascii ) {
+				return '';
+			}
+			$host = strtolower( $ascii );
+		}
+		if ( '[' === substr( $host, 0, 1 ) ) {
+			if ( ']' !== substr( $host, -1 ) || false === filter_var( substr( $host, 1, -1 ), FILTER_VALIDATE_IP, FILTER_FLAG_IPV6 ) ) {
+				return '';
+			}
+		} elseif ( false === filter_var( $host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) && false === filter_var( $host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME ) ) {
+			return '';
+		}
+		$port = isset( $parts['port'] ) ? (int) $parts['port'] : 0;
+		if ( $port < 0 || $port > 65535 ) {
+			return '';
+		}
+		$base = $scheme . '://' . $host . ( isset( $parts['port'] ) ? ':' . $port : '' );
+		if ( strlen( $base ) > $maximum ) {
+			return '';
+		}
+		$path   = isset( $parts['path'] ) ? (string) $parts['path'] : '';
+		$path   = '/' === $path ? '' : rtrim( $path, '/' );
+		$path   = self::text( $path, $maximum - strlen( $base ) );
+		$length = strlen( $base . $path );
+		while ( $length > $maximum ) {
+			$path   = (string) preg_replace( '/.$/us', '', $path );
+			$length = strlen( $base . $path );
+		}
+		$path = preg_replace( '/%(?:[a-f0-9]?)$/i', '', $path );
+		return rtrim( $base . $path, '/' );
 	}
 
 	public static function sha256( $value ): string {

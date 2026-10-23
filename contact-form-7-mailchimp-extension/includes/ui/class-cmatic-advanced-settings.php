@@ -10,6 +10,9 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Advanced_Settings {
 	public static function render(): void {
+		if ( ! current_user_can( 'wpcf7_manage_integration' ) ) {
+			return;
+		}
 		?>
 		<table class="form-table mt0 description">
 		<tbody>
@@ -62,7 +65,7 @@ class Cmatic_Advanced_Settings {
 					<input type="checkbox" id="chimpmatic-update" data-field="auto_update" value="1" <?php checked( (bool) Cmatic_Options_Repository::get_option( 'auto_update', true ), true ); ?> />
 					<span class="cmatic-toggle-slider"></span>
 				</label>
-				<span class="cmatic-toggle-label"><?php esc_html_e( 'Auto Update Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ); ?></span>
+				<span class="cmatic-toggle-label"><?php esc_html_e( 'Auto Update Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ); ?></span>
 				</fieldset>
 			</td>
 			</tr>
@@ -77,9 +80,9 @@ class Cmatic_Advanced_Settings {
 			<th scope="row"><?php esc_html_e( 'License Reset', 'contact-form-7-mailchimp-extension' ); ?></th>
 			<td>
 				<fieldset><legend class="screen-reader-text"><span><?php esc_html_e( 'License Reset', 'contact-form-7-mailchimp-extension' ); ?></span></legend>
-				<button type="button" id="cmatic-license-reset-btn" class="button"><?php esc_html_e( 'Reset License Data', 'contact-form-7-mailchimp-extension' ); ?></button>
+				<button type="button" id="cmatic-license-reset-btn" class="button" disabled><?php esc_html_e( 'Reset License Data', 'contact-form-7-mailchimp-extension' ); ?></button>
 				<div id="cmatic-license-reset-message" style="margin-top: 10px;"></div>
-				<small class="description"><?php esc_html_e( 'Clears all cached license data. Use this if you see "zombie activation" issues after deactivating your license.', 'contact-form-7-mailchimp-extension' ); ?></small>
+				<small class="description"><?php esc_html_e( 'Our Pro version lets you manage and refresh its license data.', 'contact-form-7-mailchimp-extension' ); ?></small>
 				</fieldset>
 			</td>
 			</tr>
@@ -94,7 +97,7 @@ class Cmatic_Advanced_Settings {
 		<tr>
 		<th scope="row"><?php esc_html_e( 'Help Us Improve', 'contact-form-7-mailchimp-extension' ); ?></th>
 		<td>
-			<fieldset><legend class="screen-reader-text"><span><?php esc_html_e( 'Help Us Improve Chimpmatic', 'contact-form-7-mailchimp-extension' ); ?></span></legend>
+			<fieldset><legend class="screen-reader-text"><span><?php esc_html_e( 'Help Us Improve Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ); ?></span></legend>
 			<label class="cmatic-toggle">
 				<input type="checkbox" id="cmatic-telemetry-enabled" data-field="telemetry" value="1" <?php checked( Cmatic_Lite_Signls_Privacy::consent_status(), 'enabled' ); ?> />
 				<span class="cmatic-toggle-slider"></span>
@@ -147,11 +150,14 @@ class Cmatic_Advanced_Settings {
 	 */
 	public static function render_card_rows( array $keys, string $slug = '' ): void {
 		$site     = __( 'For every form on this site.', 'contact-form-7-mailchimp-extension' );
-		$form     = __( 'This form only.', 'contact-form-7-mailchimp-extension' );
+		$form     = __( 'For this form.', 'contact-form-7-mailchimp-extension' );
 		$manifest = '' === $slug ? array() : Cmatic_Lite_Esp_Manifest::get( $slug );
-		$label    = self::text( $manifest['label'] ?? '', __( 'your provider', 'contact-form-7-mailchimp-extension' ) );
+		$label    = self::text( $manifest['label'] ?? '', __( 'provider', 'contact-form-7-mailchimp-extension' ) );
 		$plural   = strtolower( self::text( $manifest['destination_plural'] ?? '', __( 'destinations', 'contact-form-7-mailchimp-extension' ) ) );
 		foreach ( $keys as $key ) {
+			if ( 'reset' !== $key && ! current_user_can( 'wpcf7_manage_integration' ) ) {
+				continue;
+			}
 			switch ( $key ) {
 				case 'debug':
 					$until = Cmatic_Debug_Log::until();
@@ -208,8 +214,9 @@ class Cmatic_Advanced_Settings {
 						'reset',
 						__( 'Reset this form', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: email provider name */
-						$form . ' ' . sprintf( __( 'Forgets the %s key, destinations, mappings, consent and status saved here. The form itself is untouched.', 'contact-form-7-mailchimp-extension' ), $label ),
-						'<div class="cmatic-provider-actions"><button type="button" class="button" id="cmatic-advanced-form-reset">' . esc_html__( 'Reset this form', 'contact-form-7-mailchimp-extension' ) . '</button> <span id="cmatic-advanced-form-reset-feedback" aria-live="polite"></span></div>'
+						$form . ' ' . sprintf( __( 'Clears destinations, mappings, consent and status saved here. Your %s connection and the form itself are kept.', 'contact-form-7-mailchimp-extension' ), $label ),
+						'<div class="cmatic-provider-actions"><button type="button" class="button" id="cmatic-advanced-form-reset">' . esc_html__( 'Reset this form', 'contact-form-7-mailchimp-extension' ) . '</button> <span id="cmatic-advanced-form-reset-feedback" aria-live="polite"></span></div>',
+						' data-cmatic-reset-row'
 					);
 					break;
 				case 'purge':
@@ -233,23 +240,24 @@ class Cmatic_Advanced_Settings {
 					self::tool_row(
 						'license',
 						__( 'License Reset', 'contact-form-7-mailchimp-extension' ),
-						$site . ' ' . __( 'Clears cached license data. Use it when a deactivated license still shows as active.', 'contact-form-7-mailchimp-extension' ),
-						'<div class="cmatic-provider-actions"><button type="button" id="cmatic-license-reset-btn" class="button">' . esc_html__( 'Reset License Data', 'contact-form-7-mailchimp-extension' ) . '</button></div><div id="cmatic-license-reset-message"></div>'
+						__( 'Our Pro version lets you manage and refresh its license data.', 'contact-form-7-mailchimp-extension' ),
+						'<div class="cmatic-provider-actions"><button type="button" id="cmatic-license-reset-btn" class="button" disabled>' . esc_html__( 'Reset License Data', 'contact-form-7-mailchimp-extension' ) . '</button></div><div id="cmatic-license-reset-message"></div>',
+						' data-lite-preview'
 					);
 					break;
 				case 'auto_update':
 					self::tool_row(
 						'auto-update',
 						__( 'Auto Update', 'contact-form-7-mailchimp-extension' ),
-						__( 'Chimpmatic Lite. Installs each new release as WordPress finds it.', 'contact-form-7-mailchimp-extension' ),
-						self::check_html( 'chimpmatic-update', 'auto_update', (bool) Cmatic_Options_Repository::get_option( 'auto_update', true ), __( 'Auto Update Chimpmatic Lite', 'contact-form-7-mailchimp-extension' ) )
+						__( 'Contact Form 7 Extension. Installs each new release as WordPress finds it.', 'contact-form-7-mailchimp-extension' ),
+						self::check_html( 'chimpmatic-update', 'auto_update', (bool) Cmatic_Options_Repository::get_option( 'auto_update', true ), __( 'Auto Update Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ) )
 					);
 					break;
 				case 'backlink':
 					self::tool_row(
 						'backlink',
 						__( 'Developer', 'contact-form-7-mailchimp-extension' ),
-						__( 'Chimpmatic Lite. A small credit line under the form.', 'contact-form-7-mailchimp-extension' ),
+						__( 'Contact Form 7 Extension. A small credit line under the form.', 'contact-form-7-mailchimp-extension' ),
 						self::check_html( 'wpcf7-mailchimp-cf-support', 'backlink', (bool) Cmatic_Options_Repository::get_option( 'backlink', false ), __( 'A backlink to my site, not compulsory, but appreciated', 'contact-form-7-mailchimp-extension' ) )
 					);
 					break;
@@ -284,5 +292,4 @@ class Cmatic_Advanced_Settings {
 	private static function text( $value, string $fallback ): string {
 		return is_scalar( $value ) && '' !== (string) $value ? (string) $value : $fallback;
 	}
-
 }
