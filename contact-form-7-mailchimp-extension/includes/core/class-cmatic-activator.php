@@ -20,8 +20,6 @@ class Cmatic_Activator {
 
 	private $pro_status;
 
-	private $redirect;
-
 	private $version;
 
 	public function __construct( $version ) {
@@ -30,7 +28,6 @@ class Cmatic_Activator {
 		$this->install_data = new Cmatic_Install_Data( $this->options );
 		$this->migration    = new Cmatic_Migration( $this->options, $version );
 		$this->pro_status   = new Cmatic_Pro_Status( $this->options );
-		$this->redirect     = new Cmatic_Redirect( $this->options );
 	}
 
 	public function activate() {
@@ -44,6 +41,7 @@ class Cmatic_Activator {
 			$install_id = $this->options->get( 'install.id' );
 			if ( ! empty( $install_id ) ) {
 				if ( $upgrade_recorded ) {
+					$this->drop_retired_settings();
 					$this->relevant_change();
 				}
 				return;
@@ -64,10 +62,6 @@ class Cmatic_Activator {
 		$upgrade_recorded = $this->record_upgrade() || $upgrade_recorded;
 
 		$activation_recorded = $this->record_activation();
-
-		if ( $is_normal_activation ) {
-			$this->redirect->schedule();
-		}
 
 		$this->options->set( 'lifecycle.is_active', true );
 
@@ -153,20 +147,16 @@ class Cmatic_Activator {
 		}
 	}
 
-	public function get_redirect() {
-		return $this->redirect;
+	private function drop_retired_settings(): void {
+		$data = $this->options->get_all();
+		if ( array_key_exists( 'activation_redirect', $data ) ) {
+			unset( $data['activation_redirect'] );
+			$this->options->save( $data );
+		}
 	}
 
 	public function get_pro_status() {
 		return $this->pro_status;
-	}
-
-	public static function is_initialized() {
-		return (bool) get_option( self::INITIALIZED_FLAG );
-	}
-
-	public static function clear_initialized_flag() {
-		return delete_option( self::INITIALIZED_FLAG );
 	}
 
 	public function verify_lifecycle_state(): void {
@@ -256,7 +246,6 @@ class Cmatic_Activator {
 				$activator = new self( $version );
 
 				$activator->verify_lifecycle_state();
-				$activator->get_redirect()->maybe_redirect();
 			},
 			5
 		);

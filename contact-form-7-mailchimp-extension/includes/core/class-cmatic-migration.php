@@ -57,10 +57,6 @@ class Cmatic_Migration {
 		$this->cleanup_legacy_options();
 	}
 
-	public function is_migrated() {
-		return (bool) $this->options->get( 'migrated', false );
-	}
-
 	private function migrate_install( &$data ) {
 		if ( ! isset( $data['install'] ) ) {
 			$data['install'] = array();
@@ -97,7 +93,7 @@ class Cmatic_Migration {
 			'news'          => (bool) $this->options->get_legacy( 'mce_show_update_news', true ),
 			'notice_banner' => (bool) $this->options->get_legacy( 'mce_show_notice', true ),
 			'welcome_panel' => array(
-				'title'   => $panel_title ? $panel_title : 'Chimpmatic Lite is now ' . $this->version . '!',
+				'title'   => $panel_title ? $panel_title : 'Contact Form 7 Extension is now ' . $this->version . '!',
 				'content' => $panel_content ? $panel_content : '',
 			),
 		);
@@ -114,10 +110,7 @@ class Cmatic_Migration {
 			$data['debug'] = ( 'on' === $old_debug || '1' === $old_debug ) ? 1 : 0;
 		}
 
-		$old_redirect = get_option( 'cmatic_do_activation_redirect' );
-		if ( false !== $old_redirect && ! isset( $data['activation_redirect'] ) ) {
-			$data['activation_redirect'] = (bool) $old_redirect;
-		}
+		unset( $data['activation_redirect'] );
 
 		$old_news_count = get_option( 'cmatic_news_retry_count' );
 		if ( false !== $old_news_count ) {
@@ -155,8 +148,12 @@ class Cmatic_Migration {
 		}
 
 		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 		$form_options = $wpdb->get_results(
-			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE 'cf7_mch_%'",
+			$wpdb->prepare(
+				"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s",
+				$wpdb->esc_like( 'cf7_mch_' ) . '%'
+			),
 			ARRAY_A
 		);
 

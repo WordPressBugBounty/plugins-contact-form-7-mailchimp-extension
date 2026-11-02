@@ -45,7 +45,7 @@
 				body: JSON.stringify({ level, message: formattedMessage, data: dataString })
 			});
 		} catch (error) {
-			originalConsole.error('[Chimpmatic Lite] Failed to send log to server:', error);
+			originalConsole.error('[Contact Form 7 Extension] Failed to send log to server:', error);
 		}
 	}
 
@@ -69,21 +69,6 @@ function chimpmaticLiteInit() {
 	function getFormId() {
 		const dataContainer = document.getElementById('cmatic_data');
 		return dataContainer?.dataset?.formId ? parseInt(dataContainer.dataset.formId, 10) || 0 : 0;
-	}
-
-	async function fetchMailchimpLists(formId, apiKey) {
-		const response = await fetch(`${chimpmaticLite.restUrl}lists`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': chimpmaticLite.restNonce
-			},
-			body: JSON.stringify({ form_id: formId, api_key: apiKey })
-		});
-
-		const data = await response.json();
-		if (!response.ok) throw new Error(data.message || 'Failed to fetch lists');
-		return data;
 	}
 
 	let cmaticLogSource = 'own';
@@ -326,238 +311,6 @@ function chimpmaticLiteInit() {
 		return options;
 	}
 
-	function updateApiStatus(isValid) {
-		const versionInfo = document.getElementById('chimpmatic-version-info');
-		if (versionInfo) {
-			const statusText = versionInfo.querySelector('.chmm');
-			if (statusText) {
-				if (isValid) {
-					statusText.classList.remove('invalid');
-					statusText.classList.add('valid');
-					statusText.textContent = 'API Connected';
-				} else {
-					statusText.classList.remove('valid');
-					statusText.classList.add('invalid');
-					statusText.textContent = 'API Inactive';
-				}
-			}
-		}
-
-		const headerDot = document.querySelector('.cmatic-header__status-dot');
-		const headerText = document.querySelector('.cmatic-header__status-text');
-		if (headerDot) {
-			if (isValid) {
-				headerDot.classList.remove('cmatic-header__status-dot--disconnected');
-				headerDot.classList.add('cmatic-header__status-dot--connected');
-			} else {
-				headerDot.classList.remove('cmatic-header__status-dot--connected');
-				headerDot.classList.add('cmatic-header__status-dot--disconnected');
-			}
-		}
-		if (headerText) {
-			headerText.textContent = isValid ? 'API Connected' : 'API Inactive';
-		}
-	}
-
-	function updateLiteBadgeStatus(status) {
-		const liteBadge = document.querySelector('.cm-lite');
-		if (!liteBadge) return;
-
-		liteBadge.classList.remove('cm-status-neutral', 'cm-status-connected', 'cm-status-error');
-
-		if (status === 'connected') liteBadge.classList.add('cm-status-connected');
-		else if (status === 'error') liteBadge.classList.add('cm-status-error');
-		else liteBadge.classList.add('cm-status-neutral');
-	}
-
-	function getSecureApiKey(apiKeyInput) {
-		const isMasked = apiKeyInput.dataset.isMasked === '1';
-		const hasKey = apiKeyInput.dataset.hasKey === '1';
-		const inputValue = apiKeyInput.value.trim();
-
-		return isMasked && hasKey ? '' : inputValue;
-	}
-
-	const fetchListsButton = document.getElementById('chm_activalist');
-	if (fetchListsButton) {
-		fetchListsButton.addEventListener('click', async function(event) {
-			event.preventDefault();
-
-			const apiKeyInput = document.getElementById('cmatic-api');
-			const selectElement = document.getElementById('wpcf7-mailchimp-list');
-
-			var dataContainer = document.getElementById('cmatic_data');
-			var authType = (dataContainer && dataContainer.dataset.authType) || '';
-
-			if (!selectElement) return;
-			if (!apiKeyInput && authType !== 'oauth') return;
-
-			const formId = getFormId();
-			const apiKey = apiKeyInput ? await getSecureApiKey(apiKeyInput, formId) : '';
-
-			if (!apiKey && authType !== 'oauth') {
-				if (typeof showInlineMessage === 'function') {
-					showInlineMessage(fetchListsButton, 'Enter API key first', 'warning');
-				}
-				updateApiStatus(false);
-				updateLiteBadgeStatus('neutral');
-				return;
-			}
-
-			if (!formId || formId <= 0) {
-				if (typeof showInlineMessage === 'function') {
-					showInlineMessage(fetchListsButton, 'Save form first', 'warning');
-				}
-				updateApiStatus(false);
-				updateLiteBadgeStatus('neutral');
-				return;
-			}
-
-			const originalText = fetchListsButton.value || fetchListsButton.textContent;
-			fetchListsButton.disabled = true;
-			if (fetchListsButton.tagName === 'INPUT') fetchListsButton.value = 'Syncing Audiences...';
-			else fetchListsButton.textContent = 'Syncing Audiences...';
-
-			try {
-				const data = await fetchMailchimpLists(formId, apiKey);
-
-				const currentSelection = selectElement.value || '';
-					selectElement.replaceChildren(...renderListsDropdown(data, currentSelection));
-
-				attachFetchFieldsListeners();
-
-				const newListDropdown = document.getElementById('wpcf7-mailchimp-list');
-				if (newListDropdown && newListDropdown.value) {
-					if (isProFieldPanelActive) {
-						newListDropdown.dispatchEvent(new Event('change', { bubbles: true }));
-					} else {
-						fetchFieldsForSelectedList();
-					}
-				}
-
-				if (data.api_valid) {
-					updateApiStatus(true);
-					updateLiteBadgeStatus('connected');
-
-					const chooser = document.querySelector('.cmatic-connect-options');
-					if (chooser) chooser.classList.add('cmatic-hidden');
-
-					document.querySelectorAll('.chmp-inactive').forEach(el => {
-						el.classList.remove('chmp-inactive');
-						el.classList.add('chmp-active');
-					});
-
-					const newUserSection = document.getElementById('chmp-new-user');
-					if (newUserSection) {
-						newUserSection.classList.remove('chmp-active');
-						newUserSection.classList.add('chmp-inactive');
-					}
-				} else {
-					updateApiStatus(false);
-					updateLiteBadgeStatus('error');
-
-					document.querySelectorAll('.chmp-active').forEach(el => {
-						el.classList.remove('chmp-active');
-						el.classList.add('chmp-inactive');
-					});
-
-					const newUserSection = document.getElementById('chmp-new-user');
-					if (newUserSection) {
-						newUserSection.classList.remove('chmp-inactive');
-						newUserSection.classList.add('chmp-active');
-					}
-				}
-
-				if (fetchListsButton.tagName === 'INPUT') fetchListsButton.value = 'Synced ✓';
-				else fetchListsButton.textContent = 'Synced ✓';
-
-				setTimeout(() => {
-					if (fetchListsButton.tagName === 'INPUT') fetchListsButton.value = originalText;
-					else fetchListsButton.textContent = originalText;
-					fetchListsButton.disabled = false;
-				}, 1000);
-
-			} catch (error) {
-				if (fetchListsButton.tagName === 'INPUT') fetchListsButton.value = originalText;
-				else fetchListsButton.textContent = originalText;
-				fetchListsButton.disabled = false;
-				alert(chimpmaticLite.i18n.error);
-			}
-		});
-	}
-
-	const apiKeyInput = document.getElementById('cmatic-api');
-	if (apiKeyInput && fetchListsButton) {
-		function isValidApiKey(key) {
-			if (key.length !== 36 || key.charAt(32) !== '-') return false;
-			if (!/^[a-f0-9]{32}$/i.test(key.substring(0, 32))) return false;
-			const dc = key.substring(33).toLowerCase();
-			const validDCs = ['us1','us2','us3','us4','us5','us6','us7','us8','us9','us10','us11','us12','us13','us14','us15','us16','us17','us18','us19','us20','us21'];
-			return validDCs.includes(dc);
-		}
-
-		function debounce(func, wait) {
-			let timeout;
-			return function(...args) {
-				clearTimeout(timeout);
-				timeout = setTimeout(() => func.apply(this, args), wait);
-			};
-		}
-
-		apiKeyInput.addEventListener('paste', function() {
-			setTimeout(() => {
-				if (isValidApiKey(apiKeyInput.value.trim())) fetchListsButton.click();
-			}, 50);
-		});
-
-		apiKeyInput.addEventListener('input', function() {
-			if (apiKeyInput.dataset.isMasked === '1' && apiKeyInput.value !== apiKeyInput.dataset.maskedKey) {
-				apiKeyInput.dataset.isMasked = '0';
-			}
-			updateLiteBadgeStatus('neutral');
-		});
-
-		apiKeyInput.addEventListener('input', debounce(function() {
-			const apiKey = apiKeyInput.value.trim();
-			if (isValidApiKey(apiKey)) {
-				fetchListsButton.click();
-			} else if (apiKey === '') {
-				const formId = getFormId();
-				if (formId) {
-					fetch(`${chimpmaticLite.restUrl}settings/reset`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-WP-Nonce': chimpmaticLite.restNonce
-						},
-						body: JSON.stringify({ form_id: formId })
-					})
-					.then(response => response.json())
-					.then(() => {
-						const selectElement = document.getElementById('wpcf7-mailchimp-list');
-						if (selectElement) selectElement.innerHTML = '';
-						const label = document.getElementById('cmatic-audiences-label');
-						if (label) label.textContent = 'Mailchimp Audiences';
-						const fieldsContainer = document.getElementById('cmatic-fields');
-						if (fieldsContainer) fieldsContainer.innerHTML = '';
-						updateLiteBadgeStatus('neutral');
-
-						document.querySelectorAll('.chmp-active').forEach(el => {
-							el.classList.remove('chmp-active');
-							el.classList.add('chmp-inactive');
-						});
-
-						const newUserSection = document.getElementById('chmp-new-user');
-						if (newUserSection) {
-							newUserSection.classList.remove('chmp-inactive');
-							newUserSection.classList.add('chmp-active');
-						}
-					});
-				}
-			}
-		}, 500));
-	}
-
 	function initToggleAutoSave() {
 		const globalFields = ['debug', 'backlink', 'auto_update', 'telemetry', 'purge_on_uninstall', 'sender_context'];
 		const toggles = document.querySelectorAll('.cmatic-toggle input[data-field], .cmatic-adv-toggle input[data-field]');
@@ -572,6 +325,7 @@ function chimpmaticLiteInit() {
 				const enabled = this.checked;
 				const wrapper = this.closest('.cmatic-toggle, .cmatic-adv-toggle');
 
+				this.disabled = true;
 				if (wrapper) wrapper.classList.add('is-saving');
 
 				try {
@@ -585,7 +339,6 @@ function chimpmaticLiteInit() {
 					});
 
 					const data = await response.json();
-					if (wrapper) wrapper.classList.remove('is-saving');
 					if (data.success) {
 						this.checked = enabled;
 						this.defaultChecked = enabled;
@@ -594,8 +347,10 @@ function chimpmaticLiteInit() {
 						this.checked = !enabled;
 					}
 				} catch (error) {
-					if (wrapper) wrapper.classList.remove('is-saving');
 					this.checked = !enabled;
+				} finally {
+					this.disabled = false;
+					if (wrapper) wrapper.classList.remove('is-saving');
 				}
 			});
 		});
@@ -1008,7 +763,7 @@ function chimpmaticLiteInit() {
 						toggleLink.addEventListener('click', async function(e) {
 							e.preventDefault();
 							config.filtered = !config.filtered;
-							this.textContent = config.filtered ? 'Show All' : 'Plugin Only';
+							this.textContent = config.filtered ? 'Show All' : 'Plugin log';
 							this.setAttribute('data-filtered', config.filtered ? '1' : '0');
 
 							if (logPanel) {
@@ -1549,8 +1304,8 @@ function chimpmaticLiteInit() {
 				tableHtml += '<thead><tr><th>Field</th><th>Sent</th><th>Received</th></tr></thead><tbody>';
 
 				for (const key of allKeys) {
-					const sentVal = sent[key] !== undefined ? escapeHtml(String(sent[key])) : '<span class="field-empty">—</span>';
-					const recvVal = received[key] !== undefined ? escapeHtml(String(received[key])) : '<span class="field-empty">—</span>';
+					const sentVal = sent[key] !== undefined ? escapeHtml(String(sent[key])) : '<span class="field-empty">Not available</span>';
+					const recvVal = received[key] !== undefined ? escapeHtml(String(received[key])) : '<span class="field-empty">Not available</span>';
 					const mismatch = sent[key] !== undefined && received[key] !== undefined && String(sent[key]) !== String(received[key]);
 					const rowClass = mismatch ? ' class="field-mismatch"' : '';
 					tableHtml += '<tr' + rowClass + '><td class="field-key">' + escapeHtml(key) + '</td><td>' + sentVal + '</td><td>' + recvVal + '</td></tr>';
@@ -1682,22 +1437,6 @@ function chimpmaticLiteInit() {
 		});
 	});
 
-	const eye = document.querySelector('.cmatic-eye');
-	const input = document.getElementById('cmatic-api');
-	if (eye && input && input.dataset.hasKey !== '1') {
-		eye.addEventListener('click', function(e) {
-			e.preventDefault();
-			const icon = this.querySelector('.dashicons');
-			const reveal = input.type === 'password';
-
-			input.type = reveal ? 'text' : 'password';
-			if (icon) {
-				icon.classList.toggle('dashicons-visibility', !reveal);
-				icon.classList.toggle('dashicons-hidden', reveal);
-			}
-		});
-	}
-
 	(function initContactLookup() {
 		const lookupBtn = document.getElementById('cmatic-lookup-btn');
 		const emailInput = document.getElementById('cmatic-lookup-email');
@@ -1766,12 +1505,12 @@ function chimpmaticLiteInit() {
 					if (value.addr1 || value.city || value.state || value.zip || value.country) {
 						const addrParts = [value.addr1, value.addr2, value.city, value.state, value.zip, value.country].filter(Boolean);
 						const label = fieldLabels[key] || key;
-						rows += `<tr data-field="${esc(fieldKey)}"><th>${esc(label)}</th><td class="cmatic-val">${addrParts.length ? esc(addrParts.join(', ')) : '—'}</td></tr>`;
+						rows += `<tr data-field="${esc(fieldKey)}"><th>${esc(label)}</th><td class="cmatic-val">${addrParts.length ? esc(addrParts.join(', ')) : 'Not available'}</td></tr>`;
 					}
 					continue;
 				}
 				const label = fieldLabels[key] || key;
-				const displayValue = (value && value !== '') ? esc(value) : '—';
+				const displayValue = (value && value !== '') ? esc(value) : 'Not available';
 				rows += `<tr data-field="${esc(fieldKey)}"><th>${esc(label)}</th><td class="cmatic-val">${displayValue}</td></tr>`;
 			}
 
@@ -1846,7 +1585,7 @@ function chimpmaticLiteInit() {
 		}
 
 		function getLanguageName(code) {
-			if (!code) return '—';
+			if (!code) return 'Not available';
 			const languages = {
 				'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German',
 				'pt': 'Portuguese', 'it': 'Italian', 'nl': 'Dutch', 'ru': 'Russian',
@@ -1865,7 +1604,7 @@ function chimpmaticLiteInit() {
 		function renderPreferences(result) {
 			let rows = '';
 
-			const emailType = result.email_type ? result.email_type.toUpperCase() : '—';
+			const emailType = result.email_type ? result.email_type.toUpperCase() : 'Not available';
 			rows += `<tr data-field="email_type"><th>Email format</th><td class="cmatic-val">${esc(emailType)}</td></tr>`;
 
 			const language = getLanguageName(result.language);
@@ -1878,23 +1617,23 @@ function chimpmaticLiteInit() {
 				const stars = '★'.repeat(result.member_rating) + '☆'.repeat(5 - result.member_rating);
 				rows += `<tr data-field="member_rating"><th>Contact rating</th><td class="cmatic-val">${stars}</td></tr>`;
 			} else {
-				rows += `<tr data-field="member_rating"><th>Contact rating</th><td class="cmatic-val">—</td></tr>`;
+				rows += `<tr data-field="member_rating"><th>Contact rating</th><td class="cmatic-val">Not available</td></tr>`;
 			}
 
-			rows += `<tr data-field="email_client"><th>Email client</th><td class="cmatic-val">${esc(result.email_client || '—')}</td></tr>`;
+			rows += `<tr data-field="email_client"><th>Email client</th><td class="cmatic-val">${esc(result.email_client || 'Not available')}</td></tr>`;
 
 			if (result.location && (result.location.country_code || result.location.timezone)) {
 				const locParts = [];
 				if (result.location.country_code) locParts.push(result.location.country_code);
 				if (result.location.region) locParts.push(result.location.region);
 				if (result.location.timezone) locParts.push(`(${result.location.timezone})`);
-				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">${esc(locParts.join(' ')) || '—'}</td></tr>`;
+				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">${esc(locParts.join(' ')) || 'Not available'}</td></tr>`;
 			} else {
-				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">—</td></tr>`;
+				rows += `<tr data-field="location"><th>Location</th><td class="cmatic-val">Not available</td></tr>`;
 			}
 
 			const smsConsent = result.consents_to_one_to_one_messaging === true ? 'Yes' :
-				(result.consents_to_one_to_one_messaging === false ? 'No' : '—');
+				(result.consents_to_one_to_one_messaging === false ? 'No' : 'Not available');
 			rows += `<tr data-field="sms_consent"><th>SMS consent</th><td class="cmatic-val">${smsConsent}</td></tr>`;
 
 			return `<table class="cmatic-field-table" data-section="preferences">${rows}</table>`;
@@ -1930,7 +1669,7 @@ function chimpmaticLiteInit() {
 
 				html += '<div class="cmatic-section-header">Contact Info</div>';
 				html += `<div data-section="contact-info">`;
-				html += `<table class="cmatic-field-table"><tr data-field="source"><th>Source</th><td class="cmatic-val">${esc(result.source || '—')}</td></tr></table>`;
+				html += `<table class="cmatic-field-table"><tr data-field="source"><th>Source</th><td class="cmatic-val">${esc(result.source || 'Not available')}</td></tr></table>`;
 				html += renderMergeFields(result.merge_fields);
 				html += `</div>`;
 
@@ -1945,11 +1684,11 @@ function chimpmaticLiteInit() {
 
 				html += '<div class="cmatic-section-header">Details</div>';
 				html += '<table class="cmatic-field-table" data-section="details">';
-				html += `<tr data-field="subscribed"><th>Subscribed</th><td class="cmatic-val">${result.subscribed ? formatDate(result.subscribed) : '—'}</td></tr>`;
-				html += `<tr data-field="timestamp_signup"><th>Signup date</th><td class="cmatic-val">${result.timestamp_signup ? formatDate(result.timestamp_signup) : '—'}</td></tr>`;
-				html += `<tr data-field="ip_signup"><th>IP signup</th><td class="cmatic-val">${esc(result.ip_signup || '—')}</td></tr>`;
-				html += `<tr data-field="last_changed"><th>Last changed</th><td class="cmatic-val">${result.last_changed ? formatDate(result.last_changed) : '—'}</td></tr>`;
-				html += `<tr data-field="unsubscribe_reason"><th>Unsubscribe reason</th><td class="cmatic-val">${esc(result.unsubscribe_reason || '—')}</td></tr>`;
+				html += `<tr data-field="subscribed"><th>Subscribed</th><td class="cmatic-val">${result.subscribed ? formatDate(result.subscribed) : 'Not available'}</td></tr>`;
+				html += `<tr data-field="timestamp_signup"><th>Signup date</th><td class="cmatic-val">${result.timestamp_signup ? formatDate(result.timestamp_signup) : 'Not available'}</td></tr>`;
+				html += `<tr data-field="ip_signup"><th>IP signup</th><td class="cmatic-val">${esc(result.ip_signup || 'Not available')}</td></tr>`;
+				html += `<tr data-field="last_changed"><th>Last changed</th><td class="cmatic-val">${result.last_changed ? formatDate(result.last_changed) : 'Not available'}</td></tr>`;
+				html += `<tr data-field="unsubscribe_reason"><th>Unsubscribe reason</th><td class="cmatic-val">${esc(result.unsubscribe_reason || 'Not available')}</td></tr>`;
 				html += '</table>';
 
 				html += '<div class="cmatic-section-header">Preferences</div>';
@@ -2045,8 +1784,8 @@ function chimpmaticLiteInit() {
 			tooltip.className = 'cmatic-upsell-tooltip';
 			tooltip.innerHTML = `
 				<strong>Pro Feature</strong><br>
-				Unlock full contact insights with ChimpMatic Pro.<br><br>
-				<a href="https://chimpmatic.com/pro/?utm_source=plugin&utm_medium=contact-lookup&utm_campaign=upsell" target="_blank">Upgrade to Pro →</a>
+				Explore full contact insights with our Pro version.<br><br>
+				<a href="https://chimpmatic.com/pro?utm_source=plugin&utm_medium=contact-lookup&utm_campaign=upsell" target="_blank">Explore our Pro version →</a>
 			`;
 
 			const rect = e.currentTarget.getBoundingClientRect();

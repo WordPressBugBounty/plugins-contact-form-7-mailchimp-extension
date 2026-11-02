@@ -189,29 +189,7 @@
 	function handleSkip(evt) {
 		evt.preventDefault();
 
-		const skipData = {
-			reason_id: 0,
-			reason_text: '',
-		};
-
-		const submitBtn = modalElement.querySelector('.cmatic-submit-button');
-		const skipLink = modalElement.querySelector('.cmatic-skip-link');
-		if (submitBtn) {
-			submitBtn.disabled = true;
-			submitBtn.textContent = config.strings.deactivating;
-		}
-		skipLink.style.display = 'none';
-
-		fetch(config.restUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': config.restNonce,
-			},
-			body: JSON.stringify(skipData),
-		}).finally(() => {
-			window.location.href = deactivateUrl;
-		});
+		window.location.href = deactivateUrl;
 	}
 
 	async function handleReasonClick(evt) {

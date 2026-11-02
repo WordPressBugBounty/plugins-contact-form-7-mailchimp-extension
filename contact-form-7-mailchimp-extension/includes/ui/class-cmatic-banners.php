@@ -37,34 +37,6 @@ class Cmatic_Banners {
 		return empty( trim( $banner ) ) ? self::DEFAULT_WELCOME : $banner;
 	}
 
-	public static function render_lateral(): void {
-		?>
-		<div id="informationdiv_aux" class="postbox mce-move mce-hidden mc-lateral">
-			<?php echo wp_kses_post( self::get_lateral_content() ); ?>
-		</div>
-		<?php
-	}
-
-	public static function get_lateral_content(): string {
-		return '
-		<div class="inside bg-f2"><h3>Upgrade to PRO</h3>
-			<p>We have the the best tool to integrate <b>Contact Form 7</b> & <b>Mailchimp.com</b> mailing lists. We have new nifty features:</p>
-			<ul>
-				<li>Tag Existing Subscribers</li>
-				<li>Group Existing Subscribers</li>
-				<li>Email Verification</li>
-				<li>AWESOME Support And more!</li>
-			</ul>
-		</div>
-		<div class="promo-2022">
-			<h1>40<span>%</span> Off!</h1>
-			<p class="interesting">Submit your name and email and we\'ll send you a coupon for <b>40% off</b> your upgrade to the pro version.</p>
-			<div class="cm-form" id="promo-form-container">
-				<!-- Form will be injected by JavaScript after page load to prevent CF7 from stripping it -->
-			</div>
-		</div>';
-	}
-
 	public static function render_new_user_help(): void {
 		$help_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'new_user_help' );
 		?>

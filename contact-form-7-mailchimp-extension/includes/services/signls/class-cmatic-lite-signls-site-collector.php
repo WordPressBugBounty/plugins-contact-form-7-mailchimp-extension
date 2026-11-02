@@ -70,7 +70,7 @@ final class Cmatic_Lite_Signls_Site_Collector {
 				'wp_cron_disabled'               => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
 				'wp_auto_update_core'            => $this->scalar_text( get_option( 'auto_update_core', 'enabled' ) ),
 				'mysql_version'                  => (string) $wpdb->db_version(),
-				'mysql_client_version'           => (string) $wpdb->get_var( 'SELECT VERSION()' ), // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One scalar compatibility fact is read from the active server.
+				'mysql_client_version'           => (string) $wpdb->db_server_info(),
 				'db_charset'                     => (string) $wpdb->charset,
 				'db_collate'                     => (string) $wpdb->collate,
 				'db_prefix_length'               => strlen( (string) $wpdb->prefix ),
@@ -128,8 +128,6 @@ final class Cmatic_Lite_Signls_Site_Collector {
 	}
 
 	private function wordpress(): array {
-		global $wpdb;
-
 		$post_counts    = wp_count_posts( 'post' );
 		$page_counts    = wp_count_posts( 'page' );
 		$media_counts   = wp_count_posts( 'attachment' );
@@ -137,7 +135,7 @@ final class Cmatic_Lite_Signls_Site_Collector {
 		$user_counts    = count_users();
 		$categories     = wp_count_terms( array( 'taxonomy' => 'category' ) );
 		$tags           = wp_count_terms( array( 'taxonomy' => 'post_tag' ) );
-		$revisions      = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'revision'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Aggregate count over the current site's posts table.
+		$revisions      = array_sum( (array) wp_count_posts( 'revision' ) );
 
 		return array(
 			'posts_published'      => isset( $post_counts->publish ) ? (int) $post_counts->publish : 0,
@@ -154,7 +152,7 @@ final class Cmatic_Lite_Signls_Site_Collector {
 			'categories_count'     => is_wp_error( $categories ) ? 0 : (int) $categories,
 			'tags_count'           => is_wp_error( $tags ) ? 0 : (int) $tags,
 			'revisions_count'      => (int) $revisions,
-			'auto_updates_enabled' => ! empty( get_option( 'auto_update_plugins', array() ) ),
+			'auto_updates_enabled' => ! empty( get_site_option( 'auto_update_plugins', array() ) ),
 		);
 	}
 

@@ -9,6 +9,7 @@
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 wp_clear_scheduled_hook( 'cmatic_daily_cron' );
+wp_clear_scheduled_hook( 'cmatic_fetch_retry' );
 wp_clear_scheduled_hook( 'csyncr_weekly_telemetry' );
 wp_clear_scheduled_hook( 'csyncr_metrics_heartbeat' );
 
@@ -19,6 +20,23 @@ wp_clear_scheduled_hook( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_refr
 $cmatic_uninstall_settings = get_option( 'cmatic', array() );
 if ( ! is_array( $cmatic_uninstall_settings ) || empty( $cmatic_uninstall_settings['purge_on_uninstall'] ) ) {
 	return;
+}
+
+require_once __DIR__ . '/includes/utils/class-cmatic-debug-log.php';
+$cmatic_private_dir = Cmatic_Debug_Log::dir();
+if ( is_dir( $cmatic_private_dir ) && Cmatic_Debug_Log::ensure_dir() ) {
+	foreach ( (array) glob( $cmatic_private_dir . '/*' ) as $cmatic_private_file ) {
+		if ( is_string( $cmatic_private_file ) && preg_match( '/^(?:migrated-[a-f0-9]{16}-)?chimpmatic-lite-[a-f0-9]{16}\.log(?:\.1)?$/', basename( $cmatic_private_file ) ) && is_file( $cmatic_private_file ) && ! is_link( $cmatic_private_file ) ) {
+			wp_delete_file( $cmatic_private_file );
+		}
+	}
+	wp_delete_file( $cmatic_private_dir . '/.htaccess' );
+	wp_delete_file( $cmatic_private_dir . '/index.php' );
+	wp_delete_file( $cmatic_private_dir . '/.migration.lock' );
+	$cmatic_private_remaining = scandir( $cmatic_private_dir );
+	if ( is_array( $cmatic_private_remaining ) && 2 === count( $cmatic_private_remaining ) ) {
+		rmdir( $cmatic_private_dir ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir -- Remove the empty private directory.
+	}
 }
 
 $cmatic_uploads = wp_upload_dir( null, false );
@@ -47,17 +65,34 @@ delete_option( 'csyncr_last_weekly_run' );
 delete_option( 'cmatic' );
 delete_option( 'cmatic_sync_stats' );
 delete_transient( 'cmatic_ab_forms' );
+delete_transient( 'cmatic_pricing_data' );
+delete_option( 'cmatic_retry_count' );
+delete_option( 'cmatic_initialized' );
+delete_option( 'cmatic_install_id' );
+delete_option( 'cmatic_lite_first_seen' );
+delete_site_option( 'cmatic_pro_release' );
+delete_site_option( 'cmatic_pro_current_state' );
 
 delete_option( 'signls_sdk_v1_' . $cmatic_signls_product_hash );
+delete_option( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_product_version' );
+delete_option( 'signls_sdk_v1_' . $cmatic_signls_product_hash . '_delivery_intent' );
 delete_metadata( 'user', 0, 'cmatic_signls_consent_notice_dismissed', '', true );
+delete_metadata( 'user', 0, 'cmatic_banner_dismissals', '', true );
 
 global $wpdb;
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+$cmatic_notice_keys = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT meta_key FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $wpdb->esc_like( 'cmatic_lite_notice_' ) . '%' ) );
+foreach ( (array) $cmatic_notice_keys as $cmatic_notice_key ) {
+	delete_metadata( 'user', 0, (string) $cmatic_notice_key, '', true );
+}
 foreach ( array( 'signls_signal_reason_counters', 'signls_signal_daily_counters', 'signls_signal_counters' ) as $cmatic_signls_table_suffix ) {
 	$cmatic_signls_table = $wpdb->prefix . $cmatic_signls_table_suffix;
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	if ( $cmatic_signls_table === $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $cmatic_signls_table ) ) ) ) {
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$cmatic_signls_table} WHERE product_hash=%s", $cmatic_signls_product_hash ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Closed SDK-owned table list and product-scoped prepared deletion.
+		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE product_hash = %s', $cmatic_signls_table, $cmatic_signls_product_hash ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 }
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 $cmatic_signls_other_products = (int) $wpdb->get_var(
 	$wpdb->prepare(
 		"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s",
@@ -68,10 +103,15 @@ if ( 0 === $cmatic_signls_other_products ) {
 	delete_option( 'signls_sdk_site_id' );
 	delete_option( 'signls_sdk_site_origin' );
 }
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'cf7_mch_%' ) );
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'cmatic_auth_%' ) );
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", 'cmatic_provider_auth_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Required uninstall cleanup.
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_cmatic_provider_backoff_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Required uninstall cleanup.
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_timeout_cmatic_provider_backoff_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Required uninstall cleanup.
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_cmatic_oauth_secret_%' ) );
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_timeout_cmatic_oauth_secret_%' ) );
+foreach ( array( 'cf7_mch_', 'cmatic_auth_', 'cmatic_provider_auth_', '_transient_cmatic_provider_backoff_', '_transient_timeout_cmatic_provider_backoff_', '_transient_cmatic_oauth_secret_', '_transient_timeout_cmatic_oauth_secret_', '_transient_cmatic_ml_lookup_', '_transient_timeout_cmatic_ml_lookup_', '_transient_cmatic_lite_save_refused_', '_transient_timeout_cmatic_lite_save_refused_', 'cmatic_lite_notice_' ) as $cmatic_option_prefix ) {
+	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+	$cmatic_option_names = $wpdb->get_col(
+		$wpdb->prepare(
+			"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+			$wpdb->esc_like( $cmatic_option_prefix ) . '%'
+		)
+	);
+	foreach ( $cmatic_option_names as $cmatic_option_name ) {
+		delete_option( $cmatic_option_name );
+	}
+}

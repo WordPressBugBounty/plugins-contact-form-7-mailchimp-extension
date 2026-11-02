@@ -13,17 +13,17 @@ final class Cmatic_Sidebar_Panel {
 		$cf7_mch  = get_option( 'cf7_mch_' . $post_id, array() );
 		$cf7_mch  = is_array( $cf7_mch ) ? $cf7_mch : array();
 		$provider = class_exists( 'Cmatic_Lite_Esp_Registry' ) ? (string) Cmatic_Lite_Esp_Registry::get_selected( $cf7_mch ) : '';
-		$label    = __( 'Chimpmatic', 'contact-form-7-mailchimp-extension' );
+		$label    = __( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' );
 		if ( '' !== $provider && class_exists( 'Cmatic_Lite_Esp_Manifest' ) ) {
 			$definition = Cmatic_Lite_Esp_Manifest::get( $provider );
 			if ( isset( $definition['label'] ) && is_scalar( $definition['label'] ) && '' !== (string) $definition['label'] ) {
 				$label = (string) $definition['label'];
 			}
 		}
-		$entry      = class_exists( 'Cmatic_Sync_Stats' ) ? Cmatic_Sync_Stats::get( $post_id ) : array();
-		$failing    = array() !== $entry && Cmatic_Sync_Stats::is_failing( $entry );
-		$last_error = array() !== $entry ? Cmatic_Sync_Stats::str( $entry['last_error'] ?? '' ) : '';
-		$facts      = array() !== $entry ? Cmatic_Sync_Stats::summary( $entry ) : __( 'no syncs yet', 'contact-form-7-mailchimp-extension' );
+		$entry      = \Cmatic\Lite\Submission\Stats::get( $post_id );
+		$failing    = array() !== $entry && \Cmatic\Lite\Submission\Stats::is_failing( $entry );
+		$last_error = array() !== $entry ? \Cmatic\Lite\Submission\Stats::str( $entry['last_error'] ?? '' ) : '';
+		$facts      = array() !== $entry ? \Cmatic\Lite\Submission\Stats::summary( $entry ) : __( 'no syncs yet', 'contact-form-7-mailchimp-extension' );
 		?>
 		<div class="misc-pub-section cmatic-status<?php echo $failing ? ' cmatic-status--failing' : ''; ?>">
 			<a href="#Chimpmatic" data-cmatic-tab="Chimpmatic-tab" class="cmatic-status__name"><?php echo esc_html( $label ); ?></a>
@@ -47,20 +47,20 @@ final class Cmatic_Sidebar_Panel {
 		?>
 		<div id="informationdiv_aux" class="postbox mce-move mc-lateral">
 			<div class="inside bg-f2">
-				<h3>Upgrade to PRO</h3>
-				<p>Get the best Contact Form 7 and Mailchimp integration tool available. Now with these new features:</p>
+				<h3>Explore our Pro version</h3>
+				<p>Our Pro version connects Contact Form 7 to eight email marketing platforms, with:</p>
 				<ul>
-					<li>Tag Existing Subscribers</li>
-					<li>Group Existing Subscribers</li>
-					<li>Email Verification</li>
-					<li>AWESOME Support And more!</li>
+					<li>Tags from form answers</li>
+					<li>Multiple destinations and routing</li>
+					<li>Unlimited field mapping</li>
+					<li>Priority support</li>
 				</ul>
 			</div>
 			<div class="promo-2022">
 				<h1><?php echo (int) $discount; ?><span>%</span> Off!</h1>
-				<p class="interesting">Unlock advanced tagging, subscriber groups, email verification, and priority support for your Mailchimp campaigns.</p>
+				<p class="interesting">Bring advanced tagging, routing, unlimited field mapping and priority support to your forms.</p>
 				<div class="cm-form">
-					<a href="<?php echo esc_url( $promo_url ); ?>" target="_blank" class="button cm-submit">Get PRO Now</a>
+					<a href="<?php echo esc_url( $promo_url ); ?>" target="_blank" class="button cm-submit">Get our Pro version</a>
 					<span class="cm-pricing"><?php echo esc_html( $text ); ?></span>
 				</div>
 			</div>

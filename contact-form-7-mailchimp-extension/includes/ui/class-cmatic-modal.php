@@ -142,20 +142,9 @@ if ( ! class_exists( 'Cmatic_Modal' ) ) {
 			return '';
 		}
 
-		public function get_modal_id() {
-			return $this->modal_id;
-		}
-
 		protected function get_strings() {
 			return array(
 				'closeLabel' => __( 'Close dialog', 'contact-form-7-mailchimp-extension' ),
-			);
-		}
-
-		protected function get_js_data() {
-			return array(
-				'modalId' => $this->modal_id,
-				'strings' => $this->get_strings(),
 			);
 		}
 	}

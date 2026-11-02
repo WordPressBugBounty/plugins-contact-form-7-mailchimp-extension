@@ -19,6 +19,7 @@ class Cmatic_Plugin_Links {
 
 		add_action( 'after_setup_theme', array( __CLASS__, 'register_action_links' ) );
 		add_filter( 'plugin_row_meta', array( __CLASS__, 'filter_plugin_row_meta' ), 10, 2 );
+		add_filter( 'all_plugins', array( __CLASS__, 'filter_list_name' ) );
 	}
 
 	public static function register_action_links(): void {
@@ -28,13 +29,21 @@ class Cmatic_Plugin_Links {
 		);
 	}
 
+	public static function filter_list_name( array $plugins ): array {
+		if ( isset( $plugins[ self::$plugin_basename ] ) ) {
+			$plugins[ self::$plugin_basename ]['Name'] = __( 'Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' );
+		}
+
+		return $plugins;
+	}
+
 	public static function filter_plugin_row_meta( array $links, string $file ): array {
 		if ( $file === self::$plugin_basename ) {
 			$links[] = sprintf(
 				'<a href="%s" target="_blank" title="%s">%s</a>',
 				esc_url( Cmatic_Pursuit::docs( 'help', 'plugin_row_meta' ) ),
-				esc_attr__( 'Chimpmatic Lite Documentation', 'contact-form-7-mailchimp-extension' ),
-				esc_html__( 'Chimpmatic Documentation', 'contact-form-7-mailchimp-extension' )
+				esc_attr__( 'Contact Form 7 Extension Documentation', 'contact-form-7-mailchimp-extension' ),
+				esc_html__( 'Contact Form 7 Extension Documentation', 'contact-form-7-mailchimp-extension' )
 			);
 		}
 
@@ -79,7 +88,7 @@ class Cmatic_Plugin_Links {
 		return sprintf(
 			'<a href="%s" target="_blank" title="%s">%s</a>',
 			esc_url( Cmatic_Pursuit::docs( 'help', 'plugins_page' ) ),
-			esc_attr__( 'Chimpmatic Documentation', 'contact-form-7-mailchimp-extension' ),
+			esc_attr__( 'Contact Form 7 Extension Documentation', 'contact-form-7-mailchimp-extension' ),
 			esc_html__( 'Docs', 'contact-form-7-mailchimp-extension' )
 		);
 	}
@@ -89,14 +98,6 @@ class Cmatic_Plugin_Links {
 
 		if ( ! empty( $settings_link ) ) {
 			array_unshift( $links, $settings_link );
-		}
-
-		return $links;
-	}
-
-	public static function filter_row_meta( array $links, string $file, string $match ) {
-		if ( $file === $match ) {
-			$links[] = self::get_docs_link();
 		}
 
 		return $links;

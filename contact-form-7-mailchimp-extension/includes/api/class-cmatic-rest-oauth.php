@@ -124,8 +124,8 @@ final class Cmatic_Rest_OAuth {
 		);
 	}
 
-	public static function check_admin_permissions() {
-		return current_user_can( 'manage_options' );
+	public static function check_admin_permissions( $request ) {
+		return Cmatic_Rest_Permissions::admin( $request );
 	}
 
 	public static function oauth_start( $request ) {

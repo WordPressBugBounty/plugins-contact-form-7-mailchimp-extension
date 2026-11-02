@@ -8,6 +8,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use Cmatic\Lite\Rest\Args;
+
 final class Cmatic_Rest_Settings {
 
 	/**
@@ -77,18 +79,10 @@ final class Cmatic_Rest_Settings {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( self::class, 'toggle_setting' ),
-				'permission_callback' => array( self::class, 'check_admin_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 				'args'                => array(
-					'field'   => array(
-						'required'          => true,
-						'type'              => 'string',
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-					'enabled' => array(
-						'required'          => true,
-						'type'              => 'boolean',
-						'sanitize_callback' => 'rest_sanitize_boolean',
-					),
+					'field'   => Args::of( 'string', 'sanitize_text_field' ),
+					'enabled' => Args::of( 'boolean', 'rest_sanitize_boolean' ),
 				),
 			)
 		);
@@ -99,21 +93,13 @@ final class Cmatic_Rest_Settings {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( self::class, 'dismiss_notice' ),
-				'permission_callback' => array( self::class, 'check_admin_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 				'args'                => array(
-					'notice_id' => array(
-						'required'          => false,
-						'type'              => 'string',
-						'default'           => 'news',
-						'sanitize_callback' => 'sanitize_text_field',
-						'enum'              => array( 'news', 'upgrade', 'license_banner', 'signls_consent' ),
+					'notice_id' => Args::of( 'string', 'sanitize_text_field', false ) + array(
+						'default' => 'news',
+						'enum'    => array( 'news', 'upgrade', 'license_banner', 'signls_consent' ),
 					),
-					'state'     => array(
-						'required'          => false,
-						'type'              => 'string',
-						'default'           => '',
-						'sanitize_callback' => 'sanitize_key',
-					),
+					'state'     => Args::of( 'string', 'sanitize_key', false ) + array( 'default' => '' ),
 				),
 			)
 		);
@@ -124,30 +110,9 @@ final class Cmatic_Rest_Settings {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( self::class, 'system_report' ),
-				'permission_callback' => array( self::class, 'check_admin_permission' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 			)
 		);
-	}
-
-	public static function check_admin_permission( $request ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return new WP_Error(
-				'rest_forbidden',
-				esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		$nonce = $request->get_header( 'X-WP-Nonce' );
-		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
-			return new WP_Error(
-				'rest_cookie_invalid_nonce',
-				esc_html__( 'Cookie nonce is invalid.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		return true;
 	}
 
 	public static function toggle_setting( $request ) {
@@ -223,29 +188,6 @@ final class Cmatic_Rest_Settings {
 			Signls_Sdk_Bridge_1_1_7::disable( 'contact-form-7-mailchimp-extension', 'admin_settings_rest', Cmatic_Lite_Signls_Privacy::CONSENT_VERSION );
 		}
 		return true;
-	}
-
-	protected static function handle_telemetry_toggle( $enabled ) {
-		return self::handle_signls_toggle( (bool) $enabled );
-	}
-
-	public static function toggle_telemetry( $request ) {
-		$enabled = $request->get_param( 'enabled' );
-
-		$saved = self::handle_telemetry_toggle( $enabled );
-		if ( ! $saved ) {
-			return new WP_Error( 'setting_not_saved', esc_html__( 'The sharing preference could not be saved.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 500 ) );
-		}
-
-		return rest_ensure_response(
-			array(
-				'success' => true,
-				'enabled' => $enabled,
-				'message' => $enabled
-					? esc_html__( 'Telemetry enabled. Thank you for helping improve the plugin!', 'contact-form-7-mailchimp-extension' )
-					: esc_html__( 'Telemetry disabled.', 'contact-form-7-mailchimp-extension' ),
-			)
-		);
 	}
 
 	public static function dismiss_notice( $request ) {

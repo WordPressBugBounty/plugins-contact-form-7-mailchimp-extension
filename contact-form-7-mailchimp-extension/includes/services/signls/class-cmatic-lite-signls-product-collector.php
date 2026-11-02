@@ -12,7 +12,7 @@ final class Cmatic_Lite_Signls_Product_Collector {
 
 	private const PRODUCT = 'contact-form-7-mailchimp-extension';
 
-	private const INTEGRATIONS = array( 'mailchimp', 'brevo', 'mailerlite', 'klaviyo' );
+	private const INTEGRATIONS = \Cmatic\Lite\Provider\Catalog::SLUGS;
 
 	private const NARROW_FEATURES = array(
 		'advanced_fields',
@@ -139,11 +139,11 @@ final class Cmatic_Lite_Signls_Product_Collector {
 				continue;
 			}
 			++$result['configured'];
-			++$integrations[ $provider ]['configured_units'];
+			$integrations[ $provider ]['configured_units'] = ( $integrations[ $provider ]['configured_units'] ?? 0 ) + 1;
 			$auth = $this->authentication( (int) $form_id, $provider, $config );
 			if ( 'none' !== $auth ) {
 				++$result['credential_units'];
-				++$integrations[ $provider ]['credential_units'];
+				$integrations[ $provider ]['credential_units'] = ( $integrations[ $provider ]['credential_units'] ?? 0 ) + 1;
 				if ( 'oauth' === $auth ) {
 					$integrations[ $provider ]['oauth_units'] = isset( $integrations[ $provider ]['oauth_units'] ) ? $integrations[ $provider ]['oauth_units'] + 1 : 1;
 				} else {
@@ -153,11 +153,11 @@ final class Cmatic_Lite_Signls_Product_Collector {
 			$destination = $this->has_destination( $settings );
 			if ( $destination ) {
 				++$result['destination_units'];
-				++$integrations[ $provider ]['destination_units'];
+				$integrations[ $provider ]['destination_units'] = ( $integrations[ $provider ]['destination_units'] ?? 0 ) + 1;
 			}
-			$mappings                                    = $this->mapping_count( $settings );
-			$result['mapping_count']                    += $mappings;
-			$integrations[ $provider ]['mapping_count'] += $mappings;
+			$mappings                                   = $this->mapping_count( $settings );
+			$result['mapping_count']                   += $mappings;
+			$integrations[ $provider ]['mapping_count'] = ( $integrations[ $provider ]['mapping_count'] ?? 0 ) + $mappings;
 			if ( 'none' !== $auth && $destination ) {
 				++$result['active'];
 			}
