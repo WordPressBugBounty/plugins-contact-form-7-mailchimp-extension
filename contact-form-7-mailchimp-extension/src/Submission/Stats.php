@@ -33,7 +33,9 @@ final class Stats {
 			}
 			$message = isset( $result['message'] ) && is_scalar( $result['message'] ) ? (string) $result['message'] : '';
 			$detail  = isset( $result['detail'] ) && is_scalar( $result['detail'] ) ? (string) $result['detail'] : '';
-			self::record( $form_id, (bool) $result['success'], '' !== $detail ? $detail : $message, self::provider_for( $form_id ) );
+			$answer  = isset( $result['provider_detail'] ) && is_string( $result['provider_detail'] ) ? $result['provider_detail'] : '';
+			$text    = '' !== $detail ? $detail : $message;
+			self::record( $form_id, (bool) $result['success'], '' !== $answer ? $answer : $text, self::provider_for( $form_id ) );
 		} catch ( \Throwable $error ) {
 			return;
 		}

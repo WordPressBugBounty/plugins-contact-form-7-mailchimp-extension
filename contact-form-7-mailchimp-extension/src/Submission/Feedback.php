@@ -36,7 +36,11 @@ final class Feedback {
 
 	public static function inject_feedback( $response, $result ) {
 		if ( null !== self::$last_result ) {
-			$response['chimpmatic'] = self::$last_result;
+			$shown = self::$last_result;
+			if ( is_array( $shown ) ) {
+				unset( $shown['provider_detail'] );
+			}
+			$response['chimpmatic'] = $shown;
 			self::clear();
 		}
 		return $response;

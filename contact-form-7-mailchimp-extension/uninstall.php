@@ -102,6 +102,8 @@ $cmatic_signls_other_products = (int) $wpdb->get_var(
 if ( 0 === $cmatic_signls_other_products ) {
 	delete_option( 'signls_sdk_site_id' );
 	delete_option( 'signls_sdk_site_origin' );
+	delete_option( 'signls_sdk_site_origin_version' );
+	delete_option( 'signls_sdk_counter_schema_version' );
 }
 foreach ( array( 'cf7_mch_', 'cmatic_auth_', 'cmatic_provider_auth_', '_transient_cmatic_provider_backoff_', '_transient_timeout_cmatic_provider_backoff_', '_transient_cmatic_oauth_secret_', '_transient_timeout_cmatic_oauth_secret_', '_transient_cmatic_ml_lookup_', '_transient_timeout_cmatic_ml_lookup_', '_transient_cmatic_lite_save_refused_', '_transient_timeout_cmatic_lite_save_refused_', 'cmatic_lite_notice_' ) as $cmatic_option_prefix ) {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching

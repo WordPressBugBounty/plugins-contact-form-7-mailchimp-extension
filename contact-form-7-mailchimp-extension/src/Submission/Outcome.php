@@ -19,7 +19,9 @@ final class Outcome {
 		if ( false === $response[0] ) {
 			self::record_outcome( $form_id, false, 'transport_connect', isset( $response[1] ) ? $response[1] : '', 'remote_rejected' );
 			$logger->log( 'ERROR', 'Network request failed.', array( 'response' => $response[1] ) );
-			Feedback::set_result( Feedback::failure( 'network_error', '', $email ) );
+			$failure                    = Feedback::failure( 'network_error', '', $email );
+			$failure['provider_detail'] = isset( $response[1] ) && $response[1] instanceof \WP_Error ? sanitize_text_field( $response[1]->get_error_message() ) : '';
+			Feedback::set_result( $failure );
 			return;
 		}
 
@@ -33,19 +35,19 @@ final class Outcome {
 		if ( ! empty( $api_data['errors'] ) ) {
 			self::record_outcome( $form_id, false, self::api_failure_class( $api_data ), $api_data, 'remote_rejected' );
 			self::log_api_errors( $api_data['errors'] );
-			Feedback::set_result( Feedback::parse_api_error( $api_data, $email ) );
+			self::refused( $api_data, $email, $logger );
 			return;
 		}
 
 		if ( isset( $api_data['status'] ) && is_int( $api_data['status'] ) && $api_data['status'] >= 400 ) {
 			self::record_outcome( $form_id, false, self::api_failure_class( $api_data ), $api_data, 'remote_rejected' );
-			Feedback::set_result( Feedback::parse_api_error( $api_data, $email ) );
+			self::refused( $api_data, $email, $logger );
 			return;
 		}
 
 		if ( isset( $api_data['title'] ) && stripos( $api_data['title'], 'error' ) !== false ) {
 			self::record_outcome( $form_id, false, self::api_failure_class( $api_data ), $api_data, 'remote_rejected' );
-			Feedback::set_result( Feedback::parse_api_error( $api_data, $email ) );
+			self::refused( $api_data, $email, $logger );
 			return;
 		}
 
@@ -79,7 +81,9 @@ final class Outcome {
 			}
 			$failure_class = 'network_error' === $result['reason'] ? 'transport_connect' : ( 'configuration_error' === $result['reason'] ? 'configuration' : 'remote_rejected' );
 			self::record_outcome( $form_id, false, $failure_class, $result, 'remote_rejected' );
-			Feedback::set_result( Feedback::failure( $reason, '', $email ) );
+			$failure                    = Feedback::failure( $reason, '', $email );
+			$failure['provider_detail'] = self::provider_detail( $result );
+			Feedback::set_result( $failure );
 			return;
 		}
 
@@ -88,6 +92,46 @@ final class Outcome {
 			$status = 'queued';
 		}
 		self::handle_success( $email, $status, $merge_vars, $form_id, $provider_data );
+	}
+
+	/**
+	 * @param array<string,mixed> $api_data Mailchimp's decoded answer.
+	 */
+	private static function refused( array $api_data, string $email, \Cmatic_File_Logger $logger ): void {
+		$status                     = isset( $api_data['status'] ) && is_int( $api_data['status'] ) ? $api_data['status'] : 0;
+		$failure                    = Feedback::parse_api_error( $api_data, $email );
+		$failure['provider_detail'] = self::provider_detail(
+			array(
+				'status' => $status,
+				'answer' => \Cmatic\Lite\Provider\HttpTransport::describe( $api_data, $status ),
+			)
+		);
+		$logger->log(
+			'ERROR',
+			'Mailchimp subscription result.',
+			array(
+				'provider' => 'mailchimp',
+				'success'  => false,
+				'reason'   => $failure['reason'],
+				'status'   => $status,
+				'answer'   => Stats::redact( $failure['provider_detail'] ),
+			)
+		);
+		Feedback::set_result( $failure );
+	}
+
+	/**
+	 * @param array<string,mixed> $result Normalized provider result.
+	 */
+	public static function provider_detail( array $result ): string {
+		$status = isset( $result['status'] ) && is_int( $result['status'] ) ? $result['status'] : 0;
+		$error  = isset( $result['answer'] ) && is_string( $result['answer'] ) && '' !== trim( $result['answer'] ) ? $result['answer'] : ( isset( $result['error'] ) && is_string( $result['error'] ) ? $result['error'] : '' );
+		$error  = trim( $error );
+		$prefix = $status >= 400 ? 'HTTP ' . $status : '';
+		if ( '' === $error || $error === $prefix || 0 === strpos( $error, 'HTTP ' . $status ) ) {
+			return '' !== $error ? $error : $prefix;
+		}
+		return '' !== $prefix ? $prefix . ': ' . $error : $error;
 	}
 
 	private static function log_api_errors( array $errors ): void {

@@ -14,7 +14,7 @@ final class Transport {
 
 	private const DEFAULT_ENDPOINT = 'https://signls.dev';
 
-	private const SDK_VERSION = '1.1.14';
+	private const SDK_VERSION = '1.1.16';
 
 	/** A second sequence conflict this soon after a resync means two installs share one credential. */
 	private const SHARED_CREDENTIAL_WINDOW = 1800;
@@ -137,7 +137,7 @@ final class Transport {
 			);
 		}
 
-		$this->state->set_many(
+		$saved = $this->state->set_many(
 			array(
 				'credential_id'     => substr( $data['credential_id'], 0, 64 ),
 				'credential_secret' => substr( $data['credential_secret'], 0, 128 ),
@@ -145,6 +145,9 @@ final class Transport {
 				'clock_offset'      => (int) $data['server_time'] - time(),
 			)
 		);
+		if ( ! $saved ) {
+			return self::storage_failure();
+		}
 		return array(
 			'ok'        => true,
 			'class'     => 'enrolled',
@@ -178,7 +181,7 @@ final class Transport {
 			$body['observed_at'] = $timestamp;
 			$body['payload']     = $payload;
 			$pending             = (string) wp_json_encode( $body );
-			$this->state->set_many(
+			$saved               = $this->state->set_many(
 				array(
 					'pending_sequence'         => $sequence,
 					'pending_body'             => $pending,
@@ -188,6 +191,9 @@ final class Transport {
 					'pending_payload_revision' => $revision,
 				)
 			);
+			if ( ! $saved ) {
+				return self::storage_failure();
+			}
 		}
 
 		$was_quarantined = '' !== (string) $this->state->get( 'pending_quarantine_class', '' );
@@ -230,16 +236,9 @@ final class Transport {
 				}
 				return $result;
 			}
-			$this->state->set_many(
-				array(
-					'last_acknowledged_sequence' => $sequence,
-					'last_acknowledged_at'       => (int) ( isset( $data['received_at'] ) ? $data['received_at'] : time() ),
-					'last_success_at'            => time(),
-					'retry_attempt'              => 0,
-				)
-			);
-			$this->state->clear_pending();
-			$this->state->delete_keys( array( 'rekey_unverified_at' ) );
+			if ( ! $this->state->acknowledge( $sequence, (int) ( $data['received_at'] ?? time() ) ) ) {
+				return self::storage_failure();
+			}
 			return array(
 				'ok'        => true,
 				'class'     => ! empty( $data['duplicate'] ) ? 'duplicate' : 'accepted',
@@ -297,6 +296,15 @@ final class Transport {
 			$response['quarantined'] = true;
 		}
 		return $response;
+	}
+
+	private static function storage_failure(): array {
+		return array(
+			'ok'        => false,
+			'class'     => 'storage_failure',
+			'status'    => 0,
+			'permanent' => false,
+		);
 	}
 
 	private function post( string $path, string $body, array $headers ): array {

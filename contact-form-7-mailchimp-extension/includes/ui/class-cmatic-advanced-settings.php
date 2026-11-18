@@ -205,7 +205,7 @@ class Cmatic_Advanced_Settings {
 						__( 'Sender context in emails', 'contact-form-7-mailchimp-extension' ),
 						$site . ' ' . __( 'One switch for every Contact Form 7 form on this site.', 'contact-form-7-mailchimp-extension' ),
 						self::check_html( 'cmatic-sender-context', 'sender_context', Cmatic_Sender_Context::enabled(), __( 'Add sender context to notification emails', 'contact-form-7-mailchimp-extension' ) )
-						. '<p class="description">' . esc_html__( 'Four lines at the end of every email a form sends to the site owner: a geo location link for the visitor address, the page and form and time, the referrer, and the browser. Emails addressed to the visitor are left alone. On until you switch it off.', 'contact-form-7-mailchimp-extension' ) . '</p>'
+						. '<p class="description">' . esc_html__( 'Four lines at the end of every email a form sends to the site owner: a geo location link for the visitor address, the page and form and time, the referrer, and the browser. Emails addressed to the visitor are left alone. Off until you switch it on.', 'contact-form-7-mailchimp-extension' ) . '</p>'
 						. '<pre class="cmatic-adv-sample">' . esc_html( Cmatic_Sender_Context::sample() ) . '</pre>'
 					);
 					break;

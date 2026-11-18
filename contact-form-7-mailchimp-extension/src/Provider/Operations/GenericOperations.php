@@ -239,15 +239,17 @@ class GenericOperations implements OperationsInterface {
 			if ( isset( $spec['status_map'] ) && isset( $result['data']['status'] ) && in_array( $result['data']['status'], array( 'subscribed', 'pending' ), true ) ) {
 				$status = $result['data']['status'];
 			}
-			$logger->log(
-				self::succeeded( $result ) || ! empty( $result['unchanged'] ) ? 'INFO' : 'ERROR',
-				$this->descriptor->label() . ' subscription result.',
-				array(
-					'provider' => $this->descriptor->slug(),
-					'success'  => self::succeeded( $result ),
-					'reason'   => self::str( $result['reason'] ?? '' ),
-				)
+			$passed  = self::succeeded( $result ) || ! empty( $result['unchanged'] );
+			$context = array(
+				'provider' => $this->descriptor->slug(),
+				'success'  => self::succeeded( $result ),
+				'reason'   => self::str( $result['reason'] ?? '' ),
 			);
+			if ( ! $passed ) {
+				$context['status'] = is_int( $result['status'] ?? null ) ? $result['status'] : 0;
+				$context['answer'] = \Cmatic\Lite\Submission\Stats::redact( Outcome::provider_detail( $result ) );
+			}
+			$logger->log( $passed ? 'INFO' : 'ERROR', $this->descriptor->label() . ' subscription result.', $context );
 			Outcome::handle_provider_result( $result, $email, $status, $merge_vars, $form_id );
 		} catch ( \Throwable $exception ) {
 			Outcome::handle_provider_result( $this->failure_result( 'network_error', isset( $this->descriptor->protocol()['query_key'] ) ? Protocol::text( Protocol::redact( $exception->getMessage(), $api_key ) ) : $exception->getMessage() ), $email, $status, $merge_vars, $form_id );
@@ -293,6 +295,8 @@ class GenericOperations implements OperationsInterface {
 				if ( '' === $result['error'] ) {
 					$result['error'] = 'Provider returned an invalid response envelope.';
 				}
+				$refused          = Protocol::text( Protocol::read( self::body_of( $result ), Protocol::text( $envelope['code'] ?? '' ) ) );
+				$result['answer'] = sanitize_text_field( $result['error'] ) . ( '' !== $refused ? ' (code ' . sanitize_text_field( $refused ) . ')' : '' );
 			}
 		}
 		return $result;

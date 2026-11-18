@@ -192,7 +192,7 @@ final class Cmatic_Plugin {
 			'product_slug'      => 'contact-form-7-mailchimp-extension',
 			'main_file'         => $this->file,
 			'sdk_path'          => $this->dir . 'includes/signls',
-			'sdk_version'       => '1.1.14',
+			'sdk_version'       => '1.1.16',
 			'adapter_file'      => $this->dir . 'includes/services/class-cmatic-lite-signls-adapter.php',
 			'adapter_class'     => 'Cmatic_Lite_Signls_Adapter',
 			'consent_reader'    => array( 'Cmatic_Lite_Signls_Privacy', 'consent_status' ),

@@ -284,6 +284,21 @@ final class StateStore {
 		return $this->replace( $state );
 	}
 
+	public function acknowledge( int $sequence, int $received_at ): bool {
+		$state = $this->all();
+		if ( $sequence < 1 || (int) ( $state['pending_sequence'] ?? 0 ) !== $sequence ) {
+			return false;
+		}
+		$state['last_acknowledged_sequence'] = $sequence;
+		$state['last_acknowledged_at']       = $received_at;
+		$state['last_success_at']            = time();
+		$state['retry_attempt']              = 0;
+		foreach ( array_merge( self::pending_keys(), array( 'rekey_unverified_at' ) ) as $key ) {
+			unset( $state[ $key ] );
+		}
+		return $this->replace( $state );
+	}
+
 	public function delete(): bool {
 		$state_deleted   = delete_option( $this->option_name );
 		$intent_deleted  = delete_option( $this->delivery_intent_option_name );
@@ -295,7 +310,8 @@ final class StateStore {
 		if ( false === get_option( $this->option_name, false ) ) {
 			return add_option( $this->option_name, $state, '', false );
 		}
-		return update_option( $this->option_name, $state, false );
+		return update_option( $this->option_name, $state, false )
+			|| get_option( $this->option_name, array() ) === $state;
 	}
 
 	/**

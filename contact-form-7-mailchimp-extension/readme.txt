@@ -4,7 +4,7 @@ Donate link: https://chimpmatic.com/pricing
 Tags: contact form 7, mailchimp, brevo, mailerlite, klaviyo
 Requires at least: 6.4
 Tested up to: 7.1
-Stable tag: 26.11.01.19
+Stable tag: 26.11.17.22
 Requires PHP: 7.4
 License: GPL v3 or later
 
@@ -67,6 +67,14 @@ Yes. Choose the checkbox in your form's settings so a signup is sent only when y
 Visit the [Help Center](https://chimpmatic.com/help) or [contact our team](https://chimpmatic.com/contact).
 
 == Changelog ==
+
+= 26.11.17.22 =
+
+[Version 26.11.17.22 release notes](https://chimpmatic.com/changelog#26.11.17.22)
+
+= 26.11.10.02 =
+
+[Version 26.11.10.02 release notes](https://chimpmatic.com/changelog#26.11.10.02)
 
 = 26.11.01.19 =
 

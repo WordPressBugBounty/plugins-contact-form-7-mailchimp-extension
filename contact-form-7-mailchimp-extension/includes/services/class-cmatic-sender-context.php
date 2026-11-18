@@ -65,7 +65,9 @@ final class Cmatic_Sender_Context {
 		}
 		$template           = method_exists( $form, 'prop' ) ? $form->prop( 'mail' ) : array();
 		$html               = is_array( $template ) && ! empty( $template['use_html'] );
-		$components['body'] = $body . self::block( $form, $html );
+		$block              = self::block( $form, $html );
+		$end                = $html ? strripos( $body, '</body>' ) : false;
+		$components['body'] = false === $end ? $body . $block : substr( $body, 0, $end ) . $block . substr( $body, $end );
 
 		return $components;
 	}

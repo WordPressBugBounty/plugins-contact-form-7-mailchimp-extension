@@ -1,6 +1,6 @@
 # Source provenance
 
-- SDK version: `1.1.14`
+- SDK version: `1.1.16`
 - Package root: `sdk/wordpress/`
 - License: `GPL-3.0-or-later`
 

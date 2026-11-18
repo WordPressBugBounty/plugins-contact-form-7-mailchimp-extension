@@ -165,6 +165,11 @@ final class Identity {
 		return hash_hmac( 'sha256', $site_origin . '|' . $prefix, $salt );
 	}
 
+	/**
+	 * Notify observers of an identity transition.
+	 *
+	 * @param non-empty-string $hook Fixed identity event hook.
+	 */
 	private function notify( string $hook, string $reason, string $old_fingerprint, string $new_fingerprint ): void {
 		if ( function_exists( 'do_action' ) ) {
 			do_action( $hook, $this->state->product(), $reason, substr( $old_fingerprint, 0, 12 ), substr( $new_fingerprint, 0, 12 ) );
