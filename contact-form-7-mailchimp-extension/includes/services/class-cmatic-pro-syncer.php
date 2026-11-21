@@ -34,8 +34,8 @@ class Cmatic_Pro_Syncer {
 	);
 
 	public static function init(): void {
-		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'offer' ) );
-		add_filter( 'auto_update_plugin', array( __CLASS__, 'decide' ), 10, 2 );
+		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'offer' ), PHP_INT_MAX );
+		add_filter( 'auto_update_plugin', array( __CLASS__, 'decide' ), PHP_INT_MAX, 2 );
 		add_action( 'set_site_transient_update_plugins', array( __CLASS__, 'schedule' ) );
 		add_action( 'init', array( __CLASS__, 'retire_legacy' ), 20 );
 	}
@@ -65,7 +65,7 @@ class Cmatic_Pro_Syncer {
 	 * @return mixed
 	 */
 	public static function offer( $transient ) {
-		if ( ! $transient instanceof stdClass || ! empty( $transient->response[ self::PRO_PLUGIN_FILE ] ) ) {
+		if ( ! $transient instanceof stdClass ) {
 			return $transient;
 		}
 		$installed = self::installed_version();
