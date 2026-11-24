@@ -205,14 +205,8 @@ final class Cmatic_Admin_Panel {
 		}
 		$provider = $posted['wpcf7-cmatic-provider'] ?? array();
 		if ( is_array( $provider ) && isset( $provider['provider'] ) && is_string( $provider['provider'] ) ) {
-			$limit  = \Cmatic\Lite\Settings\Entitlements::field_limit( sanitize_key( $provider['provider'] ), $form_id );
-			$mapped = 0;
-			foreach ( MappingSchema::arr( $provider['merge_fields'] ?? array() ) as $offset => $field ) {
-				if ( is_array( $field ) && '' !== trim( MappingSchema::str( $provider[ MappingSchema::slot( (int) $offset ) ] ?? '' ) ) ) {
-					++$mapped;
-				}
-			}
-			if ( $mapped > $limit ) {
+			$limit = \Cmatic\Lite\Settings\Entitlements::field_limit( sanitize_key( $provider['provider'] ), $form_id );
+			if ( MappingSchema::capped_count( MappingSchema::arr( $provider['merge_fields'] ?? array() ), $provider ) > $limit ) {
 				wp_die(
 					esc_html__( 'Choose email and three fields. Clear a mapping to choose another field.', 'contact-form-7-mailchimp-extension' ),
 					'',

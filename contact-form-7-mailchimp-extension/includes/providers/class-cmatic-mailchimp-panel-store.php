@@ -348,23 +348,36 @@ final class Cmatic_Mailchimp_Panel_Store {
 				return MappingSchema::num( is_array( $a ) ? ( $a['display_order'] ?? 0 ) : 0 ) - MappingSchema::num( is_array( $b ) ? ( $b['display_order'] ?? 0 ) : 0 );
 			}
 		);
+		$required = array();
+		$optional = array();
 		foreach ( $raw as $field ) {
 			if ( ! is_array( $field ) || empty( $field['tag'] ) ) {
 				continue;
 			}
-			$tag  = sanitize_text_field( MappingSchema::str( $field['tag'] ) );
-			$type = sanitize_key( MappingSchema::str( $field['type'] ?? 'text' ) );
-			if ( 'EMAIL' === strtoupper( $tag ) || in_array( $type, self::EXCLUDED_TYPES, true ) ) {
+			$tag         = sanitize_text_field( MappingSchema::str( $field['tag'] ) );
+			$type        = sanitize_key( MappingSchema::str( $field['type'] ?? 'text' ) );
+			$is_required = ! empty( $field['required'] );
+			$unsupported = in_array( $type, self::EXCLUDED_TYPES, true );
+			if ( 'EMAIL' === strtoupper( $tag ) || ( $unsupported && ! $is_required ) ) {
 				continue;
 			}
-			$fields[] = array(
+			$entry = array(
 				'tag'           => $tag,
 				'name'          => sanitize_text_field( MappingSchema::str( $field['name'] ?? $tag ) ),
 				'type'          => $type,
-				'display_order' => MappingSchema::num( $field['display_order'] ?? count( $fields ) ),
+				'display_order' => MappingSchema::num( $field['display_order'] ?? count( $fields ) + count( $required ) + count( $optional ) ),
 			);
+			if ( $is_required ) {
+				$entry['required'] = true;
+				if ( $unsupported ) {
+					$entry['unsupported'] = true;
+				}
+				$required[] = $entry;
+			} else {
+				$optional[] = $entry;
+			}
 		}
 
-		return $fields;
+		return array_merge( $fields, $required, $optional );
 	}
 }

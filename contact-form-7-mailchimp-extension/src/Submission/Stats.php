@@ -52,6 +52,8 @@ final class Stats {
 			$entry['ok']           = self::int( $entry['ok'] ) + 1;
 			$entry['last_ok_at']   = $now;
 			$entry['last_outcome'] = 'ok';
+		} elseif ( 'visitor' === self::kind( $message ) ) {
+			$entry['failed'] = self::int( $entry['failed'] ) + 1;
 		} else {
 			$entry['failed']        = self::int( $entry['failed'] ) + 1;
 			$entry['last_error']    = self::redact( $message );
@@ -135,6 +137,21 @@ final class Stats {
 			$parts[] = sprintf( __( 'last %s ago', 'contact-form-7-mailchimp-extension' ), human_time_diff( $last_ok ) );
 		}
 		return implode( ' · ', $parts );
+	}
+
+	public static function kind( string $message ): string {
+		$text = strtolower( $message );
+		foreach ( array( 'looks fake or invalid', 'compliance state', 'permanently deleted', 'forgotten email', 'member exists', 'already a list member', 'signed up to a lot of lists', 'not a valid email', 'invalid email address', 'valid email address', 'already subscribed' ) as $phrase ) {
+			if ( false !== strpos( $text, $phrase ) ) {
+				return 'visitor';
+			}
+		}
+		foreach ( array( 'api key', 'api_key', 'apikey', 'unauthori', 'forbidden', 'http 401', 'http 403', 'list_not_found', 'resource not found', 'could not be found', 'deactivated', 'curl error', 'transport_', 'could not resolve' ) as $phrase ) {
+			if ( false !== strpos( $text, $phrase ) ) {
+				return 'connection';
+			}
+		}
+		return 'other';
 	}
 
 	public static function redact( string $message ): string {

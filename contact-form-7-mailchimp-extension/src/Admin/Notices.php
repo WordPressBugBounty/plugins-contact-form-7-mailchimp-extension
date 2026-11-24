@@ -100,7 +100,7 @@ final class Notices {
 			),
 		);
 		foreach ( \Cmatic\Lite\Submission\Stats::all() as $form_id => $stat ) {
-			if ( $form_id > 0 && \Cmatic\Lite\Submission\Stats::is_failing( $stat ) && current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
+			if ( $form_id > 0 && \Cmatic\Lite\Submission\Stats::is_failing( $stat ) && 'visitor' !== \Cmatic\Lite\Submission\Stats::kind( self::str( $stat['last_error'] ?? '' ) ) && current_user_can( 'wpcf7_edit_contact_form', $form_id ) ) {
 				$entries[] = self::failing_entry( $form_id, $stat );
 			}
 		}
@@ -341,10 +341,18 @@ final class Notices {
 		$label      = self::str( $definition['label'] ?? $provider );
 		$title      = get_the_title( $form_id ) ?: __( 'Your contact form', 'contact-form-7-mailchimp-extension' );
 		$error      = \Cmatic\Lite\Submission\Stats::redact( self::str( $stat['last_error'] ?? '' ) );
-		/* translators: 1: provider name, 2: redacted provider error. */
-		$message = sprintf( __( 'Recent submissions from this form are not reaching %1$s. %1$s said: "%2$s" Open the form\'s Contact Form 7 Extension tab to fix the connection.', 'contact-form-7-mailchimp-extension' ), $label, $error ?: __( 'Check the connection and selected list.', 'contact-form-7-mailchimp-extension' ) );
-		/* translators: 1: form title, 2: provider name. */
-		return self::entry( 'sync-failing:' . $form_id, 'failing', 40, sprintf( __( '"%1$s" is not reaching %2$s', 'contact-form-7-mailchimp-extension' ), $title, $label ), $message, array( self::action( __( "Open the form's Contact Form 7 Extension tab", 'contact-form-7-mailchimp-extension' ), self::form_url( $form_id ), 'primary' ), self::action( __( 'Remind me later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze-day' ) ) );
+		if ( 'connection' === \Cmatic\Lite\Submission\Stats::kind( $error ) || '' === $error ) {
+			/* translators: 1: provider name, 2: redacted provider error. */
+			$message = sprintf( __( 'Recent submissions from this form are not reaching %1$s. %1$s said: "%2$s" Open the form\'s Contact Form 7 Extension tab to fix the connection.', 'contact-form-7-mailchimp-extension' ), $label, $error ?: __( 'Check the connection and selected list.', 'contact-form-7-mailchimp-extension' ) );
+			/* translators: 1: form title, 2: provider name. */
+			$heading = sprintf( __( '"%1$s" is not reaching %2$s', 'contact-form-7-mailchimp-extension' ), $title, $label );
+		} else {
+			/* translators: 1: provider name, 2: redacted provider error. */
+			$message = sprintf( __( '%1$s turned down the latest signup from this form and said: "%2$s" Open the form\'s Contact Form 7 Extension tab to check which form field each %1$s field is mapped to.', 'contact-form-7-mailchimp-extension' ), $label, $error );
+			/* translators: 1: provider name, 2: form title. */
+			$heading = sprintf( __( '%1$s turned down a signup from "%2$s"', 'contact-form-7-mailchimp-extension' ), $label, $title );
+		}
+		return self::entry( 'sync-failing:' . $form_id, 'failing', 40, $heading, $message, array( self::action( __( "Open the form's Contact Form 7 Extension tab", 'contact-form-7-mailchimp-extension' ), self::form_url( $form_id ), 'primary' ), self::action( __( 'Remind me later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze-day' ) ) );
 	}
 
 	/** @param array{installed:bool,active:bool,version:string} $plugin

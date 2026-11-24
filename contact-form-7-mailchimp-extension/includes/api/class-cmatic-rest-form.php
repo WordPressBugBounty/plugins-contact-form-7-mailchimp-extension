@@ -181,9 +181,10 @@ final class Cmatic_Rest_Form {
 		}
 
 		if ( preg_match( '/^field[0-9]+$/', $field ) && '' !== $value && null !== $value ) {
-			$mapped = 0;
+			$fields = \Cmatic\Lite\Settings\MappingSchema::arr( $cf7_mch['merge_fields'] ?? array() );
+			$mapped = \Cmatic\Lite\Settings\MappingSchema::capped_count( $fields, $cf7_mch );
 			foreach ( $cf7_mch as $key => $mapping ) {
-				if ( preg_match( '/^field[0-9]+$/', (string) $key ) && is_string( $mapping ) && '' !== trim( $mapping ) ) {
+				if ( preg_match( '/^field([0-9]+)$/', (string) $key, $slot ) && ! isset( $fields[ (int) $slot[1] - 3 ] ) && is_string( $mapping ) && '' !== trim( $mapping ) ) {
 					++$mapped;
 				}
 			}

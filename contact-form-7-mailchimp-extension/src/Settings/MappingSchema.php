@@ -20,8 +20,9 @@ final class MappingSchema {
 	const EMAIL_TAG   = 'EMAIL';
 
 	public static function active_slots( array $section, int $limit ): array {
-		$email = array();
-		$other = array();
+		$email    = array();
+		$required = array();
+		$other    = array();
 		foreach ( self::arr( $section['merge_fields'] ?? array() ) as $offset => $field ) {
 			$slot = self::slot( (int) $offset );
 			if ( ! is_array( $field ) || '' === trim( self::str( $section[ $slot ] ?? '' ) ) ) {
@@ -29,11 +30,13 @@ final class MappingSchema {
 			}
 			if ( 'EMAIL' === strtoupper( self::str( $field['tag'] ?? '' ) ) ) {
 				$email[] = $slot;
+			} elseif ( self::required( $field ) ) {
+				$required[] = $slot;
 			} else {
 				$other[] = $slot;
 			}
 		}
-		return array_merge( array_slice( $email, 0, 1 ), array_slice( $other, 0, max( 0, $limit - 1 ) ) );
+		return array_merge( array_slice( $email, 0, 1 ), $required, array_slice( $other, 0, max( 0, $limit - 1 ) ) );
 	}
 
 
@@ -70,14 +73,48 @@ final class MappingSchema {
 			if ( isset( $field['display_order'] ) ) {
 				$order = $numeric_only ? self::num( $field['display_order'] ) : self::int( $field['display_order'] );
 			}
-			$sanitized[] = array(
+			$entry = array(
 				'tag'           => $tag,
 				'name'          => sanitize_text_field( self::str( $field['name'] ?? $tag ) ),
 				'type'          => sanitize_key( self::str( $field['type'] ?? 'text' ) ),
 				'display_order' => $order,
 			);
+			foreach ( array( 'required', 'unsupported' ) as $flag ) {
+				if ( self::flag( $field[ $flag ] ?? false ) ) {
+					$entry[ $flag ] = true;
+				}
+			}
+			$sanitized[] = $entry;
 		}
 		return $sanitized;
+	}
+
+	/**
+	 * @param mixed $value
+	 */
+	public static function flag( $value ): bool {
+		return true === $value || 1 === $value || '1' === $value || 'true' === $value;
+	}
+
+	/**
+	 * @param array<array-key,mixed> $field
+	 */
+	public static function required( $field ): bool {
+		return is_array( $field ) && 'EMAIL' !== strtoupper( self::str( $field['tag'] ?? '' ) ) && self::flag( $field['required'] ?? false );
+	}
+
+	/**
+	 * @param array<array-key,mixed> $fields
+	 * @param array<array-key,mixed> $mappings
+	 */
+	public static function capped_count( array $fields, array $mappings ): int {
+		$mapped = 0;
+		foreach ( $fields as $offset => $field ) {
+			if ( is_array( $field ) && ! self::required( $field ) && '' !== trim( self::str( $mappings[ self::slot( (int) $offset ) ] ?? '' ) ) ) {
+				++$mapped;
+			}
+		}
+		return $mapped;
 	}
 
 	/**

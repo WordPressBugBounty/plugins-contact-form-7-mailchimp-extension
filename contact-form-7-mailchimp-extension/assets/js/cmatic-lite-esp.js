@@ -32,6 +32,9 @@
 			savedProvider: chimpmaticLiteEspState.active_provider || '',
 			providers: chimpmaticLiteEspState.providers || {}
 		};
+		Object.keys( state.providers ).forEach( ( slug ) =>
+			arrangeFields( state.providers[ slug ] )
+		);
 		const initialProviders = JSON.parse(JSON.stringify(state.providers));
 		const controllers = new Map();
 		let generation = 0;
@@ -70,6 +73,7 @@
 		const destinationSelect = document.getElementById('cmatic-provider-list');
 		const mappingsLocked = document.getElementById('cmatic-provider-mappings-locked');
 		const mappingsGrid = document.getElementById('cmatic-provider-mappings');
+		let mappingsHeight = 0;
 		const mappingsHeading = document.getElementById('cmatic-provider-mappings-heading');
 		const mappingDescription = document.getElementById('cmatic-provider-mapping-description');
 		const saveRow = document.getElementById('cmatic-provider-save-row');
@@ -526,59 +530,190 @@
 			host.replaceChildren(fragment);
 		}
 
-		function renderMailerLiteGroups(current) {
-			const selected = new Set((current.base_groups || [current.selected_list]).map(String));
-			const provider = definition(state.activeProvider);
+		function reducedMotion() {
+			return Boolean(
+				window.matchMedia &&
+				window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches
+			);
+		}
+
+		function glide( container, attribute, before ) {
+			if ( ! before.size || reducedMotion() ) {
+				return;
+			}
+			container
+				.querySelectorAll( '[' + attribute + ']' )
+				.forEach( function ( row ) {
+					const old = before.get( row.getAttribute( attribute ) );
+					if ( ! old ) {
+						return;
+					}
+					const now = row.getBoundingClientRect();
+					const dx = old.left - now.left;
+					const dy = old.top - now.top;
+					if ( Math.abs( dx ) < 1 && Math.abs( dy ) < 1 ) {
+						return;
+					}
+					row.style.transition = 'none';
+					row.style.transform =
+						'translate(' + dx + 'px, ' + dy + 'px)';
+					row.getBoundingClientRect();
+					window.requestAnimationFrame( function () {
+						row.style.transition =
+							'transform 360ms cubic-bezier(0.2, 0.7, 0.2, 1)';
+						row.style.transform = '';
+					} );
+					row.addEventListener(
+						'transitionend',
+						function () {
+							row.style.transition = '';
+						},
+						{ once: true }
+					);
+				} );
+		}
+
+		function renderMailerLiteGroups( current ) {
+			const before = new Map();
+			mailerliteGroups
+				.querySelectorAll( '[data-mailerlite-group]' )
+				.forEach( function ( row ) {
+					before.set(
+						row.dataset.mailerliteGroup,
+						row.getBoundingClientRect()
+					);
+				} );
+			const selected = new Set(
+				( current.base_groups || [ current.selected_list ] ).map(
+					String
+				)
+			);
+			const provider = definition( state.activeProvider );
 			const fragment = document.createDocumentFragment();
-			sortedLists(current).sort((a, b) => Number(String(b.id) === String(current.selected_list)) - Number(String(a.id) === String(current.selected_list))).forEach(function(list, index) {
-				const id = String(list.id || '');
-				const row = document.createElement('div');
-				const groupLabel = document.createElement('label');
-				const group = document.createElement('input');
-				row.className = 'cmatic-provider-mapping-row';
-				row.dataset.mailerliteGroup = id;
-				group.type = root.dataset.licenseState === 'licensed' ? 'checkbox' : 'radio';
-				group.id = 'cmatic-mailerlite-group-' + index;
-				group.name = group.type === 'radio' ? 'wpcf7-cmatic-provider[primary_group]' : 'wpcf7-cmatic-provider[base_groups][]';
-				group.value = id;
-				group.checked = group.type === 'radio' ? id === String(current.selected_list || '') : selected.has(id);
-				group.dataset.mailerliteGroupSelected = '';
-				groupLabel.htmlFor = group.id;
-				const stats = list.stats || {};
-				const contacts = Number(stats.member_count !== undefined ? stats.member_count : list.member_count) || 0;
-				const fields = Number(stats.merge_field_count !== undefined ? stats.merge_field_count : list.merge_field_count) || 0;
-				const parts = [];
-				if (contacts > 0) parts.push(format(i18n('tilePeople', '%1$s %2$s'), contacts.toLocaleString(), String(provider.person_plural).toLowerCase()));
-				if (fields > 0) parts.push(format(i18n('tileData', '%1$s %2$s'), fields.toLocaleString(), String(provider.data_plural).toLowerCase()));
-				const meta = document.createElement('span');
-				meta.className = 'cmatic-provider-tile__meta';
-				meta.textContent = parts.length ? ' (' + parts.join(' · ') + ')' : '';
-				const title = document.createElement('strong');
-				title.textContent = String(list.name || id);
-				row.append(title, meta);
-				groupLabel.append(group, document.createTextNode(' ' + format(i18n('sendPeopleHere', 'Send %s here'), String(provider.person_plural).toLowerCase())));
-				row.append(groupLabel);
-				if (group.type === 'radio') {
-					const extraLabel = document.createElement('label');
-					extraLabel.dataset.litePreview = '';
-					const extra = document.createElement('input');
-					extra.type = 'checkbox'; extra.disabled = true;
-					extraLabel.append(extra, document.createTextNode(' ' + i18n('additionalDestination', 'Also send here')));
-					row.append(extraLabel);
-				}
-				if (group.type !== 'radio' && id === String(current.selected_list || '')) {
-					const primary = document.createElement('input');
-					primary.type = 'hidden';
-					primary.name = 'wpcf7-cmatic-provider[primary_group]';
-					primary.value = id;
-					const badge = document.createElement('span');
-					badge.className = 'cmatic-destination__main';
-					badge.textContent = i18n('mainDestination', 'Main destination');
-					row.append(primary, badge);
-				}
-				fragment.append(row);
-			});
-			mailerliteGroups.replaceChildren(fragment);
+			sortedLists( current )
+				.sort(
+					( a, b ) =>
+						Number(
+							String( b.id ) === String( current.selected_list )
+						) -
+						Number(
+							String( a.id ) === String( current.selected_list )
+						)
+				)
+				.forEach( function ( list, index ) {
+					const id = String( list.id || '' );
+					const row = document.createElement( 'div' );
+					const groupLabel = document.createElement( 'label' );
+					const group = document.createElement( 'input' );
+					row.className = 'cmatic-provider-mapping-row';
+					row.dataset.mailerliteGroup = id;
+					group.type =
+						root.dataset.licenseState === 'licensed'
+							? 'checkbox'
+							: 'radio';
+					group.id = 'cmatic-mailerlite-group-' + index;
+					group.name =
+						group.type === 'radio'
+							? 'wpcf7-cmatic-provider[primary_group]'
+							: 'wpcf7-cmatic-provider[base_groups][]';
+					group.value = id;
+					group.checked =
+						group.type === 'radio'
+							? id === String( current.selected_list || '' )
+							: selected.has( id );
+					group.dataset.mailerliteGroupSelected = '';
+					groupLabel.htmlFor = group.id;
+					const stats = list.stats || {};
+					const contacts =
+						Number(
+							stats.member_count !== undefined
+								? stats.member_count
+								: list.member_count
+						) || 0;
+					const fields =
+						Number(
+							stats.merge_field_count !== undefined
+								? stats.merge_field_count
+								: list.merge_field_count
+						) || 0;
+					const parts = [];
+					if ( contacts > 0 ) {
+						parts.push(
+							format(
+								i18n( 'tilePeople', '%1$s %2$s' ),
+								contacts.toLocaleString(),
+								String( provider.person_plural ).toLowerCase()
+							)
+						);
+					}
+					if ( fields > 0 ) {
+						parts.push(
+							format(
+								i18n( 'tileData', '%1$s %2$s' ),
+								fields.toLocaleString(),
+								String( provider.data_plural ).toLowerCase()
+							)
+						);
+					}
+					const meta = document.createElement( 'span' );
+					meta.className = 'cmatic-provider-tile__meta';
+					meta.textContent = parts.length
+						? ' (' + parts.join( ' · ' ) + ')'
+						: '';
+					const title = document.createElement( 'strong' );
+					title.textContent = String( list.name || id );
+					row.append( title, meta );
+					groupLabel.append(
+						group,
+						document.createTextNode(
+							' ' +
+								format(
+									i18n( 'sendPeopleHere', 'Send %s here' ),
+									String(
+										provider.person_plural
+									).toLowerCase()
+								)
+						)
+					);
+					row.append( groupLabel );
+					if ( group.type === 'radio' ) {
+						const extraLabel = document.createElement( 'label' );
+						extraLabel.dataset.litePreview = '';
+						const extra = document.createElement( 'input' );
+						extra.type = 'checkbox';
+						extra.disabled = true;
+						extraLabel.append(
+							extra,
+							document.createTextNode(
+								' ' +
+									i18n(
+										'additionalDestination',
+										'Also send here'
+									)
+							)
+						);
+						row.append( extraLabel );
+					}
+					if (
+						group.type !== 'radio' &&
+						id === String( current.selected_list || '' )
+					) {
+						const primary = document.createElement( 'input' );
+						primary.type = 'hidden';
+						primary.name = 'wpcf7-cmatic-provider[primary_group]';
+						primary.value = id;
+						const badge = document.createElement( 'span' );
+						badge.className = 'cmatic-destination__main';
+						badge.textContent = i18n(
+							'mainDestination',
+							'Main destination'
+						);
+						row.append( primary, badge );
+					}
+					fragment.append( row );
+				} );
+			mailerliteGroups.replaceChildren( fragment );
+			glide( mailerliteGroups, 'data-mailerlite-group', before );
 		}
 
 		function renderMailerLiteOptions(current) {
@@ -724,14 +859,173 @@
 			return matches.length === 1 ? matches[0] : null;
 		}
 
-		function freeMappingSlots(current) {
-			const slots = []; let email = '';
-			(current.fields || []).forEach(function(field, index) {
-				const slot = 'field' + (index + 3);
-				if (!String(current.mappings?.[slot] || '').trim()) return;
-				if (String(field.tag).toUpperCase() === 'EMAIL') email = slot; else slots.push(slot);
-			});
-			return new Set([email, ...slots.slice(0, Math.max(0, Number(root.dataset.freeFields) - 1))].filter(Boolean));
+		function flagged( value ) {
+			return (
+				value === true ||
+				value === 1 ||
+				value === '1' ||
+				value === 'true'
+			);
+		}
+
+		function providerRequired( field ) {
+			return (
+				Boolean( field ) &&
+				String( field.tag || '' ).toUpperCase() !== 'EMAIL' &&
+				flagged( field.required )
+			);
+		}
+
+		function canMap( select ) {
+			return Array.from( select.options ).some(
+				( option ) => option.value && ! option.disabled
+			);
+		}
+
+		function requiredNote( row, select, field, isRequired, unsupported ) {
+			const previous = row.querySelector( '.cmatic-required-note' );
+			if ( previous ) {
+				previous.remove();
+			}
+			const isEmail = String( field.tag || '' ).toUpperCase() === 'EMAIL';
+			const missing = isRequired && ! select.value;
+			select.classList.toggle(
+				'cmatic-required-missing',
+				missing && ! isEmail
+			);
+			select.classList.toggle(
+				'cmatic-email-missing',
+				missing && isEmail
+			);
+			select.setAttribute(
+				'aria-invalid',
+				missing && isEmail ? 'true' : 'false'
+			);
+			if ( ! missing ) {
+				return;
+			}
+			const name = String( field.name || field.tag || '' );
+			const note = document.createElement( 'p' );
+			note.className =
+				'cmatic-required-note' + ( isEmail ? ' is-email' : '' );
+			note.id = select.id + '-required';
+			if ( isEmail ) {
+				note.textContent = i18n(
+					'requiredEmailNote',
+					'Map the email address field. Signups cannot be sent without it.'
+				);
+			} else if ( unsupported ) {
+				note.textContent = format(
+					i18n(
+						'requiredUnsupportedNote',
+						'Mailchimp marks %1$s as required, but this plugin cannot fill a %2$s field. Contacts are stored without it; make it optional in Mailchimp if you do not need it.'
+					),
+					name,
+					String( field.type || '' )
+				);
+			} else if ( ! canMap( select ) ) {
+				note.textContent = format(
+					i18n(
+						'requiredAddFieldNote',
+						'Mailchimp marks %s as required. Add a field for it on the Form tab and save, then map it here. Until then contacts are stored without it.'
+					),
+					name
+				);
+			} else {
+				note.textContent = format(
+					i18n(
+						'requiredMapNote',
+						'Mailchimp marks %s as required. Map it to a form field, or contacts are stored without it.'
+					),
+					name
+				);
+			}
+			select.setAttribute(
+				'aria-describedby',
+				[ select.getAttribute( 'aria-describedby' ), note.id ]
+					.filter( Boolean )
+					.join( ' ' )
+			);
+			select.insertAdjacentElement( 'afterend', note );
+		}
+
+		function arrangeFields( current ) {
+			const entries = ( current.fields || [] ).map(
+				function ( field, index ) {
+					return {
+						field,
+						value: String(
+							( current.mappings || {} )[
+								'field' + ( index + 3 )
+							] || ''
+						),
+						index,
+					};
+				}
+			);
+			const rank = function ( entry ) {
+				if (
+					String( entry.field.tag || '' ).toUpperCase() === 'EMAIL'
+				) {
+					return 0;
+				}
+				return providerRequired( entry.field ) ? 1 : 2;
+			};
+			const natural = ( entry ) =>
+				Number.isFinite( Number( entry.field.display_order ) ) &&
+				'' !== String( entry.field.display_order ?? '' )
+					? Number( entry.field.display_order )
+					: entry.index;
+			const ordered = entries
+				.slice()
+				.sort(
+					( first, second ) =>
+						rank( first ) - rank( second ) ||
+						natural( first ) - natural( second ) ||
+						first.index - second.index
+				);
+			if (
+				ordered.every( ( entry, position ) => entry.index === position )
+			) {
+				return;
+			}
+			const mappings = {};
+			Object.keys( current.mappings || {} ).forEach( function ( key ) {
+				if ( ! /^field[0-9]+$/.test( key ) ) {
+					mappings[ key ] = current.mappings[ key ];
+				}
+			} );
+			ordered.forEach( ( entry, position ) => {
+				mappings[ 'field' + ( position + 3 ) ] = entry.value;
+			} );
+			current.fields = ordered.map( ( entry ) => entry.field );
+			current.mappings = mappings;
+		}
+
+		function optionalField( field ) {
+			return (
+				Boolean( field ) &&
+				String( field.tag || '' ).toUpperCase() !== 'EMAIL' &&
+				! providerRequired( field )
+			);
+		}
+
+		function paidSlot( current, slot ) {
+			if (
+				root.dataset.licenseState === 'licensed' ||
+				! /^field[0-9]+$/.test( String( slot ) )
+			) {
+				return false;
+			}
+			const fields = current.fields || [];
+			const index = Number( String( slot ).slice( 5 ) ) - 3;
+			if ( ! optionalField( fields[ index ] ) ) {
+				return false;
+			}
+			return (
+				fields.slice( 0, index ).filter( optionalField ).length >=
+				Math.max( 0, Number( root.dataset.freeFields ) - 1 )
+			);
 		}
 
 		function compatibleType(providerType, formType) {
@@ -794,135 +1088,273 @@
 			select.insertAdjacentElement('afterend', warning);
 		}
 
-		function renderFieldState(current) {
+		function renderFieldState( current ) {
 			const fragment = document.createDocumentFragment();
-			const total = document.createElement('input');
+			const total = document.createElement( 'input' );
 			total.type = 'hidden';
 			total.name = 'wpcf7-cmatic-provider[total_merge_fields]';
-			total.value = String(current.total_fields || 0);
-			fragment.append(total);
+			total.value = String( current.total_fields || 0 );
+			fragment.append( total );
 
-			(current.fields || []).forEach(function(field, index) {
-				['tag', 'name', 'type', 'display_order'].forEach(function(property) {
-					const input = document.createElement('input');
+			( current.fields || [] ).forEach( function ( field, index ) {
+				[
+					'tag',
+					'name',
+					'type',
+					'display_order',
+					'required',
+					'unsupported',
+				].forEach( function ( property ) {
+					const input = document.createElement( 'input' );
 					input.type = 'hidden';
-					input.name = 'wpcf7-cmatic-provider[merge_fields][' + index + '][' + property + ']';
-					input.value = String(field[property] === undefined ? '' : field[property]);
-					fragment.append(input);
-				});
-			});
-			if (state.activeProvider === 'mailchimp') {
-				const mirror = function(name, value) {
-					const input = document.createElement('input');
+					input.name =
+						'wpcf7-cmatic-provider[merge_fields][' +
+						index +
+						'][' +
+						property +
+						']';
+					input.value = String(
+						field[ property ] === undefined ? '' : field[ property ]
+					);
+					fragment.append( input );
+				} );
+			} );
+			if ( state.activeProvider === 'mailchimp' ) {
+				const mirror = function ( name, value ) {
+					const input = document.createElement( 'input' );
 					input.type = 'hidden';
 					input.name = 'wpcf7-mailchimp[' + name + ']';
 					input.value = value;
-					fragment.append(input);
+					fragment.append( input );
 				};
-				mirror('list', String(current.selected_list || ''));
-				mirror('accept', current.consent_gate === 'required' ? String(current.consent_field || '') : ' ');
-				mirror('confsubs', current.double_optin === 'pending' ? '1' : '0');
-				mirror('double_optin', current.double_optin === 'pending' ? '1' : '0');
-				Object.keys(current.mappings || {}).forEach(function(slot) {
-					mirror(slot, String(current.mappings[slot] || ''));
-				});
-				const legacyList = document.getElementById('wpcf7-mailchimp-list');
-				if (legacyList) {
-					legacyList.disabled = true;
-					if (current.selected_list && !Array.from(legacyList.options).some(function(option) { return option.value === String(current.selected_list); })) {
-						const option = document.createElement('option');
-						option.value = String(current.selected_list);
-						option.textContent = String(current.selected_list_name || current.selected_list);
-						legacyList.append(option);
+				mirror( 'list', String( current.selected_list || '' ) );
+				mirror(
+					'accept',
+					current.consent_gate === 'required'
+						? String( current.consent_field || '' )
+						: ' '
+				);
+				mirror(
+					'confsubs',
+					current.double_optin === 'pending' ? '1' : '0'
+				);
+				mirror(
+					'double_optin',
+					current.double_optin === 'pending' ? '1' : '0'
+				);
+				Object.keys( current.mappings || {} ).forEach(
+					function ( slot ) {
+						mirror(
+							slot,
+							String( current.mappings[ slot ] || '' )
+						);
 					}
-					legacyList.value = String(current.selected_list || '');
+				);
+				const legacyList = document.getElementById(
+					'wpcf7-mailchimp-list'
+				);
+				if ( legacyList ) {
+					legacyList.disabled = true;
+					if (
+						current.selected_list &&
+						! Array.from( legacyList.options ).some(
+							function ( option ) {
+								return (
+									option.value ===
+									String( current.selected_list )
+								);
+							}
+						)
+					) {
+						const option = document.createElement( 'option' );
+						option.value = String( current.selected_list );
+						option.textContent = String(
+							current.selected_list_name || current.selected_list
+						);
+						legacyList.append( option );
+					}
+					legacyList.value = String( current.selected_list || '' );
 				}
 			}
-			fieldState.replaceChildren(fragment);
+			fieldState.replaceChildren( fragment );
 		}
 
-		function renderMappings(current) {
-			const rows = Array.from(root.querySelectorAll('[data-mapping-slot]'));
-			const template = rows[0].closest('.cmatic-provider-mapping-row');
-			while (rows.length < (current.fields || []).length) {
-				const row = template.cloneNode(true);
-				row.querySelectorAll('.cmatic-pro-chip, .cmatic-provider-mapping-warning').forEach(item => item.remove());
-				const slot = 'field' + (rows.length + 3);
-				const select = row.querySelector('[data-mapping-slot]');
+		function renderMappings( current ) {
+			const rows = Array.from(
+				root.querySelectorAll( '[data-mapping-slot]' )
+			);
+			const template = rows[ 0 ].closest(
+				'.cmatic-provider-mapping-row'
+			);
+			while ( rows.length < ( current.fields || [] ).length ) {
+				const row = template.cloneNode( true );
+				row.querySelectorAll(
+					'.cmatic-pro-chip, .cmatic-provider-mapping-warning, .cmatic-required-note'
+				).forEach( ( item ) => item.remove() );
+				const slot = 'field' + ( rows.length + 3 );
+				const select = row.querySelector( '[data-mapping-slot]' );
 				row.dataset.slot = slot;
 				select.id = 'cmatic-provider-' + slot;
 				select.name = 'wpcf7-cmatic-provider[' + slot + ']';
 				select.dataset.mappingSlot = slot;
-				select.removeAttribute('data-cmatic-paid');
-				row.querySelector('label').htmlFor = select.id;
-				template.parentElement.append(row);
-				rows.push(select);
+				select.removeAttribute( 'data-cmatic-paid' );
+				row.querySelector( 'label' ).htmlFor = select.id;
+				template.parentElement.append( row );
+				rows.push( select );
 			}
-			rows.forEach(function(select, offset) {
-				const row = select.closest('.cmatic-provider-mapping-row');
-				const field = (current.fields || [])[offset];
+			rows.forEach( function ( select, offset ) {
+				const row = select.closest( '.cmatic-provider-mapping-row' );
+				const field = ( current.fields || [] )[ offset ];
 				const slot = select.dataset.mappingSlot;
 
-				if (!row || !field) {
-					if (row) row.hidden = true;
+				if ( ! row || ! field ) {
+					if ( row ) {
+						row.hidden = true;
+					}
 					select.disabled = true;
 					select.value = '';
 					return;
 				}
 
-				const isEmail = String(field.tag || '').toUpperCase() === 'EMAIL';
-				const currentValue = String((current.mappings || {})[slot] || '');
-				const placeholder = select.options[0];
-				const options = Array.from(select.options).slice(1).sort(function(first, second) {
-					return Number(compatibleType(field.type, second.dataset.basetype))
-						- Number(compatibleType(field.type, first.dataset.basetype));
-				});
-				select.replaceChildren(placeholder, ...options);
+				const isEmail =
+					String( field.tag || '' ).toUpperCase() === 'EMAIL';
+				const currentValue = String(
+					( current.mappings || {} )[ slot ] || ''
+				);
+				const placeholder = select.options[ 0 ];
+				const options = Array.from( select.options )
+					.slice( 1 )
+					.sort( function ( first, second ) {
+						return (
+							Number(
+								compatibleType(
+									field.type,
+									second.dataset.basetype
+								)
+							) -
+							Number(
+								compatibleType(
+									field.type,
+									first.dataset.basetype
+								)
+							)
+						);
+					} );
+				select.replaceChildren( placeholder, ...options );
 				row.hidden = false;
-				row.dataset.remoteTag = String(field.tag || '');
+				row.dataset.remoteTag = String( field.tag || '' );
+				const isRequired = isEmail || providerRequired( field );
+				const unsupported = ! isEmail && flagged( field.unsupported );
 				row.dataset.required = isEmail ? '1' : '0';
-				row.querySelector('[data-field-label]').textContent = String(field.name || field.tag || slot);
-				row.querySelectorAll('[data-profile-property-name], [data-profile-property-remove]').forEach(input => input.remove());
-				const customProperty = state.activeProvider === 'klaviyo' && !['EMAIL','first_name','last_name','phone_number','organization','title'].includes(field.tag);
-				if (customProperty) {
-					const input = document.createElement('input');
-					input.type = 'text'; input.value = String(field.tag || ''); input.dataset.profilePropertyName = String(offset); input.dataset.field = slot;
-					input.setAttribute('aria-label', i18n('profilePropertyName', 'Profile property name')); input.required = true;
-					row.querySelector('[data-field-label]').replaceChildren(input);
-					const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'button-link';
-					remove.textContent = i18n('removeProperty', 'Remove property'); remove.dataset.profilePropertyRemove = String(offset); remove.dataset.field = slot;
-					row.append(remove);
+				row.dataset.providerRequired =
+					isRequired && ! isEmail ? '1' : '0';
+				row.querySelector( '[data-field-label]' ).textContent = String(
+					field.name || field.tag || slot
+				);
+				row.querySelectorAll(
+					'[data-profile-property-name], [data-profile-property-remove]'
+				).forEach( ( input ) => input.remove() );
+				const customProperty =
+					state.activeProvider === 'klaviyo' &&
+					! [
+						'EMAIL',
+						'first_name',
+						'last_name',
+						'phone_number',
+						'organization',
+						'title',
+					].includes( field.tag );
+				if ( customProperty ) {
+					const input = document.createElement( 'input' );
+					input.type = 'text';
+					input.value = String( field.tag || '' );
+					input.dataset.profilePropertyName = String( offset );
+					input.dataset.field = slot;
+					input.setAttribute(
+						'aria-label',
+						i18n( 'profilePropertyName', 'Profile property name' )
+					);
+					input.required = true;
+					row.querySelector( '[data-field-label]' ).replaceChildren(
+						input
+					);
+					const remove = document.createElement( 'button' );
+					remove.type = 'button';
+					remove.className = 'button-link';
+					remove.textContent = i18n(
+						'removeProperty',
+						'Remove property'
+					);
+					remove.dataset.profilePropertyRemove = String( offset );
+					remove.dataset.field = slot;
+					row.append( remove );
 				}
-				row.querySelector('[data-field-type]').textContent = (customProperty ? i18n('customProfileProperty', 'Custom profile property') : String(field.tag || '')) + ' · ' + String(field.type || 'text');
-				row.querySelector('[data-required-label]').hidden = !isEmail;
-				select.disabled = false;
-				select.setAttribute('aria-required', isEmail ? 'true' : 'false');
+				row.querySelector( '[data-field-type]' ).textContent =
+					( customProperty
+						? i18n(
+								'customProfileProperty',
+								'Custom profile property'
+							)
+						: String( field.tag || '' ) ) +
+					' · ' +
+					String( field.type || 'text' );
+				row.querySelector( '[data-required-label]' ).hidden =
+					! isRequired;
+				select.disabled = unsupported;
+				select.setAttribute(
+					'aria-required',
+					isRequired ? 'true' : 'false'
+				);
 
-				Array.from(select.options).forEach(function(option) {
-					if (!option.value) {
+				Array.from( select.options ).forEach( function ( option ) {
+					if ( ! option.value ) {
 						option.disabled = false;
 						return;
 					}
-					option.disabled = (isEmail && option.dataset.basetype !== 'email')
-						|| (String(field.type || '').toLowerCase() === 'boolean' && option.dataset.basetype !== 'acceptance');
-				});
+					option.disabled =
+						( isEmail && option.dataset.basetype !== 'email' ) ||
+						( String( field.type || '' ).toLowerCase() ===
+							'boolean' &&
+							option.dataset.basetype !== 'acceptance' );
+				} );
 
 				let mapping = currentValue;
-				if (!mapping && !current.has_saved_mappings && !current.preselection_done) {
-					const roles = definition(state.activeProvider).features?.basic_fields || {};
-					const role = Object.keys(roles).find(key => String(roles[key]).toLowerCase() === String(field.tag).toLowerCase());
-					const match = role ? basicMappingOption(select, role) : null;
+				if (
+					! mapping &&
+					! current.has_saved_mappings &&
+					! current.preselection_done
+				) {
+					const roles =
+						definition( state.activeProvider ).features
+							?.basic_fields || {};
+					const role = Object.keys( roles ).find(
+						( key ) =>
+							String( roles[ key ] ).toLowerCase() ===
+							String( field.tag ).toLowerCase()
+					);
+					const match = role
+						? basicMappingOption( select, role )
+						: null;
 					mapping = match ? match.value : '';
-					current.mappings[slot] = mapping;
+					current.mappings[ slot ] = mapping;
 				}
-				select.value = mapping;
-				mappingWarning(field, select);
-			});
+				select.value = unsupported ? '' : mapping;
+				mappingWarning( field, select );
+				requiredNote( row, select, field, isRequired, unsupported );
+			} );
 
-			if ((current.fields || []).length) current.preselection_done = true;
-			const addProperty = document.getElementById('cmatic-klaviyo-add-property');
-			if (addProperty) addProperty.hidden = state.activeProvider !== 'klaviyo' || !current.selected_list;
-			renderFieldState(current);
+			if ( ( current.fields || [] ).length ) {
+				current.preselection_done = true;
+			}
+			const addProperty = document.getElementById(
+				'cmatic-klaviyo-add-property'
+			);
+			if ( addProperty ) {
+				addProperty.hidden =
+					state.activeProvider !== 'klaviyo' ||
+					! current.selected_list;
+			}
+			renderFieldState( current );
 		}
 
 		function duplicateRules(current) {
@@ -1225,58 +1657,268 @@
 			destinationDescription.textContent = format(i18n('destinationsFound', '%1$d %2$s found. Choose where new submissions from this form should go.'), listCount, String(meta.destination_plural || '').toLowerCase());
 		}
 
-		function renderMappingStage(meta, current) {
-			const visible = Boolean(current.connected && current.selected_list && current.fields && current.fields.length);
+		function renderDroppedAlert( current ) {
+			let alert = document.getElementById( 'cmatic-dropped-alert' );
+			const dropped = ( current.fields || [] )
+				.filter( function ( field, index ) {
+					const slot = 'field' + ( index + 3 );
+					return (
+						paidSlot( current, slot ) &&
+						String(
+							( current.mappings || {} )[ slot ] || ''
+						).trim()
+					);
+				} )
+				.map( ( field ) => String( field.name || field.tag || '' ) );
+			if ( ! dropped.length ) {
+				if ( alert ) {
+					alert.remove();
+				}
+				return;
+			}
+			if ( ! alert ) {
+				alert = document.createElement( 'div' );
+				alert.id = 'cmatic-dropped-alert';
+				alert.className = 'cmatic-dropped-alert';
+				alert.setAttribute( 'role', 'status' );
+				mappingsGrid.insertAdjacentElement( 'beforebegin', alert );
+			}
+			alert.textContent = format(
+				i18n(
+					'droppedAlert',
+					'Saving these settings stops sending %1$s to Mailchimp. The free version sends email, the fields Mailchimp requires and the first %2$d other fields. Until you save, signups keep sending your current fields.'
+				),
+				dropped.join( ', ' ),
+				Math.max( 0, Number( root.dataset.freeFields ) - 1 )
+			);
+		}
+
+		function renderRequiredAlert() {
+			let alert = document.getElementById( 'cmatic-required-alert' );
+			const missing = Array.from(
+				root.querySelectorAll(
+					'.cmatic-provider-mapping-row[data-provider-required="1"]:not([hidden])'
+				)
+			)
+				.filter( function ( row ) {
+					const select = row.querySelector( '[data-mapping-slot]' );
+					return select && ! select.value;
+				} )
+				.map( ( row ) =>
+					row.querySelector( '[data-field-label]' ).textContent.trim()
+				);
+			if ( ! missing.length ) {
+				if ( alert ) {
+					alert.remove();
+				}
+				return;
+			}
+			if ( ! alert ) {
+				alert = document.createElement( 'div' );
+				alert.id = 'cmatic-required-alert';
+				alert.className = 'cmatic-required-alert';
+				alert.setAttribute( 'role', 'status' );
+				mappingsGrid.insertAdjacentElement( 'beforebegin', alert );
+			}
+			alert.textContent = format(
+				i18n(
+					'requiredAlert',
+					'Mailchimp marks these fields as required and they are not mapped yet: %s. Contacts from this form are stored without them until you map them below.'
+				),
+				missing.join( ', ' )
+			);
+		}
+
+		function renderMappingStage( meta, current ) {
+			const visible = Boolean(
+				current.connected &&
+				current.selected_list &&
+				current.fields &&
+				current.fields.length
+			);
+			const wasHidden = mappingsGrid.hidden;
+			if ( ! mappingsGrid.hidden && mappingsGrid.offsetHeight ) {
+				mappingsHeight = mappingsGrid.offsetHeight;
+			}
+			const loading =
+				! visible &&
+				Boolean(
+					current.connected &&
+					current.selected_list &&
+					current.fields_loading
+				);
+			mappingsLocked.classList.toggle( 'is-loading', loading );
+			mappingsLocked.setAttribute(
+				'aria-busy',
+				loading ? 'true' : 'false'
+			);
+			mappingsLocked.style.minHeight =
+				loading && mappingsHeight ? mappingsHeight + 'px' : '';
+			let skeleton = mappingsLocked.querySelector( '.cmatic-skeleton' );
+			if ( loading && ! skeleton ) {
+				skeleton = document.createElement( 'div' );
+				skeleton.className = 'cmatic-skeleton';
+				skeleton.setAttribute( 'aria-hidden', 'true' );
+				const list = selectedList( current );
+				const count = Math.min(
+					12,
+					Math.max(
+						2,
+						Number( list?.stats?.merge_field_count || 3 ) + 1
+					)
+				);
+				for ( let index = 0; index < count; index++ ) {
+					skeleton.append(
+						Object.assign( document.createElement( 'span' ), {
+							className: 'cmatic-skeleton-row',
+						} )
+					);
+				}
+				mappingsLocked.append( skeleton );
+			} else if ( ! loading && skeleton ) {
+				skeleton.remove();
+			}
+			if ( visible && wasHidden && mappingsHeight && ! reducedMotion() ) {
+				mappingsGrid.classList.remove( 'is-entering' );
+				mappingsGrid.getBoundingClientRect();
+				mappingsGrid.classList.add( 'is-entering' );
+			}
 			mappingsHeading.textContent = format(
-				i18n('mapProviderFields', 'Map %1$s %2$s'),
+				i18n( 'mapProviderFields', 'Map %1$s %2$s' ),
 				meta.label,
-				term(meta, 'data_plural', 'fields').toLowerCase()
+				term( meta, 'data_plural', 'fields' ).toLowerCase()
 			);
 			mappingDescription.textContent = format(
-				i18n('mappedFields', 'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.'),
+				i18n(
+					'mappedFields',
+					'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.'
+				),
 				meta.label,
-				term(meta, 'data_singular', 'field').toLowerCase()
+				term( meta, 'data_singular', 'field' ).toLowerCase()
 			);
 			testingNotice.textContent = format(
-				i18n('testingWarning', 'Real submission: may create or update a %1$s in %2$s and trigger confirmation emails or automations.'),
-				term(meta, 'person_singular', 'contact').toLowerCase(),
+				i18n(
+					'testingWarning',
+					'Real submission: may create or update a %1$s in %2$s and trigger confirmation emails or automations.'
+				),
+				term( meta, 'person_singular', 'contact' ).toLowerCase(),
 				meta.label
 			);
-			mappingsGrid.hidden = !visible;
+			mappingsGrid.hidden = ! visible;
 			mappingsLocked.hidden = visible;
-			saveRow.hidden = !visible;
-			if (!visible) {
-				mappingsLocked.querySelector('p').textContent = current.lists_loading
-					? format(i18n('waitForDestinations', 'Wait while %s load.'), String(meta.destination_plural || '').toLowerCase())
-					: format(
+			if ( ! visible ) {
+				document.getElementById( 'cmatic-required-alert' )?.remove();
+				document.getElementById( 'cmatic-dropped-alert' )?.remove();
+			}
+			saveRow.hidden = ! visible;
+			if ( ! visible ) {
+				if ( loading ) {
+					const spinner = Object.assign(
+						document.createElement( 'span' ),
+						{ className: 'cmatic-loading-spinner' }
+					);
+					spinner.setAttribute( 'aria-hidden', 'true' );
+					mappingsLocked
+						.querySelector( 'p' )
+						.replaceChildren(
+							spinner,
+							document.createTextNode(
+								format(
+									i18n(
+										'loadingFieldsFor',
+										'Loading %1$s %2$s for %3$s...'
+									),
+									meta.label,
+									term(
+										meta,
+										'data_plural',
+										'fields'
+									).toLowerCase(),
+									String( current.selected_list_name || '' )
+								)
+							)
+						);
+					return;
+				}
+				mappingsLocked.querySelector( 'p' ).textContent =
+					current.lists_loading
+						? format(
+								i18n(
+									'waitForDestinations',
+									'Wait while %s load.'
+								),
+								String(
+									meta.destination_plural || ''
+								).toLowerCase()
+							)
+						: format(
 								i18n(
 									'chooseToLoadFields',
 									'Choose the %1$s above to see its %2$s.'
 								),
-						String(meta.destination_singular || '').toLowerCase(),
-						term(meta, 'data_plural', 'fields').toLowerCase()
-					);
+								String(
+									meta.destination_singular || ''
+								).toLowerCase(),
+								term(
+									meta,
+									'data_plural',
+									'fields'
+								).toLowerCase()
+							);
 				return;
 			}
 
-			renderMappings(current);
-			renderMailerLiteOptions(current);
-			renderPaidControls(current);
-			root.querySelectorAll('#cmatic-provider-tools [data-cmatic-provider-only]').forEach(row => { if (root.dataset.manageIntegration === '0') row.hidden = true; });
-			root.querySelectorAll('[data-lite-preview] input, [data-lite-preview] select, [data-lite-preview] button, #cmatic-tags input, #cmatic-tags select, #cmatic-tags button').forEach(control => { if (!control.classList.contains('cmatic-pro-chip__trigger')) control.disabled = true; control.removeAttribute('name'); });
-			const complete = state.activeProvider === state.savedProvider && current.configured && !current.dirty;
-			if (current.dirty) {
-				saveStatus.textContent = i18n('unsavedChanges', 'Unsaved changes');
-				saveButton.textContent = i18n('saveChanges', 'Save changes');
-				saveButton.disabled = !requiredEmailMapped() || !consentReady(state.activeProvider, current);
-			} else if (complete) {
-				saveStatus.textContent = i18n('savedJustNow', 'Saved');
-				saveButton.textContent = i18n('saveChanges', 'Save changes');
+			renderMappings( current );
+			renderRequiredAlert();
+			renderDroppedAlert( current );
+			renderMailerLiteOptions( current );
+			renderPaidControls( current );
+			root.querySelectorAll(
+				'#cmatic-provider-tools [data-cmatic-provider-only]'
+			).forEach( ( row ) => {
+				if ( root.dataset.manageIntegration === '0' ) {
+					row.hidden = true;
+				}
+			} );
+			root.querySelectorAll(
+				'[data-lite-preview] input, [data-lite-preview] select, [data-lite-preview] button, #cmatic-tags input, #cmatic-tags select, #cmatic-tags button'
+			).forEach( ( control ) => {
+				if (
+					! control.classList.contains( 'cmatic-pro-chip__trigger' )
+				) {
+					control.disabled = true;
+				}
+				control.removeAttribute( 'name' );
+			} );
+			const complete =
+				state.activeProvider === state.savedProvider &&
+				current.configured &&
+				! current.dirty;
+			if ( current.dirty ) {
+				saveStatus.textContent = i18n(
+					'unsavedChanges',
+					'Unsaved changes'
+				);
+				saveButton.textContent = i18n( 'saveChanges', 'Save changes' );
+				saveButton.disabled =
+					! requiredEmailMapped() ||
+					! consentReady( state.activeProvider, current );
+			} else if ( complete ) {
+				saveStatus.textContent = i18n( 'savedJustNow', 'Saved' );
+				saveButton.textContent = i18n( 'saveChanges', 'Save changes' );
 				saveButton.disabled = true;
 			} else {
-				saveStatus.textContent = i18n('saveToActivate', 'Save to activate this configuration.');
-				saveButton.textContent = i18n('saveConfiguration', 'Save configuration');
-				saveButton.disabled = !requiredEmailMapped() || !consentReady(state.activeProvider, current);
+				saveStatus.textContent = i18n(
+					'saveToActivate',
+					'Save to activate this configuration.'
+				);
+				saveButton.textContent = i18n(
+					'saveConfiguration',
+					'Save configuration'
+				);
+				saveButton.disabled =
+					! requiredEmailMapped() ||
+					! consentReady( state.activeProvider, current );
 			}
 		}
 
@@ -1284,7 +1926,12 @@
 			root.querySelectorAll('.cmatic-pro-chip').forEach(chip => chip.remove());
 			root.querySelectorAll('[data-cmatic-paid]').forEach(control => control.removeAttribute('data-cmatic-paid'));
 			const mappingNote = document.getElementById('cmatic-free-mapping-note');
-			if (mappingNote) mappingNote.hidden = root.dataset.licenseState === 'licensed' || freeMappingSlots(current).size < Number(root.dataset.freeFields);
+			if ( mappingNote ) {
+				mappingNote.hidden = ! ( current.fields || [] ).some(
+					( field, index ) =>
+						paidSlot( current, 'field' + ( index + 3 ) )
+				);
+			}
 			if (root.dataset.licenseState === 'licensed') return;
 			const paidKeys = new Set(JSON.parse(root.dataset.paidKeys || '[]'));
 			let chipIndex = 0;
@@ -1304,7 +1951,7 @@
 				const nativeTags = ['tagging', 'labeltags', 'labeltags_cm-tag', 'sync_tags'].includes(key) || control.closest('#cmatic-tags');
 				const fieldCreation = control.closest('#cmatic-provider-mailerlite-create-field') || control.matches('#cmatic-klaviyo-add-property, [data-profile-property-name], [data-profile-property-remove]');
 				const nativeExport = control.closest('#cmatic-provider-tools [data-cmatic-provider-only="mailchimp"]');
-				const paidMapping = /^field[0-9]+$/.test(key) && freeMappingSlots(current).size >= Number(root.dataset.freeFields) && !freeMappingSlots(current).has(key);
+					const paidMapping = paidSlot( current, key );
 				if (!control.closest('[data-lite-preview]') && !paidKeys.has(key) && !paidMapping && !extraDestination && !routing && !nativeTags && !fieldCreation && !nativeExport) return;
 				const row = control.closest('.cmatic-consent-policy-row, .cmatic-provider-tool-row, .cmatic-provider-mapping-row, .mcee-container');
 				let label = control.labels?.[0] || null;
@@ -1498,6 +2145,96 @@
 			autoLoadOnlyDestination();
 		}
 
+		async function refreshFieldDetails() {
+			const slug = state.activeProvider;
+			const current = providerState( slug );
+			const listId = String( current.selected_list || '' );
+			if (
+				slug !== 'mailchimp' ||
+				! current.connected ||
+				! listId ||
+				current.fields_loading ||
+				current.dirty
+			) {
+				return;
+			}
+			let data;
+			try {
+				data = await request( 'fields-check', 'fields', {
+					form_id: Number( root.dataset.formId ),
+					provider: slug,
+					list_id: listId,
+				} );
+			} catch {
+				return;
+			}
+			if (
+				slug !== state.activeProvider ||
+				listId !== String( current.selected_list || '' ) ||
+				current.fields_loading ||
+				current.dirty
+			) {
+				return;
+			}
+			const fresh = [
+				...( data.merge_fields || [] ),
+				...( data.locked_fields || [] ),
+			].filter(
+				( field, index, fields ) =>
+					fields.findIndex( ( item ) => item.tag === field.tag ) ===
+					index
+			);
+			if ( ! fresh.length ) {
+				return;
+			}
+			const shape = ( fields ) =>
+				fields
+					.map( ( field ) => [
+						String( field.tag ),
+						flagged( field.required ),
+						flagged( field.unsupported ),
+					] )
+					.sort()
+					.join( '|' );
+			if ( shape( fresh ) === shape( current.fields || [] ) ) {
+				return;
+			}
+			const byTag = {};
+			( current.fields || [] ).forEach( function ( field, index ) {
+				const value = String(
+					( current.mappings || {} )[ 'field' + ( index + 3 ) ] || ''
+				);
+				if ( value ) {
+					byTag[ String( field.tag ).toUpperCase() ] = value;
+				}
+			} );
+			const mappings = {};
+			Object.keys( current.mappings || {} ).forEach( function ( key ) {
+				if ( ! /^field[0-9]+$/.test( key ) ) {
+					mappings[ key ] = current.mappings[ key ];
+				}
+			} );
+			fresh.forEach( function ( field, index ) {
+				mappings[ 'field' + ( index + 3 ) ] =
+					byTag[ String( field.tag ).toUpperCase() ] || '';
+			} );
+			current.fields = fresh;
+			current.mappings = mappings;
+			current.total_fields = Math.max(
+				fresh.length,
+				Number( data.total_merge_fields || 0 )
+			);
+			arrangeFields( current );
+			const baseline = initialProviders[ slug ] || {};
+			baseline.fields = JSON.parse( JSON.stringify( current.fields ) );
+			baseline.mappings = JSON.parse(
+				JSON.stringify( current.mappings )
+			);
+			baseline.total_fields = current.total_fields;
+			render();
+			savedPanelInputs = panelInputSnapshot();
+		}
+
 		function autoLoadOnlyDestination() {
 			const slug = state.activeProvider;
 			if (!slug) return;
@@ -1629,6 +2366,7 @@
 				current.locked_fields = Array.isArray(data.locked_fields) ? data.locked_fields : [];
 				current.total_fields = Math.max(current.fields.length, Number(data.total_merge_fields || 0));
 				current.mappings = Object.assign({}, String(previous.selected_list) === String(listId) ? previous.mappings : {}, data.mappings || {});
+				arrangeFields( current );
 				current.fields_loading = false;
 				current.configured = false;
 				updateDirty(slug);
@@ -1819,6 +2557,27 @@
 				try {
 					await request('reset', 'reset', { form_id: Number(root.dataset.formId) });
 					if (feedback) feedback.textContent = i18n('resetDone', 'Form reset. Reloading...');
+					document
+						.querySelectorAll(
+							'#wpcf7-admin-form-element input, #wpcf7-admin-form-element textarea, #wpcf7-admin-form-element select'
+						)
+						.forEach( function ( control ) {
+							if ( control.tagName === 'SELECT' ) {
+								Array.from( control.options ).forEach(
+									( option ) => {
+										option.defaultSelected =
+											option.selected;
+									}
+								);
+							} else if (
+								control.type === 'checkbox' ||
+								control.type === 'radio'
+							) {
+								control.defaultChecked = control.checked;
+							} else {
+								control.defaultValue = control.value;
+							}
+						} );
 					window.location.reload();
 				} catch (error) {
 					advancedReset.disabled = false;
@@ -1964,6 +2723,13 @@
 					current.base_groups = [groupId];
 					current.configured = false;
 					loadFields(groupId, false, undefined, previousRouting);
+					mailerliteGroups
+						.querySelector(
+							'[data-mailerlite-group="' +
+								CSS.escape( groupId ) +
+								'"] [data-mailerlite-group-selected]'
+						)
+						?.focus( { preventScroll: true } );
 					return;
 				}
 				const checkedGroups = Array.from(mailerliteGroups.querySelectorAll('[data-mailerlite-group-selected]:checked')).map(function(input) { return input.value; });
@@ -2013,7 +2779,11 @@
 			if (!select || !root.contains(select)) return;
 			const current = providerState(state.activeProvider);
 			current.mappings = current.mappings || {};
-			if (root.dataset.licenseState !== 'licensed' && select.value && !current.mappings[select.dataset.mappingSlot] && freeMappingSlots(current).size >= Number(root.dataset.freeFields)) {
+			if (
+				select.value &&
+				! current.mappings[ select.dataset.mappingSlot ] &&
+				paidSlot( current, select.dataset.mappingSlot )
+			) {
 				select.value = '';
 				showMessage(i18n('chooseThreeFields', 'Choose email and three fields. Clear a mapping to choose another field.'), 'error');
 				return;
@@ -2151,6 +2921,7 @@
 		render();
 		savedPanelInputs = panelInputSnapshot();
 		autoLoadOnlyDestination();
+		refreshFieldDetails();
 	}
 
 	if (document.readyState === 'loading') {

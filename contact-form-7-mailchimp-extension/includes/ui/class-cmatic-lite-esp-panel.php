@@ -674,7 +674,7 @@ final class Cmatic_Lite_Esp_Panel {
 			if ( ! is_array( $field ) || empty( $field['tag'] ) ) {
 				continue;
 			}
-			foreach ( array( 'tag', 'name', 'type', 'display_order' ) as $property ) {
+			foreach ( array( 'tag', 'name', 'type', 'display_order', 'required', 'unsupported' ) as $property ) {
 				printf(
 					'<input type="hidden" name="wpcf7-cmatic-provider[merge_fields][%1$d][%2$s]" data-provider-field="%2$s" data-provider-field-index="%1$d" value="%3$s">',
 					(int) $offset,

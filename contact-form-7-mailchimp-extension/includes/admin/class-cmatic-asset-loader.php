@@ -171,6 +171,19 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 						'mapProviderFields'                => __( 'Map %1$s %2$s', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider data name. */
 						'mapData'                          => __( 'Map %s', 'contact-form-7-mailchimp-extension' ),
+						/* translators: 1: platform name, 2: field term, 3: audience name. */
+						'loadingFieldsFor'                 => __( 'Loading %1$s %2$s for %3$s...', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: comma-separated field names. */
+						'requiredAlert'                    => __( 'Mailchimp marks these fields as required and they are not mapped yet: %s. Contacts from this form are stored without them until you map them below.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: 1: comma-separated field names, 2: number of free fields. */
+						'droppedAlert'                     => __( 'Saving these settings stops sending %1$s to Mailchimp. The free version sends email, the fields Mailchimp requires and the first %2$d other fields. Until you save, signups keep sending your current fields.', 'contact-form-7-mailchimp-extension' ),
+						'requiredEmailNote'                => __( 'Map the email address field. Signups cannot be sent without it.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: 1: field name, 2: field type. */
+						'requiredUnsupportedNote'          => __( 'Mailchimp marks %1$s as required, but this plugin cannot fill a %2$s field. Contacts are stored without it; make it optional in Mailchimp if you do not need it.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: field name. */
+						'requiredAddFieldNote'             => __( 'Mailchimp marks %s as required. Add a field for it on the Form tab and save, then map it here. Until then contacts are stored without it.', 'contact-form-7-mailchimp-extension' ),
+						/* translators: %s: field name. */
+						'requiredMapNote'                  => __( 'Mailchimp marks %s as required. Map it to a form field, or contacts are stored without it.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: 1: email provider name, 2: provider data name. */
 						'mappedFields'                     => __( 'Match each %1$s %2$s to a Contact Form 7 field. Email address mapping is required.', 'contact-form-7-mailchimp-extension' ),
 						/* translators: %s: provider destination plural. */

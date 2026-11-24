@@ -23,13 +23,7 @@ final class SettingsValidator {
 	 * @return array<string,mixed>|null
 	 */
 	public static function provider_save( string $slug, array $section, array $posted, int $field_limit, $contact_form, int $form_id ): ?array {
-		$mapped = 0;
-		foreach ( MappingSchema::arr( $posted['merge_fields'] ?? array() ) as $offset => $field ) {
-			if ( is_array( $field ) && '' !== trim( MappingSchema::str( $posted[ MappingSchema::slot( (int) $offset ) ] ?? '' ) ) ) {
-				++$mapped;
-			}
-		}
-		if ( $mapped > $field_limit ) {
+		if ( MappingSchema::capped_count( MappingSchema::arr( $posted['merge_fields'] ?? array() ), $posted ) > $field_limit ) {
 			return null;
 		}
 		$field_limit = count( MappingSchema::arr( $posted['merge_fields'] ?? array() ) );
