@@ -85,6 +85,13 @@ final class Cmatic_Lite_Signls_Snapshot {
 			$successes
 		);
 
+		if ( class_exists( '\\Cmatic\\Lite\\Telemetry\\PanelActivity' ) && \Cmatic\Lite\Telemetry\PanelActivity::active() ) {
+			try {
+				$observations['panel'] = \Cmatic\Lite\Telemetry\PanelActivity::snapshot();
+			} catch ( Throwable $exception ) {
+				unset( $exception );
+			}
+		}
 		$missing                           = array_values( array_unique( $missing ) );
 		$observations['collection_status'] = empty( $missing ) ? 'complete' : ( 0 === $successes ? 'failed' : 'partial' );
 		$observations['missing_sections']  = $missing;

@@ -119,7 +119,7 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 							'type'              => 'integer',
 							'sanitize_callback' => 'absint',
 							'validate_callback' => function ( $param ) {
-								return is_numeric( $param ) && $param > 0;
+								return is_numeric( $param ) && $param >= 0 && $param <= 6;
 							},
 						),
 						'reason_text' => array(
@@ -174,7 +174,10 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 				'language'        => get_locale(),
 			);
 
-			$this->send_feedback_email( $feedback );
+			self::record_reason( (int) $reason_id, is_string( $reason_text ) ? $reason_text : '' );
+			if ( $reason_id > 0 ) {
+				$this->send_feedback_email( $feedback );
+			}
 
 			return new WP_REST_Response(
 				array(
@@ -185,10 +188,34 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 			);
 		}
 
+		public static function record_reason( int $reason_id, string $reason_text ): void {
+			$reasons = array(
+				0 => 'skipped',
+				1 => 'better',
+				2 => 'missing_features',
+				3 => 'too_complicated',
+				4 => 'temporary',
+				5 => 'conflict',
+				6 => 'other',
+			);
+			if ( ! isset( $reasons[ $reason_id ] ) || ! class_exists( '\\Cmatic\\Lite\\Telemetry\\PanelActivity' ) ) {
+				return;
+			}
+			$reason = $reasons[ $reason_id ];
+			\Cmatic\Lite\Telemetry\PanelActivity::record( 'skipped' === $reason ? 'deactivate_skipped' : 'deactivate_reason_' . $reason );
+			if ( in_array( $reason, array( 'better', 'conflict' ), true ) && '' !== $reason_text ) {
+				$folder = strtolower( (string) strtok( $reason_text, '/' ) );
+				$slug   = \Cmatic\Lite\Telemetry\PanelActivity::slug( $folder );
+				if ( '' !== $slug ) {
+					\Cmatic\Lite\Telemetry\PanelActivity::record( substr( 'deactivate_' . $reason . '_' . $slug, 0, 48 ) );
+				}
+			}
+		}
+
 		private function send_feedback_email( $feedback ) {
 			$reason_labels = array(
 				0 => 'Skipped survey',
-				1 => 'I found a better Mailchimp integration',
+				1 => 'I found a better integration',
 				2 => 'Missing features I need',
 				3 => 'Too complicated to set up',
 				4 => "It's a temporary deactivation",
@@ -256,7 +283,7 @@ if ( ! class_exists( 'Cmatic_Deactivation_Survey' ) ) {
 							'reasons'         => array(
 								array(
 									'id'          => 1,
-									'text'        => __( 'I found a better Mailchimp integration', 'contact-form-7-mailchimp-extension' ),
+									'text'        => __( 'I found a better integration', 'contact-form-7-mailchimp-extension' ),
 									'input_type'  => 'plugin-dropdown',
 									'placeholder' => __( 'Select the plugin you are switching to', 'contact-form-7-mailchimp-extension' ),
 									'max_length'  => 0,

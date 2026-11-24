@@ -56,6 +56,7 @@ final class Cmatic_Lite_Signls_Contract {
 					'wordpress'         => self::wordpress(),
 					'legacy_lifecycle'  => self::legacy_lifecycle(),
 					'opportunities'     => self::opportunities(),
+					'panel'             => self::panel(),
 					'collection_status' => self::enum( array( 'complete', 'partial', 'failed' ), 'failed' ),
 					'missing_sections'  => self::list_of(
 						self::enum(
@@ -332,6 +333,27 @@ final class Cmatic_Lite_Signls_Contract {
 				'php'           => self::version(),
 				'mysql_version' => self::version( true ),
 				'software'      => self::object( array( 'server' => self::text() ) ),
+			)
+		);
+	}
+
+	private static function panel(): array {
+		return self::object(
+			array(
+				'schema' => self::uint( 255 ),
+				'events' => self::map_of(
+					self::object(
+						array(
+							'count'    => self::uint(),
+							'first_at' => self::uint(),
+							'last_at'  => self::uint(),
+							'ms_total' => self::uint(),
+							'ms_max'   => self::uint(),
+						)
+					),
+					\Cmatic\Lite\Telemetry\PanelActivity::MAX_EVENTS,
+					48
+				),
 			)
 		);
 	}

@@ -143,6 +143,7 @@ final class Cmatic_Plugin {
 		Cmatic_Contact_Lookup::init();
 		Cmatic_Rest_OAuth::init();
 		\Cmatic\Lite\Submission\Feedback::init();
+		\Cmatic\Lite\Telemetry\PanelActivity::init();
 
 		Cmatic_Deactivation_Survey::init_lite();
 		Cmatic_Asset_Loader::init();

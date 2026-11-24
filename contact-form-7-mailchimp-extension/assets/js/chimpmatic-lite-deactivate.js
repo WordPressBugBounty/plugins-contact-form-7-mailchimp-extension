@@ -189,6 +189,17 @@
 	function handleSkip(evt) {
 		evt.preventDefault();
 
+		try {
+			fetch( config.restUrl, {
+				method: 'POST',
+				keepalive: true,
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': config.restNonce,
+				},
+				body: JSON.stringify( { reason_id: 0, reason_text: '' } ),
+			} ).catch( () => {} );
+		} catch {}
 		window.location.href = deactivateUrl;
 	}
 

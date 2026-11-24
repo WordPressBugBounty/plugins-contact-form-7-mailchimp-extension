@@ -42,39 +42,31 @@
 	justify-content: center;
 }
 
-.cmatic-modal--active .cmatic-modal__overlay {
-	animation: modalOverlayFadeIn 0.3s ease;
-}
-
-.cmatic-modal--active .cmatic-modal__dialog {
-	animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 @keyframes modalOverlayFadeIn {
+
 	from { opacity: 0; }
+
 	to { opacity: 1; }
 }
 
 @keyframes modalSlideUp {
+
 	from { opacity: 0; transform: translateY(100px); }
+
 	to { opacity: 1; transform: translateY(0); }
 }
 
-.cmatic-modal--closing .cmatic-modal__overlay {
-	animation: modalOverlayFadeOut 0.3s ease;
-}
-
-.cmatic-modal--closing .cmatic-modal__dialog {
-	animation: modalSlideDown 0.3s ease;
-}
-
 @keyframes modalOverlayFadeOut {
+
 	from { opacity: 1; }
+
 	to { opacity: 0; }
 }
 
 @keyframes modalSlideDown {
+
 	from { opacity: 1; transform: translateY(0); }
+
 	to { opacity: 0; transform: translateY(50px); }
 }
 
@@ -206,7 +198,9 @@
 }
 
 @keyframes slideDown {
+
 	from { opacity: 0; transform: translateY(-10px); }
+
 	to { opacity: 1; transform: translateY(0); }
 }
 
@@ -230,7 +224,7 @@ select.cmatic-input-field {
 	cursor: pointer;
 	appearance: none;
 	background-color: #fff;
-	background-image: url(data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23646970' d='M6 9L1 4h10z'/%3E%3C/svg%3E);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23646970' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
 	background-repeat: no-repeat;
 	background-position: right 14px center;
 	background-size: 12px;
@@ -288,6 +282,7 @@ select.cmatic-input-field {
 }
 
 @media (max-width: 640px) {
+
 	.cmatic-modal__dialog {
 	width: 95%;
 	margin: 10px auto;
@@ -328,13 +323,15 @@ select.cmatic-input-field {
 	outline-offset: 2px;
 }
 
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
+
 	.cmatic-modal__dialog {
 	border: 2px solid currentcolor;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
+
 	* {
 	transition: none !important;
 	}
@@ -466,4 +463,20 @@ select.cmatic-input-field {
 
 .cmatic-modal__feedback--skipped .cmatic-modal__feedback-title {
 	color: #614200;
+}
+
+.cmatic-modal--active .cmatic-modal__overlay {
+	animation: modalOverlayFadeIn 0.3s ease;
+}
+
+.cmatic-modal--active .cmatic-modal__dialog {
+	animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cmatic-modal--closing .cmatic-modal__overlay {
+	animation: modalOverlayFadeOut 0.3s ease;
+}
+
+.cmatic-modal--closing .cmatic-modal__dialog {
+	animation: modalSlideDown 0.3s ease;
 }

@@ -70,6 +70,7 @@ delete_option( 'cmatic_retry_count' );
 delete_option( 'cmatic_initialized' );
 delete_option( 'cmatic_install_id' );
 delete_option( 'cmatic_lite_first_seen' );
+delete_option( 'cmatic_lite_panel_activity' );
 delete_site_option( 'cmatic_pro_release' );
 delete_site_option( 'cmatic_pro_current_state' );
 

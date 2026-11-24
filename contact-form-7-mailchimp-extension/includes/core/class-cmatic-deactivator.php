@@ -25,6 +25,9 @@ class Cmatic_Deactivator {
 
 		$this->record_deactivation();
 
+		if ( class_exists( '\\Cmatic\\Lite\\Telemetry\\PanelActivity' ) ) {
+			\Cmatic\Lite\Telemetry\PanelActivity::record( 'deactivated' );
+		}
 		$this->flush_signls_before_suspend();
 
 		do_action( 'cmatic_deactivated' );
