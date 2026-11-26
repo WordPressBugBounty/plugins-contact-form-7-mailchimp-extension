@@ -75,6 +75,9 @@ final class FieldValues {
 	 * @return string|array<int,string>
 	 */
 	public static function replace_tag_values( string $subject, array $posted_data ) {
+		if ( preg_match_all( self::TAG_PATTERN, $subject ) > 1 ) {
+			return self::fill_template( $subject, $posted_data );
+		}
 		if ( preg_match( self::TAG_PATTERN, $subject, $matches ) > 0 ) {
 			$key = self::posted_key( $matches[1], $posted_data );
 			if ( null !== $key ) {
@@ -100,6 +103,25 @@ final class FieldValues {
 			return '';
 		}
 		return $subject;
+	}
+
+	/**
+	 * @param array<array-key,mixed> $posted_data Submitted Contact Form 7 data.
+	 */
+	private static function fill_template( string $subject, array $posted_data ): string {
+		$missing = false;
+		$filled  = preg_replace_callback(
+			self::TAG_PATTERN,
+			static function ( array $match ) use ( $posted_data, &$missing ): string {
+				$value = trim( self::replace_tags( '[' . $match[1] . ']', $posted_data ) );
+				if ( '' === $value ) {
+					$missing = true;
+				}
+				return $value;
+			},
+			$subject
+		);
+		return $missing || ! is_string( $filled ) ? '' : trim( $filled );
 	}
 
 	public static function build( array $cf7_mch, array $posted_data, int $field_limit = CMATIC_LITE_FIELDS, bool $zero_values = false ): array {
@@ -133,8 +155,21 @@ final class FieldValues {
 		}
 
 		if ( $field_limit < PHP_INT_MAX ) {
-			$email      = array_intersect_key( $merge_vars, array( 'EMAIL' => true ) );
-			$merge_vars = $email + array_slice( array_diff_key( $merge_vars, $email ), 0, max( 0, $field_limit - 1 ), true );
+			$required = array();
+			foreach ( $cf7_mch['merge_fields'] as $merge_field ) {
+				if ( is_array( $merge_field ) && MappingSchema::required( $merge_field ) ) {
+					$required[ MappingSchema::str( $merge_field['tag'] ?? '' ) ] = true;
+				}
+			}
+			$email    = array_intersect_key( $merge_vars, array( 'EMAIL' => true ) );
+			$others   = array_diff_key( $merge_vars, $email );
+			$optional = 0;
+			foreach ( array_keys( $others ) as $merge_tag ) {
+				if ( ! isset( $required[ $merge_tag ] ) && ++$optional > $field_limit - 1 ) {
+					unset( $others[ $merge_tag ] );
+				}
+			}
+			$merge_vars = $email + $others;
 		}
 		return self::filter_empty( $merge_vars );
 	}

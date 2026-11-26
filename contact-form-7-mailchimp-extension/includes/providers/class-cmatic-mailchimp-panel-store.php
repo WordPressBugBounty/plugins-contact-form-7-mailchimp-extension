@@ -89,7 +89,9 @@ final class Cmatic_Mailchimp_Panel_Store {
 			$drop_oauth     = $key_changed && 'oauth' === self::auth_type( $config );
 		}
 		$selected = FormSettings::selected_list( $config );
-		if ( $key_changed || ( '' !== $selected && ! FormSettings::list_exists( array( 'lisdata' => array( 'lists' => $items ) ), $selected ) ) ) {
+		$kept     = '' !== $selected && FormSettings::list_exists( array( 'lisdata' => array( 'lists' => $items ) ), $selected );
+		$cleared  = ! $kept && ( $key_changed || '' !== $selected );
+		if ( $cleared ) {
 			$changes = array_merge( $changes, MappingSchema::cleared_mailchimp_account() );
 		}
 		if ( $drop_oauth ) {
@@ -99,6 +101,7 @@ final class Cmatic_Mailchimp_Panel_Store {
 			}
 		}
 		$config = FormSettingsRepository::merge( $form_id, $changes, $drop_oauth ? array( 'auth_type', 'api_key_backup', 'oauth_account_name' ) : array() );
+		\Cmatic\Lite\Submission\Stats::clear_failure( $form_id );
 		if ( ! Cmatic_Options_Repository::get_option( 'api.first_connected' ) ) {
 			Cmatic_Options_Repository::set_option( 'api.first_connected', time() );
 		}
@@ -109,6 +112,7 @@ final class Cmatic_Mailchimp_Panel_Store {
 			'connected'          => true,
 			'credential_present' => true,
 			'key_changed'        => $key_changed,
+			'selection_cleared'  => $cleared,
 			'auth_type'          => self::auth_type( $config ),
 			'lists'              => self::normalize_lists( $config ),
 		);
@@ -202,7 +206,7 @@ final class Cmatic_Mailchimp_Panel_Store {
 		$selected    = FormSettings::selected_list( $config );
 		$accept      = trim( MappingSchema::str( $config['accept'] ?? '' ) );
 		$mappings    = MappingSchema::mappings( $config, $limit );
-		$connected   = self::credential_present( $config ) && 1 === MappingSchema::num( $config['api-validation'] ?? 0 );
+		$connected   = self::credential_present( $config ) && 1 === MappingSchema::num( $config['api-validation'] ?? 0 ) && ! \Cmatic\Lite\Submission\Stats::credential_rejected( $form_id, 'mailchimp' );
 		$offset      = MappingSchema::email_offset( $fields, $limit, true );
 		$mapped      = null !== $offset && '' !== MappingSchema::str( $mappings[ MappingSchema::slot( $offset ) ] ?? '' );
 		$base_groups = \Cmatic\Lite\Submission\DestinationResolver::base_groups( $config );

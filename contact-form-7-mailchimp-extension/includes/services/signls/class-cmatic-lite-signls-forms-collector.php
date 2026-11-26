@@ -216,6 +216,13 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 				$result[ (int) $match[1] ]['last_submission'] = self::nonnegative_int( $value );
 			}
 		}
+		foreach ( \Cmatic\Lite\Submission\Stats::all() as $form_id => $stat ) {
+			if ( ! isset( $result[ $form_id ] ) ) {
+				continue;
+			}
+			$result[ $form_id ]['submissions']     = max( self::nonnegative_int( $result[ $form_id ]['submissions'] ), self::nonnegative_int( $stat['ok'] ?? 0 ) + self::nonnegative_int( $stat['failed'] ?? 0 ) );
+			$result[ $form_id ]['last_submission'] = max( self::nonnegative_int( $result[ $form_id ]['last_submission'] ), self::nonnegative_int( $stat['last_ok_at'] ?? 0 ), self::nonnegative_int( $stat['last_error_at'] ?? 0 ) );
+		}
 		$this->configurations = $result;
 		return $result;
 	}

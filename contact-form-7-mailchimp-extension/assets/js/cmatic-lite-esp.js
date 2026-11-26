@@ -720,7 +720,11 @@
 			const active = state.activeProvider === 'mailerlite';
 			mailerliteOptions.hidden = !active;
 			fieldCreator.hidden = root.dataset.manageIntegration === '0' || !active || !current.create_field_supported || !current.connected;
-			lookup.hidden = !active || !current.lookup_supported || !current.connected;
+			lookup.hidden =
+				! active ||
+				! current.lookup_supported ||
+				! current.connected ||
+				lookup.dataset.cmaticLocked === '1';
 			if (!active) return;
 			mailerliteStatus.value = String(current.status_mode || 'legacy_provider_managed');
 			mailerliteStatus.disabled = false;
@@ -2270,7 +2274,11 @@
 				current.credential_present = true;
 				current.auth_type = String(data.auth_type || current.auth_type || 'api_key');
 				current.lists = Array.isArray(data.lists) ? data.lists : [];
-				if (data.key_changed) {
+				if (
+					data.selection_cleared === undefined
+						? data.key_changed
+						: data.selection_cleared
+				) {
 					current.selected_list = '';
 					current.selected_list_name = '';
 					current.fields = [];

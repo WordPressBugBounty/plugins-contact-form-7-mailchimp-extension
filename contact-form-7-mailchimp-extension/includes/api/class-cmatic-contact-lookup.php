@@ -88,7 +88,7 @@ class Cmatic_Contact_Lookup {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( static::class, 'cmatic_lookup_contact' ),
-				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'form' ),
+				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 				'args'                => array(
 					'email'   => Args::of( 'string', 'sanitize_email' ) + array(
 						'validate_callback' => function ( $param ) {
@@ -104,6 +104,12 @@ class Cmatic_Contact_Lookup {
 	public static function cmatic_lookup_contact( $request ) {
 		$email   = strtolower( $request->get_param( 'email' ) );
 		$form_id = $request->get_param( 'form_id' );
+		if ( ! Cmatic_Rest_Permissions::manage_options() ) {
+			return new WP_Error( 'rest_forbidden', esc_html__( 'An administrator manages this connection.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
+		}
+		if ( ! Cmatic_Rest_Permissions::lookup_limit( 'mc', (int) $form_id, (string) $email ) ) {
+			return new WP_Error( 'provider_lookup_limited', esc_html__( 'Too many lookups. Try again later.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 429 ) );
+		}
 
 		$option_name = 'cf7_mch_' . $form_id;
 		$cf7_mch     = get_option( $option_name, array() );
@@ -282,6 +288,9 @@ class Cmatic_Contact_Lookup {
 			'form_id' => 0,
 		);
 		$args     = wp_parse_args( $args, $defaults );
+		if ( ! Cmatic_Rest_Permissions::manage_options() ) {
+			return;
+		}
 		?>
 		<div id="cmatic-contact-lookup" class="postbox mce-move mce-hidden">
 			<div class="inside" style="padding: 15px;">

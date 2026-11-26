@@ -70,6 +70,16 @@
 		true
 	);
 
+	document.addEventListener( 'click', ( event ) => {
+		const choice = event.target.closest
+			? event.target.closest( '[data-provider-choice]' )
+			: null;
+		const name = choice ? slug( choice.dataset.providerChoice ) : '';
+		if ( name ) {
+			send( 'provider_picked_' + name );
+		}
+	} );
+
 	let panelSeen = false;
 	function panelVisible() {
 		const panel = document.getElementById( config.panel );

@@ -33,10 +33,21 @@ final class Cmatic_Submission_Handler {
 		if ( ! is_object( $contact_form ) || ! method_exists( $contact_form, 'id' ) ) {
 			return;
 		}
+		if ( self::is_admin_test( (int) $contact_form->id() ) ) {
+			self::process_submission( $contact_form );
+			return;
+		}
 		if ( array() === self::$pending ) {
 			add_action( 'shutdown', array( __CLASS__, 'send_after_response' ), 100 );
 		}
 		self::$pending[ (int) $contact_form->id() ] = $contact_form;
+	}
+
+	private static function is_admin_test( int $form_id ): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Contact Form 7 verified the submission; only a flag is read.
+		$marker = isset( $_POST['_cmatic_test_modal'] ) && is_string( $_POST['_cmatic_test_modal'] ) ? sanitize_text_field( wp_unslash( $_POST['_cmatic_test_modal'] ) ) : '';
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- Contact Form 7 registers this meta capability.
+		return '1' === $marker && $form_id > 0 && current_user_can( 'wpcf7_edit_contact_form', $form_id );
 	}
 
 	public static function send_after_response(): void {
@@ -76,7 +87,7 @@ final class Cmatic_Submission_Handler {
 				return;
 			}
 
-			$submission = WPCF7_Submission::get_instance();
+			$submission = class_exists( 'WPCF7_Submission' ) ? WPCF7_Submission::get_instance() : null;
 			if ( ! $submission ) {
 				return;
 			}

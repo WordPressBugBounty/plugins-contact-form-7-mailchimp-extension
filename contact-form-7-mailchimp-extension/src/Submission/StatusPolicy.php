@@ -21,6 +21,7 @@ final class StatusPolicy {
 			}
 
 			$logger->log( 'INFO', 'Subscription skipped: acceptance checkbox was not checked.' );
+			\Cmatic\Lite\Telemetry\PanelActivity::note( 'skipped_acceptance_not_checked' );
 			Feedback::set_result( Feedback::skipped( 'acceptance_not_checked' ) );
 			return null;
 		}

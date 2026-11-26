@@ -23,7 +23,7 @@ final class Cmatic_Lite_Esp_Panel {
 		if ( 'mailchimp' === $slug ) {
 			$has_credentials = ! empty( $config['api'] )
 				|| ( isset( $config['auth_type'] ) && 'oauth' === $config['auth_type'] );
-			if ( 1 === \Cmatic\Lite\Settings\MappingSchema::int( $config['api-validation'] ?? 0 ) ) {
+			if ( 1 === \Cmatic\Lite\Settings\MappingSchema::int( $config['api-validation'] ?? 0 ) && ! \Cmatic\Lite\Submission\Stats::credential_rejected( $form_id, 'mailchimp' ) ) {
 				return 'connected';
 			}
 			return $has_credentials ? 'disconnected' : 'fresh';
@@ -34,7 +34,7 @@ final class Cmatic_Lite_Esp_Panel {
 		$has_credentials = '' !== $credential;
 		unset( $credential );
 
-		if ( $has_credentials && 1 === MappingSchema::int( $settings['api-validation'] ?? 0 ) ) {
+		if ( $has_credentials && 1 === MappingSchema::int( $settings['api-validation'] ?? 0 ) && ! \Cmatic\Lite\Submission\Stats::credential_rejected( $form_id, $slug ) ) {
 			return 'connected';
 		}
 		return $has_credentials ? 'disconnected' : 'fresh';
@@ -130,6 +130,10 @@ final class Cmatic_Lite_Esp_Panel {
 					<strong><?php esc_html_e( 'Setup complete', 'contact-form-7-mailchimp-extension' ); ?></strong>
 					<p id="cmatic-provider-completion-outcome"></p>
 					<span id="cmatic-provider-completion-meta"></span>
+					<?php if ( 0 === MappingSchema::int( \Cmatic\Lite\Submission\Stats::get( $form_id )['ok'] ?? 0 ) ) : ?>
+					<p class="cmatic-provider-completion-next"><?php echo esc_html( \Cmatic\Lite\Admin\Notices::first_test_copy()['message'] ); ?></p>
+					<p class="cmatic-provider-completion-next"><button type="button" class="button button-primary vc-test-submission"><?php echo esc_html( \Cmatic\Lite\Admin\Notices::first_test_copy()['button'] ); ?></button></p>
+					<?php endif; ?>
 				</div>
 			</div>
 			<ol id="cmatic-provider-progress" class="cmatic-provider-progress" aria-label="<?php esc_attr_e( 'Setup progress', 'contact-form-7-mailchimp-extension' ); ?>">
@@ -357,7 +361,7 @@ final class Cmatic_Lite_Esp_Panel {
 				<h3 id="cmatic-provider-tools-heading"><?php esc_html_e( 'Test and inspect', 'contact-form-7-mailchimp-extension' ); ?></h3>
 				<p class="description cmatic-provider-tools-description"><?php esc_html_e( 'Inspect delivery or test this Contact Form 7 form here.', 'contact-form-7-mailchimp-extension' ); ?></p>
 				<div class="cmatic-provider-tool-list">
-					<div id="cmatic-provider-mailerlite-lookup" class="cmatic-provider-tool-row cmatic-provider-tool-row--lookup" hidden>
+					<div id="cmatic-provider-mailerlite-lookup" class="cmatic-provider-tool-row cmatic-provider-tool-row--lookup" hidden<?php echo current_user_can( 'wpcf7_manage_integration' ) ? '' : ' data-cmatic-locked="1"'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>>
 						<div class="cmatic-provider-tool-copy"><strong><?php esc_html_e( 'Find a subscriber', 'contact-form-7-mailchimp-extension' ); ?></strong><p><?php esc_html_e( 'Inspect the subscriber currently stored in MailerLite.', 'contact-form-7-mailchimp-extension' ); ?></p></div>
 						<div class="cmatic-provider-tool-control"><div class="cmatic-provider-tool-field"><label for="cmatic-provider-mailerlite-lookup-email"><?php esc_html_e( 'Subscriber email address', 'contact-form-7-mailchimp-extension' ); ?></label><input type="email" id="cmatic-provider-mailerlite-lookup-email" autocomplete="off"></div><div class="cmatic-provider-actions"><button type="button" class="button button-primary" id="cmatic-provider-mailerlite-lookup-submit"><?php esc_html_e( 'Find subscriber', 'contact-form-7-mailchimp-extension' ); ?></button></div><div id="cmatic-provider-mailerlite-lookup-results" role="status" aria-live="polite"></div></div>
 					</div>
@@ -435,7 +439,7 @@ final class Cmatic_Lite_Esp_Panel {
 			$mappings                     = MappingSchema::mappings( $mapped, $field_limit );
 			$provider_state               = array(
 				'has_saved_mappings'         => array() !== array_filter( MappingSchema::mappings( $settings, PHP_INT_MAX ) ),
-				'connected'                  => $has_key && 1 === MappingSchema::int( $settings['api-validation'] ?? 0 ),
+				'connected'                  => $has_key && 1 === MappingSchema::int( $settings['api-validation'] ?? 0 ) && ! \Cmatic\Lite\Submission\Stats::credential_rejected( $form_id, $slug ),
 				'credential_present'         => $has_key,
 				'lists'                      => $lists,
 				'selected_list'              => $selected,

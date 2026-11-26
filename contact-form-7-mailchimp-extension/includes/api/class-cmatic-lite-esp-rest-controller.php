@@ -81,7 +81,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				array(
 					'methods'             => 'POST',
 					'callback'            => array( __CLASS__, $callback ),
-					'permission_callback' => array( 'Cmatic_Rest_Permissions', 'create_field' === $callback ? 'admin' : 'form' ),
+					'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
 					'args'                => array(
 						'form_id'  => Args::form_id(),
 						'provider' => Args::of( 'string', 'sanitize_key' ),
@@ -154,13 +154,11 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$selected    = FormSettings::selected_list( $settings );
 		$changes     = array_merge( $validation, array_diff_key( $lists, array_flip( array( 'merge_fields', 'total_merge_fields' ) ) ), array( 'disconnected_key_fingerprint' => '' ) );
 
-		if (
-			$key_changed
-			|| (
-				'' !== $selected
-				&& ! FormSettings::list_exists( array( 'lisdata' => array( 'lists' => $list_items ) ), $selected )
-			)
-		) {
+		$kept    = '' !== $selected && ( $key_changed
+			? self::same_destination( FormSettings::lists( $settings ), $list_items, $selected )
+			: FormSettings::list_exists( array( 'lisdata' => array( 'lists' => $list_items ) ), $selected ) );
+		$cleared = ! $kept && ( $key_changed || '' !== $selected );
+		if ( $cleared ) {
 			$changes = array_merge( $changes, MappingSchema::cleared_provider_account( $field_limit ) );
 		}
 
@@ -195,6 +193,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		if ( $key_changed && 'mailerlite' === $slug ) {
 			\Cmatic\Lite\Submission\Degradation::clear( $form_id );
 		}
+		\Cmatic\Lite\Submission\Stats::clear_failure( $form_id );
 		if ( ! Cmatic_Options_Repository::get_option( 'api.first_connected' ) ) {
 			Cmatic_Options_Repository::set_option( 'api.first_connected', time() );
 		}
@@ -207,6 +206,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 				'connected'          => true,
 				'credential_present' => true,
 				'key_changed'        => $key_changed,
+				'selection_cleared'  => $cleared,
 				'lists'              => $list_items,
 			)
 		);
@@ -411,13 +411,13 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$slug     = (string) $request->get_param( 'provider' );
 		$email    = sanitize_email( (string) $request->get_param( 'email' ) );
 		$provider = Cmatic_Lite_Esp_Registry::get( $slug );
-		if ( ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) || 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Lookup_Interface ) {
+		if ( ! Cmatic_Rest_Permissions::manage_options() || ! current_user_can( 'wpcf7_edit_contact_form', $form_id ) || 'mailerlite' !== $slug || ! $provider instanceof Cmatic_Lite_Esp_Lookup_Interface ) {
 			return new WP_Error( 'provider_lookup_forbidden', esc_html__( 'Subscriber lookup is unavailable.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 403 ) );
 		}
 		if ( ! is_email( $email ) ) {
 			return new WP_Error( 'invalid_lookup_email', esc_html__( 'Enter a valid email address.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
 		}
-		if ( ! self::consume_lookup_limit( $form_id, $email ) ) {
+		if ( ! Cmatic_Rest_Permissions::lookup_limit( 'ml', $form_id, $email ) ) {
 			return new WP_Error( 'provider_lookup_limited', esc_html__( 'Too many lookups. Try again later.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 429 ) );
 		}
 		$key = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
@@ -586,28 +586,6 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		return add_option( $name, $expires, '', false );
 	}
 
-	private static function consume_lookup_limit( int $form_id, string $email ): bool {
-		$user_id     = get_current_user_id();
-		$base        = 'cmatic_ml_lookup_' . $user_id . '_' . $form_id;
-		$target      = $base . '_' . substr( hash_hmac( 'sha256', strtolower( $email ), wp_salt( 'nonce' ) ), 0, 24 );
-		$total_value = get_transient( $base );
-		$same_value  = get_transient( $target );
-		$total       = is_numeric( $total_value ) ? (int) $total_value : 0;
-		$same        = is_numeric( $same_value ) ? (int) $same_value : 0;
-		if ( $total >= 10 || $same >= 3 ) {
-			return false;
-		}
-		set_transient( $base, $total + 1, 10 * MINUTE_IN_SECONDS );
-		set_transient( $target, $same + 1, 10 * MINUTE_IN_SECONDS );
-		return true;
-	}
-
-
-
-
-
-
-
 	private static function scalar_string( $value ): string {
 		return is_scalar( $value ) ? (string) $value : '';
 	}
@@ -615,6 +593,22 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 
 	private static function is_known_list( int $form_id, string $slug, string $list_id ): bool {
 		return FormSettings::list_exists( FormSettingsRepository::load( $form_id )->section( $slug ), $list_id );
+	}
+
+	/**
+	 * @param array<array-key, mixed> $before
+	 * @param array<array-key, mixed> $after
+	 */
+	private static function same_destination( array $before, array $after, string $list_id ): bool {
+		$names = array();
+		foreach ( array( $before, $after ) as $index => $lists ) {
+			foreach ( $lists as $list ) {
+				if ( is_array( $list ) && isset( $list['id'] ) && is_scalar( $list['id'] ) && $list_id === (string) $list['id'] ) {
+					$names[ $index ] = isset( $list['name'] ) && is_scalar( $list['name'] ) ? trim( (string) $list['name'] ) : '';
+				}
+			}
+		}
+		return isset( $names[0], $names[1] ) && '' !== $names[1] && $names[0] === $names[1];
 	}
 
 	private static function record_transition( string $provider, string $operation, bool $success, string $failure_class, $value, string $fallback ): void {

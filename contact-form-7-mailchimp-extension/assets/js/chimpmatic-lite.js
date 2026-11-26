@@ -1184,6 +1184,7 @@ function chimpmaticLiteInit() {
 
 				const response = await fetch(restUrl, {
 					method: 'POST',
+					headers: { 'X-WP-Nonce': window.chimpmaticLite.nonce },
 					body: formData,
 					credentials: 'same-origin'
 				});
@@ -1198,6 +1199,18 @@ function chimpmaticLiteInit() {
 					isSuccess = true;
 					showResponse(responseOutput, 'success', data.message || 'Message sent successfully.');
 					form.reset();
+					refreshDebugLogsAfterSubmission();
+				} else if (
+					data.status === 'mail_failed' &&
+					data.chimpmatic &&
+					data.chimpmatic.success === true
+				) {
+					isSuccess = true;
+					showResponse(
+						responseOutput,
+						'error',
+						"The signup was added, but this site could not send the form's notification email. Check the Mail tab and your site's email setup."
+					);
 					refreshDebugLogsAfterSubmission();
 				} else if (data.status === 'validation_failed' || data.status === 'mail_failed') {
 					showResponse(responseOutput, 'error', data.message || 'There was an error sending your message.');
@@ -1368,6 +1381,13 @@ function chimpmaticLiteInit() {
 		}
 	}
 
+	if (
+		new URLSearchParams( window.location.search ).get( 'cmatic-test' ) ===
+		'1'
+	) {
+		window.setTimeout( openTestModal, 400 );
+	}
+
 	document.addEventListener('click', function(event) {
 		const btn = event.target.closest('.vc-test-submission');
 		if (!btn) return;
@@ -1412,29 +1432,6 @@ function chimpmaticLiteInit() {
 		if (!form) return;
 
 		form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-	});
-
-	document.addEventListener('click', function(event) {
-		if (!event.target.classList.contains('notice-dismiss')) return;
-		const noticeElement = event.target.closest('#mce-notice');
-		if (!noticeElement) return;
-
-		event.preventDefault();
-		fetch(chimpmaticLite.restUrl + 'notices/dismiss', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': chimpmaticLite.restNonce
-			}
-		}).then(function(response) {
-			return response.json();
-		}).then(function(data) {
-			if (data.success) {
-				noticeElement.style.transition = 'opacity 0.3s ease-out';
-				noticeElement.style.opacity = '0';
-				setTimeout(function() { noticeElement.style.display = 'none'; }, 300);
-			}
-		});
 	});
 
 	(function initContactLookup() {

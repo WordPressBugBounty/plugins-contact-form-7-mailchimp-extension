@@ -55,6 +55,11 @@ final class Cmatic_Rest_Lists {
 		$cf7_mch         = get_option( $option_name, array() );
 		$api_key         = $cf7_mch['api'] ?? '';
 		$logfile_enabled = (bool) get_option( CMATIC_LOG_OPTION, false );
+		$known           = \Cmatic\Lite\Settings\FormSettings::lists( is_array( $cf7_mch ) ? $cf7_mch : array() );
+		if ( ! is_string( $list_id ) || 1 !== preg_match( '/^[A-Za-z0-9_-]{1,64}$/D', $list_id ) || ( array() !== $known && ! \Cmatic\Lite\Settings\FormSettings::list_exists( is_array( $cf7_mch ) ? $cf7_mch : array(), $list_id ) ) ) {
+			self::record_transition( 'refresh_schema', false, 'validation', 'Destination is missing or no longer known.', 'deleted_destination' );
+			return new WP_Error( 'invalid_list', esc_html__( 'Choose one of the audiences from your connected account.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
+		}
 
 		if ( empty( $api_key ) ) {
 			$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );

@@ -2202,6 +2202,10 @@ tr.cmatic-not-pro:hover,
 	margin: 0 0 3px;
 }
 
+.cmatic-provider-completion .cmatic-provider-completion-next {
+	margin-top: 10px;
+}
+
 #cmatic-provider-completion-meta {
 	font-size: 12px;
 }

@@ -103,6 +103,29 @@ final class Stats {
 		return self::int( $entry['ok'] ?? 0 ) > 0 || self::int( $entry['failed'] ?? 0 ) > 0;
 	}
 
+	public static function credential_rejected( int $form_id, string $provider ): bool {
+		$entry = self::get( $form_id );
+		if ( ! self::is_failing( $entry ) || ( '' !== self::str( $entry['provider'] ?? '' ) && sanitize_key( $provider ) !== self::str( $entry['provider'] ?? '' ) ) ) {
+			return false;
+		}
+		$text = strtolower( self::str( $entry['last_error'] ?? '' ) );
+		foreach ( array( 'api key', 'api_key', 'apikey', 'unauthori', 'http 401' ) as $phrase ) {
+			if ( false !== strpos( $text, $phrase ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static function clear_failure( int $form_id ): void {
+		$all = self::all();
+		if ( ! isset( $all[ $form_id ] ) || ! self::is_failing( $all[ $form_id ] ) ) {
+			return;
+		}
+		$all[ $form_id ]['last_outcome'] = '';
+		update_option( self::OPTION, $all, false );
+	}
+
 	public static function forget( int $form_id ): void {
 		$all = self::all();
 		unset( $all[ $form_id ] );

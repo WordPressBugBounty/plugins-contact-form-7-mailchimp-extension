@@ -378,13 +378,13 @@ final class Cmatic_Admin_Bar_Menu {
 			var upgradeLink = document.querySelector('#wp-admin-bar-chimpmatic-upgrade > a');
 			if (upgradeLink) {
 				upgradeLink.addEventListener('click', function() {
-					fetch('<?php echo esc_url( rest_url( 'chimpmatic-lite/v1/notices/dismiss' ) ); ?>', {
+					fetch('<?php echo esc_url( rest_url( 'chimpmatic-lite/v1/notices/act' ) ); ?>', {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
 							'X-WP-Nonce': '<?php echo esc_js( wp_create_nonce( 'wp_rest' ) ); ?>'
 						},
-						body: JSON.stringify({ notice_id: 'upgrade' })
+						body: JSON.stringify({ id: 'admin-bar-upgrade', act: 'open' })
 					});
 				});
 			}

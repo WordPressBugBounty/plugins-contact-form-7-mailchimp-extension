@@ -91,10 +91,20 @@ final class PanelActivity {
 		if ( in_array( $event, self::BROWSER_EVENTS, true ) ) {
 			return $event;
 		}
-		return 1 === preg_match( '/^(help|link)_[a-z0-9][a-z0-9_]{0,39}$/', $event ) ? $event : '';
+		return 1 === preg_match( '/^(help|link|provider_picked)_[a-z0-9][a-z0-9_]{0,31}$/', $event ) ? $event : '';
 	}
 
-	public static function record( string $event, int $elapsed_ms = -1 ): bool {
+	public static function note( string $event ): bool {
+		return self::record( $event, -1, false );
+	}
+
+	public static function daily( string $event ): bool {
+		$event = self::slug( $event );
+		$seen  = self::events()[ $event ]['last_at'] ?? 0;
+		return time() - $seen >= DAY_IN_SECONDS && self::record( $event, -1, false );
+	}
+
+	public static function record( string $event, int $elapsed_ms = -1, bool $send = true ): bool {
 		$event = self::slug( $event );
 		if ( '' === $event || ! self::active() ) {
 			return false;
@@ -124,7 +134,9 @@ final class PanelActivity {
 		} else {
 			update_option( self::OPTION, $events, false );
 		}
-		self::send();
+		if ( $send ) {
+			self::send();
+		}
 		return true;
 	}
 
@@ -217,7 +229,7 @@ final class PanelActivity {
 	 * @return mixed
 	 */
 	public static function rest_finished( $response, $handler, $request ) {
-		if ( ! $request instanceof \WP_REST_Request ) {
+		if ( ! $request instanceof \WP_REST_Request || ! is_user_logged_in() ) {
 			return $response;
 		}
 		$event = self::route_event( $request );

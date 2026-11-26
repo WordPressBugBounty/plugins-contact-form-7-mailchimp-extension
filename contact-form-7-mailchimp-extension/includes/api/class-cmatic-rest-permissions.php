@@ -9,6 +9,74 @@
 defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Rest_Permissions {
+	private const NAMESPACES = array( '/chimpmatic-lite/v1/', '/cmatic/v1/', '/cmatic/' );
+
+	public const FORM_ROUTES = array(
+		'form/field',
+		'form/setting',
+		'merge-fields',
+		'notices/act',
+		'providers/consent/validate',
+		'providers/fields',
+		'providers/reset',
+		'settings/reset',
+	);
+
+	public static function init(): void {
+		add_filter( 'rest_request_before_callbacks', array( __CLASS__, 'guard' ), 5, 3 );
+	}
+
+	/**
+	 * @param mixed $response
+	 * @param mixed $handler
+	 * @param mixed $request
+	 * @return mixed
+	 */
+	public static function guard( $response, $handler, $request ) {
+		unset( $handler );
+		if ( is_wp_error( $response ) || ! $request instanceof WP_REST_Request ) {
+			return $response;
+		}
+		$tier = self::tier( (string) $request->get_route() );
+		if ( '' === $tier ) {
+			return $response;
+		}
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- Contact Form 7 registers these capabilities.
+		$allowed = 'form' === $tier ? ( current_user_can( 'wpcf7_edit_contact_forms' ) || current_user_can( 'wpcf7_manage_integration' ) ) : current_user_can( 'wpcf7_manage_integration' );
+		if ( $allowed ) {
+			return $response;
+		}
+		return new WP_Error(
+			'rest_forbidden',
+			esc_html__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
+			array( 'status' => is_user_logged_in() ? 403 : 401 )
+		);
+	}
+
+	public static function tier( string $route ): string {
+		foreach ( self::NAMESPACES as $namespace ) {
+			if ( 0 === strpos( $route, $namespace ) ) {
+				return in_array( trim( substr( $route, strlen( $namespace ) ), '/' ), self::FORM_ROUTES, true ) ? 'form' : 'admin';
+			}
+		}
+		return '';
+	}
+
+	public static function lookup_limit( string $bucket, int $form_id, string $email ): bool {
+		$base        = 'cmatic_' . sanitize_key( $bucket ) . '_lookup_' . get_current_user_id() . '_' . $form_id;
+		$target      = $base . '_' . substr( hash_hmac( 'sha256', strtolower( $email ), wp_salt( 'nonce' ) ), 0, 24 );
+		$total_value = get_transient( $base );
+		$same_value  = get_transient( $target );
+		$total       = is_numeric( $total_value ) ? (int) $total_value : 0;
+		$same        = is_numeric( $same_value ) ? (int) $same_value : 0;
+		if ( $total >= 10 || $same >= 3 ) {
+			return false;
+		}
+		set_transient( $base, $total + 1, 10 * MINUTE_IN_SECONDS );
+		set_transient( $target, $same + 1, 10 * MINUTE_IN_SECONDS );
+		return true;
+	}
+
 	public static function admin( $request ) {
 		if ( ! current_user_can( 'wpcf7_manage_integration' ) ) {
 			return new WP_Error(
@@ -52,18 +120,6 @@ final class Cmatic_Rest_Permissions {
 
 	public static function manage_options(): bool {
 		return current_user_can( 'wpcf7_manage_integration' );
-	}
-
-	public static function manage_options_or_error() {
-		if ( ! current_user_can( 'wpcf7_manage_integration' ) ) {
-			return new WP_Error(
-				'rest_forbidden',
-				__( 'You do not have permission to access this endpoint.', 'contact-form-7-mailchimp-extension' ),
-				array( 'status' => 403 )
-			);
-		}
-
-		return true;
 	}
 
 	private static function nonce( $request ) {

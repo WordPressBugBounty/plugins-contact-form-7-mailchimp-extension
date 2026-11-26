@@ -33,7 +33,6 @@ final class Cmatic_Admin_Panel {
 		add_action( 'wpcf7_after_save', array( __CLASS__, 'save_provider_settings' ), 12 );
 		add_action( 'wpcf7_admin_misc_pub_section', array( __CLASS__, 'render_sidebar_info' ) );
 		add_action( 'wpcf7_admin_footer', array( __CLASS__, 'render_footer_banner' ), 10, 1 );
-		add_action( 'admin_notices', array( __CLASS__, 'render_save_refused' ) );
 	}
 
 	public static function register_panel( array $panels ): array {
@@ -343,12 +342,17 @@ final class Cmatic_Admin_Panel {
 		$settings            = new FormSettings( $form_id, $current );
 		$saved               = \Cmatic\Lite\Settings\SettingsValidator::provider_save( $slug, $settings->section( $slug ), $posted, $field_limit, $contact_form, $form_id );
 		if ( null === $saved ) {
+			if ( array() !== $before && ! defined( 'CMATIC_VERSION' ) ) {
+				FormSettingsRepository::store( $form_id, $before );
+			}
+			unset( self::$settings_before_save[ $form_id ] );
 			FormSettingsRepository::remember_provider( $form_id, $slug );
 			$fields = MappingSchema::normalize_fields( $posted['merge_fields'] ?? array(), MappingSchema::SLOT_MAX, false );
 			set_transient(
 				self::REFUSED_TRANSIENT . get_current_user_id(),
 				array(
 					'form'  => $form_id,
+					'at'    => time(),
 					'email' => ! MappingSchema::has_email_mapping( array_merge( $posted, array( 'merge_fields' => $fields ) ), count( $fields ) ),
 				),
 				MINUTE_IN_SECONDS
@@ -376,21 +380,30 @@ final class Cmatic_Admin_Panel {
 		return wp_verify_nonce( $nonce, sprintf( 'wpcf7-save-contact-form_%s', $form_id ) ) && current_user_can( 'wpcf7_edit_contact_form', $form_id );
 	}
 
-	public static function render_save_refused(): void {
-		$key     = self::REFUSED_TRANSIENT . get_current_user_id();
-		$refused = get_transient( $key );
+	/**
+	 * @return array<string,mixed>|null
+	 */
+	public static function refused_entry(): ?array {
+		$refused = get_transient( self::REFUSED_TRANSIENT . get_current_user_id() );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen check.
-		$page = isset( $_GET['page'] ) ? sanitize_key( MappingSchema::str( wp_unslash( $_GET['page'] ) ) ) : '';
+		$page = isset( $_GET['page'] ) && is_scalar( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : '';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen check.
-		$post = isset( $_GET['post'] ) ? MappingSchema::int( wp_unslash( $_GET['post'] ) ) : 0;
+		$post = isset( $_GET['post'] ) && is_scalar( $_GET['post'] ) ? absint( wp_unslash( (string) $_GET['post'] ) ) : 0;
 		if ( ! is_array( $refused ) || 'wpcf7' !== $page || MappingSchema::int( $refused['form'] ?? 0 ) !== $post ) {
-			return;
+			return null;
 		}
-		delete_transient( $key );
-		$message = ! empty( $refused['email'] )
+		$message       = ! empty( $refused['email'] )
 			? __( 'Contact Form 7 Extension did not save this form\'s email settings: map the subscriber email address to a form field, then save again. The previous settings are kept.', 'contact-form-7-mailchimp-extension' )
 			: __( 'Contact Form 7 Extension did not save this form\'s email settings because some of them were not valid. The previous settings are kept; check the Contact Form 7 Extension tab and save again.', 'contact-form-7-mailchimp-extension' );
-		echo '<div class="notice notice-error" role="alert" data-cmatic-lite-save-refused><p>' . esc_html( $message ) . '</p></div>';
+		$entry         = \Cmatic\Lite\Admin\Notices::entry( 'save-refused:' . $post . '-' . MappingSchema::int( $refused['at'] ?? 0 ), 'failing', 60, __( 'This form\'s email settings were not saved', 'contact-form-7-mailchimp-extension' ), $message, array() );
+		$entry['kind'] = 'save_refused';
+		$entry['wide'] = true;
+		$entry['once'] = true;
+		return $entry;
+	}
+
+	public static function clear_refused(): void {
+		delete_transient( self::REFUSED_TRANSIENT . get_current_user_id() );
 	}
 
 	public static function render_sidebar_info( int $post_id ): void {

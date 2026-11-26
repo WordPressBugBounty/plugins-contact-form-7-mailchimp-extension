@@ -14,21 +14,6 @@ final class Cmatic_License_Banner {
 
 	private const CAMPAIGNS = array( 'activate', 'winback', 'renew' );
 
-	private const META_KEY = 'cmatic_banner_dismissals';
-
-	private const SNOOZE = array(
-		'unlicensed'        => 7 * DAY_IN_SECONDS,
-		'unlicensed_urgent' => DAY_IN_SECONDS,
-		'unlicensed_over'   => DAY_IN_SECONDS,
-		'expired'           => 30 * DAY_IN_SECONDS,
-		'invalid'           => 7 * DAY_IN_SECONDS,
-		'expiring'          => 30 * DAY_IN_SECONDS,
-	);
-
-	public static function init(): void {
-		\Cmatic\Lite\Admin\Notices::boot();
-	}
-
 	public static function resolve_state(): string {
 		if ( ! class_exists( 'Cmatic_License_State_Resolver' ) ) {
 			return '';
@@ -74,21 +59,5 @@ final class Cmatic_License_Banner {
 		return class_exists( 'Cmatic_License_State_Resolver' )
 			? Cmatic_License_State_Resolver::expires_at()
 			: 0;
-	}
-
-	public static function render(): void {}
-
-	public static function handle_dismiss( string $state ) {
-		if ( ! isset( self::SNOOZE[ $state ] ) ) {
-			return false;
-		}
-		$user_id    = get_current_user_id();
-		$dismissals = get_user_meta( $user_id, self::META_KEY, true );
-		if ( ! is_array( $dismissals ) ) {
-			$dismissals = array();
-		}
-		$dismissals[ $state ] = time() + self::SNOOZE[ $state ];
-		update_user_meta( $user_id, self::META_KEY, $dismissals );
-		return $dismissals[ $state ];
 	}
 }

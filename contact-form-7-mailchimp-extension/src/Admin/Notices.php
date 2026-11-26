@@ -42,7 +42,8 @@ final class Notices {
 	}
 
 	private static function allowed(): bool {
-		return current_user_can( 'manage_options' ) && 'new' !== self::mode();
+		// phpcs:ignore WordPress.WP.Capabilities.Unknown -- Contact Form 7 registers this capability.
+		return 'new' !== self::mode() && ( current_user_can( 'manage_options' ) || current_user_can( 'wpcf7_edit_contact_forms' ) );
 	}
 
 	private static function on_our_screen(): bool {
@@ -55,8 +56,9 @@ final class Notices {
 		if ( ! self::allowed() ) {
 			return array();
 		}
+		$admin = current_user_can( 'manage_options' );
 		if ( 'old' === self::mode() ) {
-			return array(
+			return ! $admin ? array() : array(
 				self::entry(
 					'pro-update',
 					'failing',
@@ -67,8 +69,9 @@ final class Notices {
 				),
 			);
 		}
-		$syncs   = self::syncs();
-		$entries = array(
+		$syncs     = self::syncs();
+		$connected = 0 === $syncs ? self::connected_form() : 0;
+		$entries   = array(
 			self::cf7_entry( self::plugin_state( 'contact-form-7/wp-contact-form-7.php' ) ),
 			self::entry(
 				'welcome',
@@ -77,7 +80,16 @@ final class Notices {
 				__( 'Welcome to Contact Form 7 Extension', 'contact-form-7-mailchimp-extension' ),
 				__( "Turn every form submission into a new subscriber on Mailchimp, Brevo, MailerLite, Klaviyo, GetResponse, EmailOctopus, Campaign Monitor or Moosend. Open your form's Contact Form 7 Extension tab, connect your email service, and choose a list. You can use a different service on each form.", 'contact-form-7-mailchimp-extension' ),
 				array( self::action( __( 'Read the setup guide', 'contact-form-7-mailchimp-extension' ), \Cmatic_Pursuit::url( 'https://chimpmatic.com/integrations', 'banner', 'setup_guide', 'welcome' ) ), self::action( __( 'Maybe later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze' ) ),
-				self::days_installed() <= 30 && 0 === $syncs
+				self::days_installed() <= 30 && 0 === $syncs && 0 === $connected
+			),
+			self::entry(
+				'first-test',
+				'onboarding',
+				10,
+				self::first_test_copy()['title'],
+				self::first_test_copy()['message'],
+				array( self::action( self::first_test_copy()['button'], self::form_url( $connected ) . '&cmatic-test=1', 'primary' ), self::action( __( 'Maybe later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze' ) ),
+				0 === $syncs && $connected > 0 && ! ( 'wpcf7' === self::get( 'page' ) && self::int( self::get( 'post' ) ) === $connected )
 			),
 			self::entry(
 				'review',
@@ -104,7 +116,19 @@ final class Notices {
 				$entries[] = self::failing_entry( $form_id, $stat );
 			}
 		}
-		return array_merge( $entries, \Cmatic_Lite_Esp_Degrade_Notice::entries() );
+		$entries = array_merge( $entries, \Cmatic_Lite_Esp_Degrade_Notice::entries() );
+		$refused = \Cmatic_Admin_Panel::refused_entry();
+		if ( null !== $refused ) {
+			$entries[] = $refused;
+		}
+		return $admin ? $entries : array_values(
+			array_filter(
+				$entries,
+				static function ( array $entry ): bool {
+					return ! empty( $entry['wide'] );
+				}
+			)
+		);
 	}
 
 	/**
@@ -122,11 +146,12 @@ final class Notices {
 			'when'     => $when,
 			'modifier' => 'failing' === $group ? 'failing' : ( 'onboarding' === $group ? 'onboarding' : '' ),
 			'top'      => true,
+			'wide'     => 'first-test' === $id || 0 === strpos( $id, 'sync-failing:' ),
 		);
 	}
 
 	/** @return array<string,mixed>|null */
-	public static function due(): ?array {
+	public static function due( bool $wide_only = false ): ?array {
 		if ( ! self::allowed() ) {
 			return null;
 		}
@@ -137,7 +162,7 @@ final class Notices {
 		foreach ( self::entries() as $entry ) {
 			$id    = self::str( $entry['id'] );
 			$state = self::state( $id );
-			if ( ! $entry['when'] || ! empty( $state['dismissed'] ) || self::int( $state['until'] ?? 0 ) > time() || ( 'upgrade' === $id && self::int( $state['count'] ?? 0 ) >= 3 ) ) {
+			if ( ( $wide_only && empty( $entry['wide'] ) ) || ! $entry['when'] || ! empty( $state['dismissed'] ) || self::int( $state['until'] ?? 0 ) > time() || ( 'upgrade' === $id && self::int( $state['count'] ?? 0 ) >= 3 ) ) {
 				continue;
 			}
 			$group = self::str( $entry['group'] );
@@ -148,7 +173,7 @@ final class Notices {
 		foreach ( self::GROUPS as $group ) {
 			if ( isset( $best[ $group ] ) ) {
 				$last = self::arr( get_user_meta( get_current_user_id(), self::LAST, true ) );
-				if ( ( $last['id'] ?? '' ) !== $best[ $group ]['id'] && time() - self::int( $last['at'] ?? 0 ) < DAY_IN_SECONDS ) {
+				if ( 'failing' !== $group && ( $last['id'] ?? '' ) !== $best[ $group ]['id'] && time() - self::int( $last['at'] ?? 0 ) < DAY_IN_SECONDS ) {
 					return null;
 				}
 				return $best[ $group ];
@@ -158,20 +183,33 @@ final class Notices {
 	}
 
 	public static function render(): void {
-		if ( ! self::allowed() || ! self::on_our_screen() ) {
+		if ( ! self::allowed() ) {
 			return;
 		}
-		$preview = self::preview();
+		$ours    = self::on_our_screen();
+		$preview = $ours ? self::preview() : array();
 		if ( array() !== $preview ) {
 			foreach ( $preview as $entry ) {
 				echo self::html( $entry ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 			return;
 		}
-		$entry = self::due();
+		$entry = self::due( ! $ours );
 		if ( null !== $entry && ( 'upgrade' !== $entry['id'] || self::claim_upgrade() ) ) {
+			\Cmatic\Lite\Telemetry\PanelActivity::daily( 'banner_shown_' . self::kind( $entry ) );
 			echo self::html( $entry ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			if ( ! empty( $entry['once'] ) ) {
+				\Cmatic_Admin_Panel::clear_refused();
+			}
 		}
+	}
+
+	/**
+	 * @param array<string,mixed> $entry
+	 */
+	private static function kind( array $entry ): string {
+		$kind = self::str( $entry['kind'] ?? '' );
+		return '' !== $kind ? $kind : str_replace( '-', '_', sanitize_key( (string) strtok( self::str( $entry['id'] ?? '' ), ':' ) ) );
 	}
 
 	private static function claim_upgrade(): bool {
@@ -211,12 +249,24 @@ final class Notices {
 	}
 
 	public static function act( string $id, string $act ): bool {
-		if ( ! self::allowed() || ! in_array( $act, array( 'dismiss', 'snooze', 'snooze-day' ), true ) ) {
+		if ( ! self::allowed() || ! in_array( $act, array( 'dismiss', 'snooze', 'snooze-day', 'open' ), true ) ) {
 			return false;
+		}
+		if ( 'admin-bar-upgrade' === $id ) {
+			if ( 'open' !== $act || ! \Cmatic_Rest_Permissions::manage_options() ) {
+				return false;
+			}
+			\Cmatic_Options_Repository::set_option( 'ui.upgrade_clicked', true );
+			\Cmatic\Lite\Telemetry\PanelActivity::note( 'banner_open_admin_bar_upgrade' );
+			return true;
 		}
 		$entries = array_column( self::entries(), null, 'id' );
 		if ( ! isset( $entries[ $id ] ) ) {
 			return false;
+		}
+		\Cmatic\Lite\Telemetry\PanelActivity::note( 'banner_' . ( 'snooze-day' === $act ? 'snooze' : $act ) . '_' . self::kind( $entries[ $id ] ) );
+		if ( 'open' === $act ) {
+			return true;
 		}
 		$old   = self::state( $id );
 		$state = 'dismiss' === $act ? array( 'dismissed' => true ) : array( 'until' => time() + ( 'snooze-day' === $act ? DAY_IN_SECONDS : self::SNOOZE ) );
@@ -250,9 +300,13 @@ final class Notices {
 			array(
 				'methods'             => 'POST',
 				'callback'            => array( self::class, 'rest_act' ),
-				'permission_callback' => array( '\\Cmatic_Rest_Permissions', 'admin' ),
+				'permission_callback' => array( self::class, 'can_act' ),
 			)
 		);
+	}
+
+	public static function can_act(): bool {
+		return self::allowed();
 	}
 
 	public static function rest_act( \WP_REST_Request $request ): \WP_REST_Response {
@@ -261,7 +315,11 @@ final class Notices {
 	}
 
 	public static function enqueue(): void {
-		if ( ! self::allowed() || ! self::on_our_screen() || ( null === self::due() && array() === self::preview() ) ) {
+		if ( ! self::allowed() ) {
+			return;
+		}
+		$ours = self::on_our_screen();
+		if ( null === self::due( ! $ours ) && ( ! $ours || array() === self::preview() ) ) {
 			return;
 		}
 		wp_enqueue_style( self::HANDLE, SPARTAN_MCE_PLUGIN_URL . 'assets/css/cmatic-lite-notices.css', array(), self::version( SPARTAN_MCE_PLUGIN_DIR . 'assets/css/cmatic-lite-notices.css' ) );
@@ -279,7 +337,7 @@ final class Notices {
 
 	/** @return list<array<string,mixed>> */
 	public static function preview(): array {
-		if ( ! self::allowed() || 'all' !== self::get( 'cmatic_lite_notice' ) ) {
+		if ( ! self::allowed() || ! current_user_can( 'manage_options' ) || 'all' !== self::get( 'cmatic_lite_notice' ) ) {
 			return array();
 		}
 		if ( 'old' === self::mode() ) {
@@ -321,6 +379,33 @@ final class Notices {
 		return $since > 0 ? (int) floor( ( time() - $since ) / DAY_IN_SECONDS ) : 0;
 	}
 
+	/**
+	 * @return array{title:string,message:string,button:string}
+	 */
+	public static function first_test_copy(): array {
+		return array(
+			'title'   => __( 'Your form is connected. See it work.', 'contact-form-7-mailchimp-extension' ),
+			'message' => __( 'Send a test signup to check that it reaches your email service. Use your own email address, because the test adds a real contact. Then add the form to a page so your visitors can sign up.', 'contact-form-7-mailchimp-extension' ),
+			'button'  => __( 'Send a test signup', 'contact-form-7-mailchimp-extension' ),
+		);
+	}
+
+	public static function connected_form(): int {
+		static $found = null;
+		if ( null !== $found ) {
+			return $found;
+		}
+		$found = 0;
+		foreach ( self::forms() as $form ) {
+			$settings = \Cmatic\Lite\Settings\FormSettingsRepository::load( $form['id'] );
+			if ( \Cmatic\Lite\Submission\Router::connected( $settings ) && '' !== \Cmatic\Lite\Settings\FormSettings::selected_list( $settings->section( $settings->provider() ) ) ) {
+				$found = $form['id'];
+				break;
+			}
+		}
+		return $found;
+	}
+
 	public static function syncs(): int {
 		return array_sum(
 			array_map(
@@ -341,7 +426,8 @@ final class Notices {
 		$label      = self::str( $definition['label'] ?? $provider );
 		$title      = get_the_title( $form_id ) ?: __( 'Your contact form', 'contact-form-7-mailchimp-extension' );
 		$error      = \Cmatic\Lite\Submission\Stats::redact( self::str( $stat['last_error'] ?? '' ) );
-		if ( 'connection' === \Cmatic\Lite\Submission\Stats::kind( $error ) || '' === $error ) {
+		$connection = 'connection' === \Cmatic\Lite\Submission\Stats::kind( $error ) || '' === $error;
+		if ( $connection ) {
 			/* translators: 1: provider name, 2: redacted provider error. */
 			$message = sprintf( __( 'Recent submissions from this form are not reaching %1$s. %1$s said: "%2$s" Open the form\'s Contact Form 7 Extension tab to fix the connection.', 'contact-form-7-mailchimp-extension' ), $label, $error ?: __( 'Check the connection and selected list.', 'contact-form-7-mailchimp-extension' ) );
 			/* translators: 1: form title, 2: provider name. */
@@ -352,7 +438,9 @@ final class Notices {
 			/* translators: 1: provider name, 2: form title. */
 			$heading = sprintf( __( '%1$s turned down a signup from "%2$s"', 'contact-form-7-mailchimp-extension' ), $label, $title );
 		}
-		return self::entry( 'sync-failing:' . $form_id, 'failing', 40, $heading, $message, array( self::action( __( "Open the form's Contact Form 7 Extension tab", 'contact-form-7-mailchimp-extension' ), self::form_url( $form_id ), 'primary' ), self::action( __( 'Remind me later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze-day' ) ) );
+		$entry         = self::entry( 'sync-failing:' . $form_id, 'failing', 40, $heading, $message, array( self::action( __( "Open the form's Contact Form 7 Extension tab", 'contact-form-7-mailchimp-extension' ), self::form_url( $form_id ), 'primary' ), self::action( __( 'Remind me later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze-day' ) ) );
+		$entry['kind'] = $connection ? 'failing_connection' : 'failing_field';
+		return $entry;
 	}
 
 	/** @param array{installed:bool,active:bool,version:string} $plugin

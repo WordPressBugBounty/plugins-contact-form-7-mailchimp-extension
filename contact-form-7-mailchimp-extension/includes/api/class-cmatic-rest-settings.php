@@ -88,23 +88,6 @@ final class Cmatic_Rest_Settings {
 		);
 
 		register_rest_route(
-			self::$namespace,
-			'/notices/dismiss',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( self::class, 'dismiss_notice' ),
-				'permission_callback' => array( 'Cmatic_Rest_Permissions', 'admin' ),
-				'args'                => array(
-					'notice_id' => Args::of( 'string', 'sanitize_text_field', false ) + array(
-						'default' => 'news',
-						'enum'    => array( 'news', 'upgrade', 'license_banner', 'signls_consent' ),
-					),
-					'state'     => Args::of( 'string', 'sanitize_key', false ) + array( 'default' => '' ),
-				),
-			)
-		);
-
-		register_rest_route(
 			'chimpmatic-lite/v1',
 			'/system-report',
 			array(
@@ -189,46 +172,6 @@ final class Cmatic_Rest_Settings {
 		}
 		return true;
 	}
-
-	public static function dismiss_notice( $request ) {
-		$notice_id = $request->get_param( 'notice_id' );
-
-		switch ( $notice_id ) {
-			case 'signls_consent':
-				$message = __( 'Sharing notice retired.', 'contact-form-7-mailchimp-extension' );
-				break;
-
-			case 'license_banner':
-				$result = class_exists( 'Cmatic_License_Banner' )
-					? Cmatic_License_Banner::handle_dismiss( (string) $request->get_param( 'state' ) )
-					: false;
-				if ( false === $result ) {
-					return new WP_Error( 'bad_state', esc_html__( 'Unknown banner state.', 'contact-form-7-mailchimp-extension' ), array( 'status' => 400 ) );
-				}
-				$message = __( 'License banner snoozed.', 'contact-form-7-mailchimp-extension' );
-				break;
-
-			case 'upgrade':
-				Cmatic_Options_Repository::set_option( 'ui.upgrade_clicked', true );
-				$message = __( 'Upgrade notice dismissed.', 'contact-form-7-mailchimp-extension' );
-				break;
-
-			case 'news':
-			default:
-				Cmatic_Options_Repository::set_option( 'ui.news', false );
-				$message = __( 'Notice dismissed successfully.', 'contact-form-7-mailchimp-extension' );
-				break;
-		}
-
-		return rest_ensure_response(
-			array(
-				'success'   => true,
-				'message'   => esc_html( $message ),
-				'dismissed' => $notice_id,
-			)
-		);
-	}
-
 
 	public static function system_report() {
 		return rest_ensure_response(

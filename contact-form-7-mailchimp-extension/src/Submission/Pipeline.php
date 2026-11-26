@@ -58,11 +58,12 @@ final class Pipeline {
 			if ( $descriptor->submission_flag( 'warn_invalid_email' ) ) {
 				$logger->log( 'WARNING', 'Subscription attempt with invalid email address.', $email );
 			}
-			Feedback::set_result( Feedback::failure( 'invalid_email', '', $email ) );
+			self::not_sent( Feedback::failure( 'invalid_email', '', $email ) );
 			return;
 		}
 		$list_id = FieldValues::replace_tags( FormSettings::raw_list( $section ), $posted_data );
 		if ( $descriptor->submission_flag( 'list_required' ) && '' === $list_id ) {
+			\Cmatic\Lite\Telemetry\PanelActivity::note( 'skipped_no_list' );
 			return;
 		}
 		$status = StatusPolicy::resolve( $effective, $posted_data, $logger );
@@ -70,6 +71,7 @@ final class Pipeline {
 			return;
 		}
 		if ( $descriptor->submission_flag( 'doi_verification' ) && 'double' === MappingSchema::str( $effective['subscription_mode'] ?? '' ) && 1 !== MappingSchema::int( $effective['doi_verified'] ?? 0 ) ) {
+			\Cmatic\Lite\Telemetry\PanelActivity::note( 'skipped_doi_unverified' );
 			return;
 		}
 		$merge_vars = FieldValues::build( $effective, $posted_data, self::limit( $policy ), $descriptor->submission_flag( 'zero_values' ) );
@@ -77,7 +79,7 @@ final class Pipeline {
 			$definitions = isset( $effective['merge_fields'] ) && is_array( $effective['merge_fields'] ) ? $effective['merge_fields'] : array();
 			$integers    = FieldValues::integer_fields( $merge_vars, $definitions );
 			if ( null === $integers ) {
-				Feedback::set_result( Feedback::failure( 'provider_field_type_error', '', $email ) );
+				self::not_sent( Feedback::failure( 'provider_field_type_error', '', $email ) );
 				return;
 			}
 			$merge_vars = $integers;
@@ -95,7 +97,7 @@ final class Pipeline {
 		if ( ! empty( $entitled['routing'] ) && DestinationResolver::is_premium_configured( $section ) ) {
 			$routing = DestinationResolver::resolve( $section, $posted_data, $form_tags );
 			if ( ! $routing['success'] ) {
-				Feedback::set_result( Feedback::failure( (string) $routing['reason'], '', $email ) );
+				self::not_sent( Feedback::failure( (string) $routing['reason'], '', $email ) );
 				return;
 			}
 			$groups = $routing['groups'];
@@ -138,26 +140,26 @@ final class Pipeline {
 		$limit      = self::limit( $policy );
 		$email      = FieldValues::email( $effective, $posted_data );
 		if ( ! is_email( $email ) ) {
-			Feedback::set_result( Feedback::failure( 'invalid_email', '', $email ) );
+			self::not_sent( Feedback::failure( 'invalid_email', '', $email ) );
 			return;
 		}
 
 		$decision = ConsentGate::decide( $effective, $posted_data, $form_tags, true );
 		if ( ! $decision['allowed'] ) {
 			$logger->log( 'INFO', 'Subscription skipped: required acceptance was not checked.' );
-			Feedback::set_result( Feedback::skipped( 'acceptance_not_checked' ) );
+			self::not_sent( Feedback::skipped( 'acceptance_not_checked' ) );
 			return;
 		}
 
 		$routing = DestinationResolver::resolve( $effective, $posted_data, $form_tags );
 		if ( ! $routing['success'] ) {
-			Feedback::set_result( Feedback::failure( (string) $routing['reason'], '', $email ) );
+			self::not_sent( Feedback::failure( (string) $routing['reason'], '', $email ) );
 			return;
 		}
 
 		$status_mode = self::status_mode( $effective );
 		if ( ! empty( $effective['resubscribe_force'] ) && ( 'active' !== $status_mode || ! $decision['eligible'] || ! $decision['accepted'] ) ) {
-			Feedback::set_result( Feedback::failure( 'resubscribe_requires_consent', '', $email ) );
+			self::not_sent( Feedback::failure( 'resubscribe_requires_consent', '', $email ) );
 			return;
 		}
 
@@ -168,7 +170,7 @@ final class Pipeline {
 			$definitions = isset( $definitions['merge_fields'] ) && is_array( $definitions['merge_fields'] ) ? $definitions['merge_fields'] : $definitions;
 			$normalized  = FieldValues::normalize( $merge_vars, $definitions );
 			if ( ! $normalized['success'] ) {
-				Feedback::set_result( Feedback::failure( 'provider_field_type_error', '', $email ) );
+				self::not_sent( Feedback::failure( 'provider_field_type_error', '', $email ) );
 				return;
 			}
 			$merge_vars = $normalized['fields'];
@@ -185,12 +187,12 @@ final class Pipeline {
 		}
 		if ( ! empty( $features['consent_metadata'] ) && ! empty( $effective['consent_metadata_enabled'] ) ) {
 			if ( ! $decision['eligible'] || ! $decision['accepted'] ) {
-				Feedback::set_result( Feedback::failure( 'consent_required', '', $email ) );
+				self::not_sent( Feedback::failure( 'consent_required', '', $email ) );
 				return;
 			}
 			$ip = RequestIp::get();
 			if ( '' === $ip ) {
-				Feedback::set_result( Feedback::failure( 'consent_ip_unavailable', '', $email ) );
+				self::not_sent( Feedback::failure( 'consent_ip_unavailable', '', $email ) );
 				return;
 			}
 			$options['consent_metadata'] = array(
@@ -253,5 +255,17 @@ final class Pipeline {
 	private static function status_mode( array $settings ): string {
 		$mode = MappingSchema::str( $settings['status_mode'] ?? 'legacy_provider_managed' );
 		return in_array( $mode, self::STATUS_MODES, true ) ? $mode : 'legacy_provider_managed';
+	}
+
+	/**
+	 * @param array<string,mixed> $result
+	 */
+	private static function not_sent( array $result ): void {
+		$reason = is_scalar( $result['reason'] ?? null ) ? (string) $result['reason'] : 'unknown';
+		if ( 'invalid_email' === $reason && '' === trim( is_scalar( $result['email'] ?? null ) ? (string) $result['email'] : '' ) ) {
+			$reason = 'no_email';
+		}
+		\Cmatic\Lite\Telemetry\PanelActivity::note( 'skipped_' . $reason );
+		Feedback::set_result( $result );
 	}
 }

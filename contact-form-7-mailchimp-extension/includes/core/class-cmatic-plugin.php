@@ -140,6 +140,7 @@ final class Cmatic_Plugin {
 		Cmatic_Lite_Esp_Rest_Controller::init();
 		Cmatic_Rest_Reset::init();
 
+		Cmatic_Rest_Permissions::init();
 		Cmatic_Contact_Lookup::init();
 		Cmatic_Rest_OAuth::init();
 		\Cmatic\Lite\Submission\Feedback::init();
@@ -164,8 +165,6 @@ final class Cmatic_Plugin {
 		require_once $this->dir . 'includes/ui/class-cmatic-modal.php';
 		require_once $this->dir . 'includes/ui/class-cmatic-test-submission-modal.php';
 
-		require_once $this->dir . 'includes/ui/class-cmatic-notification.php';
-		require_once $this->dir . 'includes/ui/class-cmatic-notification-center.php';
 		require_once $this->dir . 'includes/ui/class-cmatic-admin-bar-menu.php';
 
 		require_once $this->dir . 'includes/admin/class-cmatic-lite-signls-privacy.php';
@@ -185,7 +184,7 @@ final class Cmatic_Plugin {
 		$test_submission_modal = new Cmatic_Test_Submission_Modal();
 		$test_submission_modal->init();
 
-		Cmatic_Notification_Center::get();
+		\Cmatic\Lite\Admin\Notices::boot();
 		Cmatic_Admin_Bar_Menu::instance();
 
 		Cmatic_Lite_Signls_Privacy::init();

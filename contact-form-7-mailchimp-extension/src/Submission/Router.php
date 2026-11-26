@@ -27,13 +27,15 @@ final class Router {
 		$slug    = $settings->provider();
 		$section = $settings->section( $slug );
 		if ( ! self::connected( $settings ) ) {
+			\Cmatic\Lite\Telemetry\PanelActivity::note( 'skipped_not_connected' );
 			return;
 		}
 		$api_key = self::credential( $settings );
 		if ( 'mailchimp' !== $slug && '' === $api_key ) {
+			\Cmatic\Lite\Telemetry\PanelActivity::note( 'skipped_no_credential' );
 			return;
 		}
-		$submission = \WPCF7_Submission::get_instance();
+		$submission = class_exists( 'WPCF7_Submission' ) ? \WPCF7_Submission::get_instance() : null;
 		if ( ! $submission ) {
 			return;
 		}

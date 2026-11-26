@@ -30,6 +30,29 @@
 		}
 	} );
 
+	document.addEventListener( 'click', function ( event ) {
+		const link = event.target.closest(
+			'[data-cmatic-lite-notice] a.cmatic-lite-notice__action:not([data-cmatic-lite-act]), [data-cmatic-lite-form-go]'
+		);
+		const notice = link && link.closest( '[data-cmatic-lite-notice]' );
+		if ( ! notice || cfg.preview ) {
+			return;
+		}
+		fetch( cfg.url, {
+			method: 'POST',
+			keepalive: true,
+			credentials: 'same-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-WP-Nonce': cfg.nonce,
+			},
+			body: JSON.stringify( {
+				id: notice.getAttribute( 'data-cmatic-lite-notice' ),
+				act: 'open',
+			} ),
+		} ).catch( function () {} );
+	} );
+
   document.addEventListener('click', function (event) {
     const trigger = event.target.closest('[data-cmatic-lite-act]');
     if (!trigger) return;

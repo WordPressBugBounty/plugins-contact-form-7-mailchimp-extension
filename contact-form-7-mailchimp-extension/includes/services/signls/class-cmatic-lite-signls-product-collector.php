@@ -55,7 +55,7 @@ final class Cmatic_Lite_Signls_Product_Collector {
 		unset( $submissions['_subs_7d'], $submissions['_subs_30d'], $submissions['_subs_median'] );
 		$setup  = $this->setup( $analysis );
 		$update = $this->update_state();
-		$reason = $this->top_failure_reason();
+		$reason = $this->top_failure_reason( (int) $submissions['last_success'] );
 
 		return array(
 			'narrow'           => $this->narrow( $analysis, $pro ),
@@ -340,8 +340,8 @@ final class Cmatic_Lite_Signls_Product_Collector {
 			'avg_response_time_ms'      => (int) Cmatic_Options_Repository::get_option( 'api.avg_response_time', 0 ),
 			'error_codes'               => array_slice( $error_summary, 0, 64, true ),
 			'api_health_score'          => null === $rate ? null : max( 0, min( 100, $rate - ( $consecutive * 5 ) ) ),
-			'setup_sync_attempted'      => (bool) Cmatic_Options_Repository::get_option( 'api.sync_attempted', false ),
-			'setup_sync_attempts_count' => (int) Cmatic_Options_Repository::get_option( 'api.sync_attempts_count', 0 ),
+			'setup_sync_attempted'      => $attempts > 0 || (bool) Cmatic_Options_Repository::get_option( 'api.sync_attempted', false ),
+			'setup_sync_attempts_count' => max( $attempts, (int) Cmatic_Options_Repository::get_option( 'api.sync_attempts_count', 0 ) ),
 			'setup_first_success'       => (bool) Cmatic_Options_Repository::get_option( 'api.setup_first_success', false ),
 			'setup_first_failure'       => (bool) Cmatic_Options_Repository::get_option( 'api.setup_first_failure', false ),
 			'setup_failure_count'       => (int) Cmatic_Options_Repository::get_option( 'api.setup_failure_count', 0 ),
@@ -632,11 +632,19 @@ final class Cmatic_Lite_Signls_Product_Collector {
 		return is_array( $this->daily_rows ) ? $this->daily_rows : array();
 	}
 
-	private function top_failure_reason(): array {
+	private function top_failure_reason( int $last_success = 0 ): array {
 		if ( null === $this->reason_rows ) {
 			$this->reason_rows = \Signls\Sdk\V1\CounterStore::read_reasons( self::PRODUCT );
 		}
-		$row = is_array( $this->reason_rows ) && isset( $this->reason_rows[0] ) && is_array( $this->reason_rows[0] ) ? $this->reason_rows[0] : array();
+		$row    = array();
+		$newest = $last_success;
+		foreach ( is_array( $this->reason_rows ) ? $this->reason_rows : array() as $candidate ) {
+			$seen = is_array( $candidate ) && isset( $candidate['last_seen_at'] ) && is_scalar( $candidate['last_seen_at'] ) ? (int) $candidate['last_seen_at'] : 0;
+			if ( is_array( $candidate ) && $seen > $newest ) {
+				$row    = $candidate;
+				$newest = $seen;
+			}
+		}
 		return array(
 			'code'   => isset( $row['reason_code'] ) && is_scalar( $row['reason_code'] ) ? (string) $row['reason_code'] : 'unknown',
 			'sample' => isset( $row['sample'] ) && is_scalar( $row['sample'] ) ? (string) $row['sample'] : '',

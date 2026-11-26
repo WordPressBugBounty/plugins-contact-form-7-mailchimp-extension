@@ -40,8 +40,6 @@ class Cmatic_CF7_Dependency {
 		return self::is_installed() && self::is_active();
 	}
 
-	public static function maybe_show_notice() {}
-
 	public static function activate_cf7() {
 		if ( ! current_user_can( 'activate_plugins' ) ) {
 			return false;
