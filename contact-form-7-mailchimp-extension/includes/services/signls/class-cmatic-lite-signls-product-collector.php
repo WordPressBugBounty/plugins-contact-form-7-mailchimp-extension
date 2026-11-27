@@ -134,7 +134,7 @@ final class Cmatic_Lite_Signls_Product_Collector {
 		foreach ( $configurations as $form_id => $row ) {
 			$config   = isset( $row['settings'] ) && is_array( $row['settings'] ) ? $row['settings'] : array();
 			$provider = Cmatic_Lite_Esp_Registry::get_selected( $config );
-			$settings = $this->provider_settings( $config, $provider );
+			$settings = \Cmatic\Lite\Settings\FormSettings::section_of( $config, $provider );
 			if ( ! $this->has_configuration( $settings, $provider ) ) {
 				continue;
 			}
@@ -416,7 +416,7 @@ final class Cmatic_Lite_Signls_Product_Collector {
 		foreach ( $configurations as $row ) {
 			$config                       = isset( $row['settings'] ) && is_array( $row['settings'] ) ? $row['settings'] : array();
 			$provider                     = Cmatic_Lite_Esp_Registry::get_selected( $config );
-			$settings                     = $this->provider_settings( $config, $provider );
+			$settings                     = \Cmatic\Lite\Settings\FormSettings::section_of( $config, $provider );
 			$counts['double_optin']      += ! empty( $settings['confsubs'] ) || 'double' === ( isset( $settings['subscription_mode'] ) ? $settings['subscription_mode'] : '' ) ? 1 : 0;
 			$counts['required_consent']  += ! empty( $settings['accept'] ) || ! empty( $settings['consent_required'] ) || 'required' === ( isset( $settings['consent_gate'] ) ? $settings['consent_gate'] : '' ) ? 1 : 0;
 			$counts['debug_logger']      += ! empty( $settings['logfileEnabled'] ) ? 1 : 0;
@@ -424,7 +424,7 @@ final class Cmatic_Lite_Signls_Product_Collector {
 			$tags                         = isset( $settings['labeltags'] ) && is_array( $settings['labeltags'] ) ? array_filter( $settings['labeltags'] ) : array();
 			if ( ! empty( $tags ) || ! empty( $settings['tags'] ) ) {
 				++$counts['tags_enabled'];
-				$counts['tags_total_selected'] += count( $tags ) + ( is_array( isset( $settings['tags'] ) ? $settings['tags'] : null ) ? count( $settings['tags'] ) : 0 );
+				$counts['tags_total_selected'] += count( $tags ) + count( \Cmatic\Lite\Settings\MappingSchema::arr( $settings['tags'] ?? null ) );
 			}
 			$counts['arbitrary_tags'] += ! empty( $settings['labeltags_cm-tag'] ) || ! empty( $settings['tag'] ) ? 1 : 0;
 			$custom                    = 0;
@@ -441,7 +441,7 @@ final class Cmatic_Lite_Signls_Product_Collector {
 			$counts['custom_merge_fields'] += $custom;
 			$groups                         = 0;
 			for ( $index = 1; $index <= 20; $index++ ) {
-				if ( ! empty( $settings[ 'ggCustomKey' . $index ] ) && ! empty( trim( (string) ( isset( $settings[ 'ggCustomValue' . $index ] ) ? $settings[ 'ggCustomValue' . $index ] : '' ) ) ) ) {
+				if ( ! empty( $settings[ 'ggCustomKey' . $index ] ) && ! empty( trim( \Cmatic\Lite\Settings\MappingSchema::str( $settings[ 'ggCustomValue' . $index ] ?? '' ) ) ) ) {
 					++$groups;
 				}
 			}
@@ -703,10 +703,6 @@ final class Cmatic_Lite_Signls_Product_Collector {
 			return array();
 		}
 		return ( new \Signls\Sdk\V1\StateStore( self::PRODUCT ) )->all();
-	}
-
-	private function provider_settings( array $config, string $provider ): array {
-		return 'mailchimp' === $provider ? $config : ( isset( $config['providers'][ $provider ] ) && is_array( $config['providers'][ $provider ] ) ? $config['providers'][ $provider ] : array() );
 	}
 
 	private function has_configuration( array $settings, string $provider ): bool {

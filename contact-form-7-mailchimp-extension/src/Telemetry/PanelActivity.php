@@ -8,6 +8,8 @@
 
 namespace Cmatic\Lite\Telemetry;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 final class PanelActivity {
@@ -78,7 +80,7 @@ final class PanelActivity {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public static function browser_event( $request ) {
-		$event = self::browser_slug( self::text( $request->get_param( 'event' ) ) );
+		$event = self::browser_slug( MappingSchema::str( $request->get_param( 'event' ) ) );
 		if ( '' === $event ) {
 			return new \WP_Error( 'invalid_event', 'Unknown event.', array( 'status' => 400 ) );
 		}
@@ -181,13 +183,6 @@ final class PanelActivity {
 	/**
 	 * @param mixed $value
 	 */
-	private static function text( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
-	}
-
-	/**
-	 * @param mixed $value
-	 */
 	private static function number( $value ): int {
 		return is_numeric( $value ) ? (int) $value : 0;
 	}
@@ -196,7 +191,7 @@ final class PanelActivity {
 	 * @param mixed $value
 	 */
 	private static function enabled( $value ): bool {
-		return '' !== self::text( $value ) && '0' !== self::text( $value );
+		return '' !== MappingSchema::str( $value ) && '0' !== MappingSchema::str( $value );
 	}
 
 	private static function send(): void {
@@ -282,7 +277,7 @@ final class PanelActivity {
 		if ( ! in_array( self::route_path( $request ), self::SETTING_ROUTES, true ) ) {
 			return '';
 		}
-		$field = self::slug( self::text( $request->get_param( 'field' ) ) );
+		$field = self::slug( MappingSchema::str( $request->get_param( 'field' ) ) );
 		if ( '' === $field ) {
 			return '';
 		}
@@ -313,11 +308,11 @@ final class PanelActivity {
 		if ( true === ( $outcome['success'] ?? null ) ) {
 			self::record( 'test_ok' );
 		} elseif ( ! empty( $outcome['skipped'] ) ) {
-			self::record( self::slug( 'test_skipped_' . self::text( $outcome['reason'] ?? 'unknown' ) ) );
+			self::record( self::slug( 'test_skipped_' . MappingSchema::str( $outcome['reason'] ?? 'unknown' ) ) );
 		} elseif ( false === ( $outcome['success'] ?? null ) ) {
-			self::record( self::slug( 'test_failed_' . self::text( $outcome['reason'] ?? 'unknown' ) ) );
+			self::record( self::slug( 'test_failed_' . MappingSchema::str( $outcome['reason'] ?? 'unknown' ) ) );
 		} else {
-			$status = is_array( $response ) ? self::text( $response['status'] ?? '' ) : '';
+			$status = is_array( $response ) ? MappingSchema::str( $response['status'] ?? '' ) : '';
 			self::record( '' !== $status ? self::slug( 'test_' . $status ) : 'test_no_answer' );
 		}
 		return $response;
@@ -354,8 +349,8 @@ final class PanelActivity {
 			}
 		}
 		foreach ( array( 'list', 'provider', 'api-validation' ) as $key ) {
-			$now = self::text( $after[ $key ] ?? '' );
-			if ( self::text( $before[ $key ] ?? '' ) !== $now && '' !== $now ) {
+			$now = MappingSchema::str( $after[ $key ] ?? '' );
+			if ( MappingSchema::str( $before[ $key ] ?? '' ) !== $now && '' !== $now ) {
 				self::record( 'save_' . $key . '_changed' );
 			}
 		}

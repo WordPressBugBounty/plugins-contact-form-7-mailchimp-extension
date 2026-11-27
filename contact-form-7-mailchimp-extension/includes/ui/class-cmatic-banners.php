@@ -37,17 +37,6 @@ class Cmatic_Banners {
 		return empty( trim( $banner ) ) ? self::DEFAULT_WELCOME : $banner;
 	}
 
-	public static function render_new_user_help(): void {
-		$help_url = Cmatic_Pursuit::docs( 'how-to-get-your-mailchimp-api-key', 'new_user_help' );
-		?>
-		<h2>
-			<a href="<?php echo esc_url( $help_url ); ?>" class="helping-field" target="_blank" rel="noopener noreferrer">
-				<?php esc_html_e( 'How to get your Mailchimp API key.', 'contact-form-7-mailchimp-extension' ); ?>
-			</a>
-		</h2>
-		<?php
-	}
-
 	public static function get_author_credit(): string {
 		$url = 'https://chimpmatic.com/?utm_source=client_site&utm_medium=backlink&utm_campaign=powered_by';
 

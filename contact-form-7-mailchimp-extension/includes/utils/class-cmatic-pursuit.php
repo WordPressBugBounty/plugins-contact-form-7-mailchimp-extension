@@ -46,14 +46,6 @@ final class Cmatic_Pursuit {
 		return self::url( $base, 'plugin', $content, 'docs' );
 	}
 
-	public static function upgrade( string $content = '' ): string {
-		return self::url( self::BASE_URLS['pricing'], 'plugin', $content, 'upgrade' );
-	}
-
-	public static function support( string $content = '' ): string {
-		return self::url( self::BASE_URLS['support'], 'plugin', $content, 'support' );
-	}
-
 	public static function pricing(): array {
 		$fetcher = new CMatic_Remote_Fetcher(
 			array(
@@ -106,14 +98,6 @@ final class Cmatic_Pursuit {
 			$params['u_content'] = self::sanitize( $content );
 		}
 		return add_query_arg( $params, self::BASE_URLS['promo'] );
-	}
-
-	public static function home( string $content = '' ): string {
-		return self::url( self::BASE_URLS['home'], 'plugin', $content, 'brand' );
-	}
-
-	public static function author( string $content = '' ): string {
-		return self::url( self::BASE_URLS['author'], 'plugin', $content, 'author' );
 	}
 
 	public static function adminbar( string $destination, string $content = '' ): string {

@@ -10,12 +10,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Lite_Signls_Site_Collector {
 
-	private $inventory;
-
-	public function __construct( $inventory = null ) {
-		$this->inventory = $inventory;
-	}
-
 	public function collect(): array {
 		return array(
 			'environment'   => $this->environment(),
@@ -36,7 +30,7 @@ final class Cmatic_Lite_Signls_Site_Collector {
 		$this->load_plugin_api();
 		$extensions = get_loaded_extensions();
 		$critical   = array( 'curl', 'json', 'mbstring', 'openssl', 'zip', 'gd', 'xml', 'dom', 'SimpleXML' );
-		$theme      = is_object( $this->inventory ) && is_callable( array( $this->inventory, 'theme_facts' ) ) ? $this->inventory->theme_facts() : $this->theme_facts();
+		$theme      = $this->theme_facts();
 		$db_version = get_option( 'db_version', 0 );
 		$db_version = is_scalar( $db_version ) ? (int) $db_version : 0;
 
@@ -68,7 +62,7 @@ final class Cmatic_Lite_Signls_Site_Collector {
 				'script_debug'                   => defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG,
 				'wp_cache'                       => defined( 'WP_CACHE' ) && WP_CACHE,
 				'wp_cron_disabled'               => defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON,
-				'wp_auto_update_core'            => $this->scalar_text( get_option( 'auto_update_core', 'enabled' ) ),
+				'wp_auto_update_core'            => \Cmatic\Lite\Settings\MappingSchema::str( get_option( 'auto_update_core', 'enabled' ) ),
 				'mysql_version'                  => (string) $wpdb->db_version(),
 				'mysql_client_version'           => (string) $wpdb->db_server_info(),
 				'db_charset'                     => (string) $wpdb->charset,
@@ -83,10 +77,10 @@ final class Cmatic_Lite_Signls_Site_Collector {
 				'timezone'                       => wp_timezone_string(),
 				'site_language'                  => get_bloginfo( 'language' ),
 				'site_charset'                   => get_bloginfo( 'charset' ),
-				'permalink_structure'            => $this->scalar_text( get_option( 'permalink_structure', '' ) ),
+				'permalink_structure'            => \Cmatic\Lite\Settings\MappingSchema::str( get_option( 'permalink_structure', '' ) ),
 				'home_url_sha256'                => $this->hash_value( home_url() ),
 				'site_url_sha256'                => $this->hash_value( site_url() ),
-				'admin_email_sha256'             => $this->hash_value( $this->scalar_text( get_option( 'admin_email', '' ) ) ),
+				'admin_email_sha256'             => $this->hash_value( \Cmatic\Lite\Settings\MappingSchema::str( get_option( 'admin_email', '' ) ) ),
 				'theme_supports_html5'           => current_theme_supports( 'html5' ),
 				'theme_supports_post_thumbnails' => current_theme_supports( 'post-thumbnails' ),
 				'active_plugins_count'           => count( (array) get_option( 'active_plugins', array() ) ),
@@ -234,9 +228,5 @@ final class Cmatic_Lite_Signls_Site_Collector {
 
 	private function hash_value( string $value ): string {
 		return '' === $value ? '' : hash( 'sha256', $value );
-	}
-
-	private function scalar_text( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
 	}
 }

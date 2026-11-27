@@ -22,7 +22,7 @@ final class Cmatic_Sidebar_Panel {
 		}
 		$entry      = \Cmatic\Lite\Submission\Stats::get( $post_id );
 		$failing    = array() !== $entry && \Cmatic\Lite\Submission\Stats::is_failing( $entry );
-		$last_error = array() !== $entry ? \Cmatic\Lite\Submission\Stats::str( $entry['last_error'] ?? '' ) : '';
+		$last_error = array() !== $entry ? \Cmatic\Lite\Settings\MappingSchema::str( $entry['last_error'] ?? '' ) : '';
 		$facts      = array() !== $entry ? \Cmatic\Lite\Submission\Stats::summary( $entry ) : __( 'no syncs yet', 'contact-form-7-mailchimp-extension' );
 		?>
 		<div class="misc-pub-section cmatic-status<?php echo $failing ? ' cmatic-status--failing' : ''; ?>">

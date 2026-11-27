@@ -31,7 +31,7 @@ final class MailerLiteOperations extends GenericOperations {
 			return $this->failure_result( 'configuration_error', 'MailerLite requires at least one destination group.' );
 		}
 
-		$mode    = self::str( $options['status_mode'] ?? 'legacy_provider_managed' );
+		$mode    = \Cmatic\Lite\Settings\MappingSchema::str( $options['status_mode'] ?? 'legacy_provider_managed' );
 		$payload = array(
 			'email'  => $email,
 			'fields' => (object) $merge_vars,
@@ -85,8 +85,8 @@ final class MailerLiteOperations extends GenericOperations {
 
 	public function create_field( string $api_key, array $spec, bool $log_enabled = false ): array {
 		unset( $log_enabled );
-		$name = sanitize_text_field( self::str( $spec['name'] ?? '' ) );
-		$type = sanitize_key( self::str( $spec['type'] ?? '' ) );
+		$name = sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $spec['name'] ?? '' ) );
+		$type = sanitize_key( \Cmatic\Lite\Settings\MappingSchema::str( $spec['type'] ?? '' ) );
 		if ( '' === $name || strlen( $name ) > 255 || ! in_array( $type, array( 'text', 'number', 'date' ), true ) ) {
 			return $this->failure_result( 'configuration_error', 'Invalid MailerLite field definition.' );
 		}

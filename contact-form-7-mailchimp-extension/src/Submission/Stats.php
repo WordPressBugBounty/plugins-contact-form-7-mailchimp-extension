@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Cmatic\Lite\Submission;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing -- Typed signatures follow the existing Lite class convention.
@@ -49,13 +51,13 @@ final class Stats {
 			$entry['since'] = $now;
 		}
 		if ( $success ) {
-			$entry['ok']           = self::int( $entry['ok'] ) + 1;
+			$entry['ok']           = MappingSchema::num( $entry['ok'] ) + 1;
 			$entry['last_ok_at']   = $now;
 			$entry['last_outcome'] = 'ok';
 		} elseif ( 'visitor' === self::kind( $message ) ) {
-			$entry['failed'] = self::int( $entry['failed'] ) + 1;
+			$entry['failed'] = MappingSchema::num( $entry['failed'] ) + 1;
 		} else {
-			$entry['failed']        = self::int( $entry['failed'] ) + 1;
+			$entry['failed']        = MappingSchema::num( $entry['failed'] ) + 1;
 			$entry['last_error']    = self::redact( $message );
 			$entry['last_error_at'] = $now;
 			$entry['last_outcome']  = 'fail';
@@ -100,15 +102,15 @@ final class Stats {
 	 * @param array<string,mixed> $entry
 	 */
 	public static function has_counts( array $entry ): bool {
-		return self::int( $entry['ok'] ?? 0 ) > 0 || self::int( $entry['failed'] ?? 0 ) > 0;
+		return MappingSchema::num( $entry['ok'] ?? 0 ) > 0 || MappingSchema::num( $entry['failed'] ?? 0 ) > 0;
 	}
 
 	public static function credential_rejected( int $form_id, string $provider ): bool {
 		$entry = self::get( $form_id );
-		if ( ! self::is_failing( $entry ) || ( '' !== self::str( $entry['provider'] ?? '' ) && sanitize_key( $provider ) !== self::str( $entry['provider'] ?? '' ) ) ) {
+		if ( ! self::is_failing( $entry ) || ( '' !== MappingSchema::str( $entry['provider'] ?? '' ) && sanitize_key( $provider ) !== MappingSchema::str( $entry['provider'] ?? '' ) ) ) {
 			return false;
 		}
-		$text = strtolower( self::str( $entry['last_error'] ?? '' ) );
+		$text = strtolower( MappingSchema::str( $entry['last_error'] ?? '' ) );
 		foreach ( array( 'api key', 'api_key', 'apikey', 'unauthori', 'http 401' ) as $phrase ) {
 			if ( false !== strpos( $text, $phrase ) ) {
 				return true;
@@ -136,16 +138,16 @@ final class Stats {
 	 * @param array<string,mixed> $entry
 	 */
 	public static function is_failing( array $entry ): bool {
-		return 'fail' === self::str( $entry['last_outcome'] ?? '' );
+		return 'fail' === MappingSchema::str( $entry['last_outcome'] ?? '' );
 	}
 
 	/**
 	 * @param array<string,mixed> $entry
 	 */
 	public static function summary( array $entry ): string {
-		$ok      = self::int( $entry['ok'] ?? 0 );
-		$failed  = self::int( $entry['failed'] ?? 0 );
-		$last_ok = self::int( $entry['last_ok_at'] ?? 0 );
+		$ok      = MappingSchema::num( $entry['ok'] ?? 0 );
+		$failed  = MappingSchema::num( $entry['failed'] ?? 0 );
+		$last_ok = MappingSchema::num( $entry['last_ok_at'] ?? 0 );
 		if ( $ok <= 0 && $failed <= 0 ) {
 			return __( 'no syncs yet', 'contact-form-7-mailchimp-extension' );
 		}
@@ -199,7 +201,7 @@ final class Stats {
 		if ( ! is_object( $form ) || ! method_exists( $form, 'id' ) ) {
 			return 0;
 		}
-		return self::int( $form->id() );
+		return MappingSchema::num( $form->id() );
 	}
 
 	private static function provider_for( int $form_id ): string {
@@ -213,29 +215,15 @@ final class Stats {
 	private static function entry( $raw ): array {
 		$raw = is_array( $raw ) ? $raw : array();
 		return array(
-			'ok'            => max( 0, self::int( $raw['ok'] ?? 0 ) ),
-			'failed'        => max( 0, self::int( $raw['failed'] ?? 0 ) ),
-			'since'         => max( 0, self::int( $raw['since'] ?? 0 ) ),
-			'last_ok_at'    => max( 0, self::int( $raw['last_ok_at'] ?? 0 ) ),
-			'last_error_at' => max( 0, self::int( $raw['last_error_at'] ?? 0 ) ),
-			'last_error'    => self::str( $raw['last_error'] ?? '' ),
-			'last_outcome'  => self::str( $raw['last_outcome'] ?? '' ),
-			'provider'      => sanitize_key( self::str( $raw['provider'] ?? '' ) ),
+			'ok'            => max( 0, MappingSchema::num( $raw['ok'] ?? 0 ) ),
+			'failed'        => max( 0, MappingSchema::num( $raw['failed'] ?? 0 ) ),
+			'since'         => max( 0, MappingSchema::num( $raw['since'] ?? 0 ) ),
+			'last_ok_at'    => max( 0, MappingSchema::num( $raw['last_ok_at'] ?? 0 ) ),
+			'last_error_at' => max( 0, MappingSchema::num( $raw['last_error_at'] ?? 0 ) ),
+			'last_error'    => MappingSchema::str( $raw['last_error'] ?? '' ),
+			'last_outcome'  => MappingSchema::str( $raw['last_outcome'] ?? '' ),
+			'provider'      => sanitize_key( MappingSchema::str( $raw['provider'] ?? '' ) ),
 		);
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	public static function int( $value ): int {
-		return is_int( $value ) ? $value : ( is_numeric( $value ) ? (int) $value : 0 );
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	public static function str( $value ): string {
-		return is_string( $value ) ? $value : ( is_scalar( $value ) ? (string) $value : '' );
 	}
 
 	private function __construct() {}

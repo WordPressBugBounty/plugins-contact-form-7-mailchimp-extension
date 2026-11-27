@@ -12,31 +12,7 @@ use Cmatic\Lite\Rest\Args;
 
 class Cmatic_Log_Viewer {
 
-	protected static $namespace   = 'chimpmatic-lite/v1';
-	protected static $log_prefix  = '[Contact Form 7 Extension]';
-	protected static $text_domain = 'contact-form-7-mailchimp-extension';
-	protected static $max_lines   = 500;
-	protected static $initialized = false;
-
-	public static function init( $namespace = null, $log_prefix = null, $text_domain = null ) {
-		if ( self::$initialized ) {
-			return;
-		}
-
-		if ( $namespace ) {
-			self::$namespace = $namespace . '/v1';
-		}
-		if ( $log_prefix ) {
-			self::$log_prefix = $log_prefix;
-		}
-		if ( $text_domain ) {
-			self::$text_domain = $text_domain;
-		}
-
-		add_action( 'rest_api_init', array( static::class, 'register_routes' ) );
-
-		self::$initialized = true;
-	}
+	protected static $namespace = 'chimpmatic-lite/v1';
 
 	public static function register_routes() {
 		register_rest_route(

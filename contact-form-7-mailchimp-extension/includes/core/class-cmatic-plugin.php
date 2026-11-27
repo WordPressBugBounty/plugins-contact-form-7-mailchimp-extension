@@ -83,8 +83,6 @@ final class Cmatic_Plugin {
 			'providers/class-cmatic-lite-esp-registry.php',
 			'providers/class-cmatic-lite-esp-manifest.php',
 			'services/signls/class-cmatic-lite-signls-outcome.php',
-			'services/submission/class-cmatic-mailchimp-subscriber.php',
-			'services/class-cmatic-license-state-resolver.php',
 			'services/class-cmatic-submission-handler.php',
 			'services/class-cmatic-sender-context.php',
 			'api/class-cmatic-rest-permissions.php',
@@ -111,7 +109,6 @@ final class Cmatic_Plugin {
 			'ui/class-cmatic-form-classes.php',
 			'ui/class-cmatic-dom-classes.php',
 			'ui/class-cmatic-sidebar-panel.php',
-			'ui/class-cmatic-license-banner.php',
 			'ui/class-cmatic-advanced-settings.php',
 		);
 
@@ -132,17 +129,10 @@ final class Cmatic_Plugin {
 		Cmatic_Pro_Syncer::init();
 		\Cmatic\Lite\Core\StayCurrent::init();
 
-		Cmatic_Log_Viewer::init( 'chimpmatic-lite', '[Contact Form 7 Extension]', 'contact-form-7-mailchimp-extension' );
-
-		Cmatic_Rest_Lists::init();
-		Cmatic_Rest_Settings::init();
-		Cmatic_Rest_Form::init();
-		Cmatic_Lite_Esp_Rest_Controller::init();
-		Cmatic_Rest_Reset::init();
-
+		foreach ( array( 'Cmatic_Log_Viewer', 'Cmatic_Rest_Lists', 'Cmatic_Rest_Settings', 'Cmatic_Rest_Form', 'Cmatic_Lite_Esp_Rest_Controller', 'Cmatic_Rest_Reset', 'Cmatic_Contact_Lookup', 'Cmatic_Rest_OAuth' ) as $rest_routes ) {
+			add_action( 'rest_api_init', array( $rest_routes, 'register_routes' ) );
+		}
 		Cmatic_Rest_Permissions::init();
-		Cmatic_Contact_Lookup::init();
-		Cmatic_Rest_OAuth::init();
 		\Cmatic\Lite\Submission\Feedback::init();
 		\Cmatic\Lite\Telemetry\PanelActivity::init();
 
@@ -162,7 +152,6 @@ final class Cmatic_Plugin {
 	}
 
 	private function load_late_dependencies(): void {
-		require_once $this->dir . 'includes/ui/class-cmatic-modal.php';
 		require_once $this->dir . 'includes/ui/class-cmatic-test-submission-modal.php';
 
 		require_once $this->dir . 'includes/ui/class-cmatic-admin-bar-menu.php';

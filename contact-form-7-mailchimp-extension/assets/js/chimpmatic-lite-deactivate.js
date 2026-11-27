@@ -203,19 +203,28 @@
 		window.location.href = deactivateUrl;
 	}
 
+	function clearReasons() {
+		modalElement
+			.querySelectorAll( '.cmatic-reason-btn' )
+			.forEach( ( btn ) => {
+				btn.classList.remove( 'selected' );
+				btn.setAttribute( 'aria-pressed', 'false' );
+				const nextEl = btn.nextElementSibling;
+				if (
+					nextEl &&
+					nextEl.classList.contains( 'cmatic-input-wrapper' )
+				) {
+					nextEl.remove();
+				}
+			} );
+	}
+
 	async function handleReasonClick(evt) {
 		const clickedBtn = evt.currentTarget;
 		const reasonId = parseInt(clickedBtn.dataset.reasonId, 10);
 		const inputType = clickedBtn.dataset.inputType;
 
-		modalElement.querySelectorAll('.cmatic-reason-btn').forEach(btn => {
-			btn.classList.remove('selected');
-			btn.setAttribute('aria-pressed', 'false');
-			const nextEl = btn.nextElementSibling;
-			if (nextEl && nextEl.classList.contains('cmatic-input-wrapper')) {
-				nextEl.remove();
-			}
-		});
+		clearReasons();
 
 		clickedBtn.classList.add('selected');
 		clickedBtn.setAttribute('aria-pressed', 'true');
@@ -374,14 +383,7 @@
 	}
 
 	function resetForm() {
-		modalElement.querySelectorAll('.cmatic-reason-btn').forEach(btn => {
-			btn.classList.remove('selected');
-			btn.setAttribute('aria-pressed', 'false');
-			const nextEl = btn.nextElementSibling;
-			if (nextEl && nextEl.classList.contains('cmatic-input-wrapper')) {
-				nextEl.remove();
-			}
-		});
+		clearReasons();
 		hideValidationError();
 		setButtonsDisabled(false);
 		const skipLink = modalElement.querySelector('.cmatic-skip-link');

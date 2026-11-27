@@ -64,7 +64,6 @@ function chimpmaticLiteInit() {
 	}
 
 	const isProFieldPanelActive = !!document.getElementById('chm_panel_gencamposygrupos');
-	let cachedLists = chimpmaticLite.lists && chimpmaticLite.lists.length > 0 ? chimpmaticLite.lists : [];
 
 	function getFormId() {
 		const dataContainer = document.getElementById('cmatic_data');
@@ -88,6 +87,27 @@ function chimpmaticLiteInit() {
 		return data;
 	}
 
+	function logText( data ) {
+		return data.success
+			? data.logs || data.message
+			: 'Error: ' + ( data.message || 'Unknown error' );
+	}
+
+	function logFilterOn() {
+		const link = document.querySelector( '.vc-toggle-filter' );
+		return ! link || link.getAttribute( 'data-filtered' ) !== '0';
+	}
+
+	async function showDebugLog( panel, filtered = true ) {
+		const i18n = window.chimpmaticLite.i18n || {};
+		panel.textContent = i18n.loading || 'Loading...';
+		try {
+			panel.textContent = logText( await getDebugLog( filtered ) );
+		} catch {
+			panel.textContent = i18n.error || 'Error loading logs';
+		}
+	}
+
 	async function clearDebugLog() {
 		const response = await fetch(`${chimpmaticLite.restUrl}logs/clear`, {
 			method: 'POST',
@@ -97,218 +117,6 @@ function chimpmaticLiteInit() {
 		const data = await response.json();
 		if (!response.ok) throw new Error(data.message || 'Failed to clear log');
 		return data;
-	}
-
-	function findBestMatch(mergeTag, fieldName, cf7Tags) {
-		if (!mergeTag || !cf7Tags || cf7Tags.length === 0) return null;
-
-		const normalize = str => String(str).toLowerCase().replace(/[^a-z0-9]/g, '');
-		const normalizedTag = normalize(mergeTag);
-		const normalizedName = normalize(fieldName);
-
-		const keywordMappings = {
-			email: ['email', 'mail', 'correo'],
-			emailaddress: ['email', 'mail'],
-			fname: ['name', 'firstname', 'first', 'nombre', 'your-name'],
-			firstname: ['name', 'firstname', 'first', 'nombre'],
-			lname: ['lastname', 'last', 'apellido', 'surname'],
-			lastname: ['lastname', 'last', 'apellido'],
-			name: ['name', 'nombre', 'your-name'],
-			fullname: ['name', 'fullname', 'nombre'],
-			phone: ['phone', 'tel', 'telefono', 'mobile', 'cell'],
-			mobilephone: ['phone', 'tel', 'mobile', 'cell'],
-			address: ['address', 'direccion', 'street'],
-			address1: ['address', 'address1', 'street'],
-			address2: ['address2', 'apt', 'suite'],
-			city: ['city', 'ciudad'],
-			state: ['state', 'province', 'region', 'estado'],
-			zip: ['zip', 'postal', 'postcode'],
-			country: ['country', 'pais'],
-			company: ['company', 'organization', 'empresa', 'org'],
-			website: ['website', 'url', 'web', 'sitio'],
-			birthday: ['birthday', 'birth', 'dob', 'cumpleanos'],
-			message: ['message', 'comments', 'mensaje', 'nota', 'your-message']
-		};
-
-		for (const [mcKeyword, cf7Keywords] of Object.entries(keywordMappings)) {
-			if (normalizedTag.includes(mcKeyword) || normalizedName.includes(mcKeyword)) {
-				for (const cf7Keyword of cf7Keywords) {
-					const match = cf7Tags.find(tag => normalize(tag.name || tag).includes(cf7Keyword));
-					if (match) return match.name || match;
-				}
-			}
-		}
-
-		for (const tag of cf7Tags) {
-			const tagName = normalize(tag.name || tag);
-			if (normalizedTag.includes(tagName) || tagName.includes(normalizedTag)) return tag.name || tag;
-			if (normalizedName.includes(tagName) || tagName.includes(normalizedName)) return tag.name || tag;
-		}
-
-		return null;
-	}
-
-	function applyFuzzyMatching(mergeFields) {
-		const cf7Tags = [];
-		const sampleDropdown = document.getElementById('wpcf7-mailchimp-field4');
-		if (sampleDropdown) {
-			Array.from(sampleDropdown.options).forEach(option => {
-				if (option.value && option.value.trim() !== '' && option.value !== ' ') {
-					cf7Tags.push({ name: option.value });
-				}
-			});
-		}
-
-		if (cf7Tags.length === 0) return;
-
-		const fieldMappings = [
-			{ id: 'field3', index: 0 },
-			{ id: 'field4', index: 1 },
-			{ id: 'field5', index: 2 },
-			{ id: 'field6', index: 3 }
-		];
-
-		const changedFields = [];
-
-		fieldMappings.forEach(mapping => {
-			const mergeField = mergeFields[mapping.index];
-			if (!mergeField) return;
-
-			const dropdown = document.getElementById(`wpcf7-mailchimp-${mapping.id}`);
-			if (!dropdown) return;
-
-			if (dropdown.value && dropdown.value.trim() !== '' && dropdown.value !== ' ') return;
-
-			const bestMatch = findBestMatch(mergeField.tag, mergeField.name, cf7Tags);
-			if (bestMatch) {
-				dropdown.value = bestMatch;
-				changedFields.push({ field: mapping.id, value: bestMatch });
-
-				Array.from(dropdown.options).forEach(opt => {
-					opt.defaultSelected = (opt.value === bestMatch);
-				});
-			}
-		});
-
-		if (changedFields.length > 0) {
-			saveFieldMappings(changedFields);
-		}
-	}
-
-	async function saveFieldMappings(fields) {
-		const formId = getFormId();
-		if (!formId || fields.length === 0) return;
-
-		for (const { field, value } of fields) {
-			try {
-				await fetch(chimpmaticLite.restUrl + 'form/field', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-WP-Nonce': chimpmaticLite.restNonce
-					},
-					body: JSON.stringify({ form_id: formId, field, value })
-				});
-			} catch (error) {
-				console.error('Failed to save field mapping:', field, error);
-			}
-		}
-	}
-
-	function updateFieldLabels(mergeFields) {
-		const fieldMappings = [
-			{ id: 'field3', index: 0 },
-			{ id: 'field4', index: 1 },
-			{ id: 'field5', index: 2 },
-			{ id: 'field6', index: 3 }
-		];
-
-		fieldMappings.forEach(mapping => {
-			const label = document.querySelector(`label[for="wpcf7-mailchimp-${mapping.id}"]`);
-			const container = label ? label.closest('.mcee-container') : null;
-
-				if (mergeFields[mapping.index]) {
-					const field = mergeFields[mapping.index];
-					if (label) {
-						const type = document.createElement('span');
-						type.className = 'mce-type';
-						type.textContent = String(field.type || '');
-						const nodes = [document.createTextNode(`${field.name} - *|${field.tag}|* `), type];
-						if (field.tag === 'EMAIL') {
-							const required = document.createElement('span');
-							required.className = 'mce-required';
-							required.textContent = 'Required';
-							nodes.push(document.createTextNode(' '), required);
-						}
-						label.replaceChildren(...nodes);
-				}
-				if (container) container.style.display = '';
-			} else {
-				if (container) container.style.display = 'none';
-			}
-		});
-
-		applyFuzzyMatching(mergeFields);
-	}
-
-	function updateFieldsNotice(totalMergeFields, liteLimit) {
-		const notice = document.getElementById('cmatic-fields-notice');
-		if (!notice) return;
-
-		if (totalMergeFields > liteLimit) {
-			notice.classList.remove('cmatic-hidden');
-			notice.classList.add('cmatic-visible');
-		} else {
-			notice.classList.remove('cmatic-visible');
-			notice.classList.add('cmatic-hidden');
-		}
-	}
-
-	function renderListsDropdown(listsData, currentSelection) {
-		const { api_valid, lists, total } = listsData;
-
-		if (lists && lists.length > 0) {
-			cachedLists = lists;
-		}
-
-		const dataContainer = document.getElementById('cmatic_data');
-		if (dataContainer) dataContainer.dataset.apiValid = api_valid ? '1' : '0';
-
-		const label = document.getElementById('cmatic-audiences-label');
-		if (label) {
-			label.textContent = api_valid && total > 0 ? `Total Mailchimp Audiences: ${total}` : 'Mailchimp Audiences';
-			const caption = label.closest('.cmatic-audiences') ?
-				label.closest('.cmatic-audiences').querySelector('small.description') : null;
-			if (caption && caption.firstChild && caption.firstChild.nodeType === Node.TEXT_NODE) {
-				caption.firstChild.nodeValue = (api_valid && total > 0
-					? 'Contacts from this form join the selected audience. Sync Fields refreshes its merge fields from Mailchimp. '
-					: (api_valid
-						? 'No audiences found in this account. Create one in Mailchimp, then click Sync Fields. '
-						: 'Connect your Mailchimp account above to load your audiences. '));
-			}
-		}
-
-		const options = [];
-		let selectedAudience = '';
-
-		if (api_valid && total > 0) {
-			selectedAudience = currentSelection;
-			if (!selectedAudience && lists.length > 0) selectedAudience = lists[0].id;
-
-			lists.forEach(list => {
-				const optionText = `${list.name} (${Number(list.member_count).toLocaleString()} contacts, ${list.field_count} fields)`;
-				const option = document.createElement('option');
-				option.value = String(list.id || '');
-				option.textContent = optionText;
-				option.selected = selectedAudience === list.id;
-				options.push(option);
-			});
-
-			const selectedList = lists.find(l => l.id === selectedAudience) || lists[0];
-			updateFieldsNotice(selectedList.field_count, chimpmaticLite.liteFieldsLimit || 4);
-		}
-
-		return options;
 	}
 
 	function initToggleAutoSave() {
@@ -462,15 +270,7 @@ function chimpmaticLiteInit() {
 			event.preventDefault();
 			const logPanel = document.getElementById('log_panel');
 			if (!logPanel) return;
-			const i18n = chimpmaticLite.i18n || {};
-			logPanel.textContent = i18n.loading || 'Loading...';
-			try {
-				const filterLink = document.querySelector('.vc-toggle-filter');
-				const data = await getDebugLog(!filterLink || filterLink.getAttribute('data-filtered') !== '0');
-				logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
-			} catch (error) {
-				logPanel.textContent = i18n.error || 'Error loading logs';
-			}
+			await showDebugLog( logPanel, logFilterOn() );
 			return;
 		}
 		const tab = event.target.closest('[data-cmatic-log-source]');
@@ -480,13 +280,7 @@ function chimpmaticLiteInit() {
 			tab.parentElement.querySelectorAll('[data-cmatic-log-source]').forEach(function(button) { button.classList.toggle('is-active', button === tab); });
 			const panel = document.getElementById('log_panel');
 			if (!panel) return;
-			panel.textContent = (chimpmaticLite.i18n || {}).loading || 'Loading...';
-			try {
-				const data = await getDebugLog(true);
-				panel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
-			} catch (error) {
-				panel.textContent = (chimpmaticLite.i18n || {}).error || 'Error loading logs';
-			}
+			await showDebugLog( panel );
 			return;
 		}
 		const source = event.target.closest('.vc-log-source');
@@ -499,15 +293,7 @@ function chimpmaticLiteInit() {
 		if (filterWrap) filterWrap.style.display = cmaticLogSource === 'site' ? '' : 'none';
 		const logPanel = document.getElementById('log_panel');
 		if (!logPanel) return;
-		logPanel.textContent = i18n.loading || 'Loading...';
-		try {
-			const filterLink = document.querySelector('.vc-toggle-filter');
-			const filtered = !filterLink || filterLink.getAttribute('data-filtered') !== '0';
-			const data = await getDebugLog(filtered);
-			logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
-		} catch (error) {
-			logPanel.textContent = i18n.error || 'Error loading logs';
-		}
+		await showDebugLog( logPanel, logFilterOn() );
 	});
 
 	(function initLogAutoRefresh() {
@@ -521,8 +307,7 @@ function chimpmaticLiteInit() {
 				const panel = document.getElementById('log_panel');
 				if (!panel) return;
 				try {
-					const data = await getDebugLog(true);
-					panel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
+					panel.textContent = logText( await getDebugLog( true ) );
 				} catch (error) {
 					window.clearInterval(timer);
 				}
@@ -562,153 +347,6 @@ function chimpmaticLiteInit() {
 			}
 		});
 	})();
-
-	const debugLogButton = document.querySelector('.cme-trigger-log:not(.cmatic-accordion-btn)');
-	if (debugLogButton) {
-		debugLogButton.addEventListener('click', async function(event) {
-			event.preventDefault();
-
-			const logPanelContainer = document.getElementById('eventlog-sys');
-			const logPanel = document.getElementById('log_panel');
-			const advancedSettings = document.querySelector('.vc-advanced-settings');
-			const advancedToggleButton = document.querySelector('.vc-view-advanced');
-			const testContainer = document.getElementById('cmatic-test-container');
-			const testSubmissionBtn = document.querySelector('.vc-test-submission');
-
-			if (!logPanelContainer || !logPanel) return;
-
-			const isLogVisible = window.getComputedStyle(logPanelContainer).display !== 'none';
-
-			if (isLogVisible) {
-				logPanelContainer.style.transition = 'opacity 0.5s ease-out';
-				logPanelContainer.style.opacity = '0';
-
-				setTimeout(() => {
-					logPanelContainer.style.display = 'none';
-					logPanelContainer.style.removeProperty('opacity');
-					logPanelContainer.style.removeProperty('transition');
-				}, 500);
-
-				this.setAttribute('aria-expanded', 'false');
-			} else {
-				if (advancedSettings) {
-					const isAdvancedVisible = window.getComputedStyle(advancedSettings).display !== 'none';
-					if (isAdvancedVisible) {
-						advancedSettings.style.transition = 'opacity 0.5s ease-out';
-						advancedSettings.style.opacity = '0';
-
-						setTimeout(() => {
-							advancedSettings.style.display = 'none';
-							advancedSettings.style.removeProperty('opacity');
-							advancedSettings.style.removeProperty('transition');
-						}, 500);
-
-						if (advancedToggleButton) advancedToggleButton.setAttribute('aria-expanded', 'false');
-					}
-				}
-
-				if (testContainer) {
-					const isTestVisible = window.getComputedStyle(testContainer).display !== 'none';
-					if (isTestVisible) {
-						testContainer.style.transition = 'opacity 0.5s ease-out';
-						testContainer.style.opacity = '0';
-
-						setTimeout(() => {
-							testContainer.style.display = 'none';
-							testContainer.style.removeProperty('opacity');
-							testContainer.style.removeProperty('transition');
-						}, 500);
-
-						if (testSubmissionBtn) testSubmissionBtn.setAttribute('aria-expanded', 'false');
-					}
-				}
-
-				logPanel.textContent = chimpmaticLite.i18n.loading;
-				logPanelContainer.style.opacity = '0';
-				logPanelContainer.style.display = 'block';
-				logPanelContainer.style.transition = 'opacity 0.5s ease-in';
-
-				setTimeout(() => { logPanelContainer.style.opacity = '1'; }, 50);
-				this.setAttribute('aria-expanded', 'true');
-
-				try {
-					const data = await getDebugLog();
-					logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
-				} catch (error) {
-					logPanel.textContent = chimpmaticLite.i18n.error;
-				}
-			}
-		});
-	}
-
-	const advancedToggleButton = document.querySelector('.vc-view-advanced:not(.cmatic-accordion-btn)');
-	if (advancedToggleButton) {
-		advancedToggleButton.addEventListener('click', function(event) {
-			event.preventDefault();
-
-			const advancedSettings = document.querySelector('.vc-advanced-settings');
-			const logPanelContainer = document.getElementById('eventlog-sys');
-			const debugLogBtn = document.querySelector('.cme-trigger-log');
-			const testContainer = document.getElementById('cmatic-test-container');
-			const testSubmissionBtn = document.querySelector('.vc-test-submission');
-
-			if (!advancedSettings) return;
-
-			const isVisible = window.getComputedStyle(advancedSettings).display !== 'none';
-
-			if (isVisible) {
-				advancedSettings.style.transition = 'opacity 0.5s ease-out';
-				advancedSettings.style.opacity = '0';
-
-				setTimeout(() => {
-					advancedSettings.style.display = 'none';
-					advancedSettings.style.removeProperty('opacity');
-					advancedSettings.style.removeProperty('transition');
-				}, 500);
-
-				this.setAttribute('aria-expanded', 'false');
-			} else {
-				if (logPanelContainer) {
-					const isLogVisible = window.getComputedStyle(logPanelContainer).display !== 'none';
-					if (isLogVisible) {
-						logPanelContainer.style.transition = 'opacity 0.5s ease-out';
-						logPanelContainer.style.opacity = '0';
-
-						setTimeout(() => {
-							logPanelContainer.style.display = 'none';
-							logPanelContainer.style.removeProperty('opacity');
-							logPanelContainer.style.removeProperty('transition');
-						}, 500);
-
-						if (debugLogBtn) debugLogBtn.setAttribute('aria-expanded', 'false');
-					}
-				}
-
-				if (testContainer) {
-					const isTestVisible = window.getComputedStyle(testContainer).display !== 'none';
-					if (isTestVisible) {
-						testContainer.style.transition = 'opacity 0.5s ease-out';
-						testContainer.style.opacity = '0';
-
-						setTimeout(() => {
-							testContainer.style.display = 'none';
-							testContainer.style.removeProperty('opacity');
-							testContainer.style.removeProperty('transition');
-						}, 500);
-
-						if (testSubmissionBtn) testSubmissionBtn.setAttribute('aria-expanded', 'false');
-					}
-				}
-
-				advancedSettings.style.opacity = '0';
-				advancedSettings.style.display = 'block';
-				advancedSettings.style.transition = 'opacity 0.5s ease-in';
-
-				setTimeout(() => { advancedSettings.style.opacity = '1'; }, 50);
-				this.setAttribute('aria-expanded', 'true');
-			}
-		});
-	}
 
 	const clearLogsButton = document.querySelector('.vc-clear-logs');
 	if (clearLogsButton) {
@@ -766,26 +404,17 @@ function chimpmaticLiteInit() {
 							this.textContent = config.filtered ? 'Show All' : 'Plugin log';
 							this.setAttribute('data-filtered', config.filtered ? '1' : '0');
 
-							if (logPanel) {
-								logPanel.textContent = chimpmaticLite.i18n?.loading || 'Loading...';
-								try {
-									const data = await getDebugLog(config.filtered);
-									logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
-								} catch (error) {
-									logPanel.textContent = chimpmaticLite.i18n?.error || 'Error loading logs';
+								if ( logPanel ) {
+									await showDebugLog(
+										logPanel,
+										config.filtered
+									);
 								}
-							}
 						});
 					}
 
-					if (logPanel && typeof chimpmaticLite !== 'undefined') {
-						logPanel.textContent = chimpmaticLite.i18n?.loading || 'Loading...';
-						try {
-							const data = await getDebugLog(config.filtered);
-							logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
-						} catch (error) {
-							logPanel.textContent = chimpmaticLite.i18n?.error || 'Error loading logs';
-						}
+					if ( logPanel ) {
+						await showDebugLog( logPanel, config.filtered );
 					}
 				}
 			},
@@ -937,18 +566,11 @@ function chimpmaticLiteInit() {
 			const data = await response.json();
 
 			if (data.success && data.merge_fields) {
-				updateFieldLabels(data.merge_fields);
-				applyFuzzyMatching(data.merge_fields);
-				const listDropdownEl = document.getElementById('wpcf7-mailchimp-list');
-				const selectedId = listDropdownEl ? listDropdownEl.value : '';
-				const selectedList = cachedLists.find(l => l.id === selectedId);
-				const audienceName = data.audience_name || (selectedList ? selectedList.name : '');
-				const totalFields = (typeof data.total_merge_fields === 'number')
-					? data.total_merge_fields
-					: (selectedList ? selectedList.field_count : 0);
-				updateFieldsNotice(totalFields, data.lite_limit || chimpmaticLite.liteFieldsLimit || 4);
-				document.querySelectorAll('.audience-name').forEach(el => { el.textContent = audienceName; });
-				document.getElementById('cmatic-stale-cache-notice')?.remove();
+				document
+					.querySelectorAll( '.audience-name' )
+					.forEach( ( el ) => {
+						el.textContent = data.audience_name || '';
+					} );
 
 				if (fetchFieldsButton) {
 					if (fetchFieldsButton.tagName === 'INPUT') fetchFieldsButton.value = 'Synced ✓';
@@ -1006,11 +628,6 @@ function chimpmaticLiteInit() {
 		if (selectedList) {
 			if (fetchFieldsButton) fetchFieldsButton.disabled = false;
 
-			for (let i = 3; i <= 8; i++) {
-				const dropdown = document.getElementById(`wpcf7-mailchimp-field${i}`);
-				if (dropdown) dropdown.value = ' ';
-			}
-
 			fetchFieldsForSelectedList();
 		} else {
 			if (fetchFieldsButton) fetchFieldsButton.disabled = true;
@@ -1036,10 +653,6 @@ function chimpmaticLiteInit() {
 		}
 	}
 
-	if (chimpmaticLite.mergeFields && chimpmaticLite.mergeFields.length > 0) {
-		updateFieldLabels(chimpmaticLite.mergeFields);
-	}
-
 	function initLicenseResetButton() {
 		const button = document.getElementById('cmatic-license-reset-btn');
 		const messageDiv = document.getElementById('cmatic-license-reset-message');
@@ -1058,7 +671,7 @@ function chimpmaticLiteInit() {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'X-WP-Nonce': chimpmaticLite.nonce
+						'X-WP-Nonce': chimpmaticLite.restNonce
 					},
 					credentials: 'same-origin',
 					body: JSON.stringify({ type: 'nuclear' })
@@ -1184,7 +797,7 @@ function chimpmaticLiteInit() {
 
 				const response = await fetch(restUrl, {
 					method: 'POST',
-					headers: { 'X-WP-Nonce': window.chimpmaticLite.nonce },
+					headers: { 'X-WP-Nonce': window.chimpmaticLite.restNonce },
 					body: formData,
 					credentials: 'same-origin'
 				});
@@ -1359,7 +972,6 @@ function chimpmaticLiteInit() {
 
 		const logPanelContainer = document.getElementById('eventlog-sys');
 		const logPanel = document.getElementById('log_panel');
-		const debugLogBtn = document.querySelector('.cme-trigger-log');
 
 		if (!logPanelContainer || !logPanel) return;
 
@@ -1370,12 +982,10 @@ function chimpmaticLiteInit() {
 			logPanelContainer.style.display = 'block';
 			logPanelContainer.style.transition = 'opacity 0.5s ease-in';
 			setTimeout(() => { logPanelContainer.style.opacity = '1'; }, 50);
-			if (debugLogBtn) debugLogBtn.setAttribute('aria-expanded', 'true');
 		}
 
 		try {
-			const data = await getDebugLog();
-			logPanel.textContent = data.success ? (data.logs || data.message) : 'Error: ' + (data.message || 'Unknown error');
+			logPanel.textContent = logText( await getDebugLog() );
 		} catch (error) {
 			logPanel.textContent = chimpmaticLite.i18n.error;
 		}
@@ -1864,17 +1474,6 @@ function chimpmaticLiteInit() {
 			if (e.key === 'Enter') {
 				lookupBtn.click();
 			}
-		});
-	})();
-
-	(function() {
-		const acceptSelect = document.getElementById('wpcf7-mailchimp-accept');
-		const helper = document.getElementById('cmatic-optin-helper');
-		if (!acceptSelect || !helper) return;
-		const textEl = helper.querySelector('.cmatic-optin-helper-text');
-		if (!textEl) return;
-		acceptSelect.addEventListener('change', function() {
-			textEl.textContent = acceptSelect.value.trim() === '' ? helper.dataset.always : helper.dataset.gated;
 		});
 	})();
 }

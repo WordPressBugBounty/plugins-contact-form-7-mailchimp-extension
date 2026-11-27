@@ -17,6 +17,7 @@ use Cmatic\Lite\Provider\Protocol;
 use Cmatic\Lite\Provider\Collection;
 use Cmatic\Lite\Provider\Payload;
 use Cmatic\Lite\Submission\Outcome;
+use Cmatic\Lite\Settings\MappingSchema;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -85,8 +86,8 @@ class GenericOperations implements OperationsInterface {
 			}
 		}
 		$body   = Payload::build( $spec, $list_id, $email, $merge_vars );
-		$path   = str_replace( '{list_id}', rawurlencode( $list_id ), Protocol::text( $spec['path'] ) );
-		$result = Payload::answer( $spec, $this->request( $api_key, Protocol::text( $spec['method'] ?? 'POST' ), $path, $body, false ), $email );
+		$path   = str_replace( '{list_id}', rawurlencode( $list_id ), MappingSchema::str( $spec['path'] ) );
+		$result = Payload::answer( $spec, $this->request( $api_key, MappingSchema::str( $spec['method'] ?? 'POST' ), $path, $body, false ), $email );
 		return ! empty( $spec['queued'] ) ? $result : $this->subscription_result( $result, $email, $merge_vars );
 	}
 
@@ -98,7 +99,7 @@ class GenericOperations implements OperationsInterface {
 			return $this->failure_result( 'configuration_error', 'No list-scoped lookup is declared.' );
 		}
 		$path   = strtr(
-			Protocol::text( $spec['path'] ),
+			MappingSchema::str( $spec['path'] ),
 			array(
 				'{list_id}'    => rawurlencode( $list_id ),
 				'{email}'      => rawurlencode( $email ),
@@ -108,9 +109,9 @@ class GenericOperations implements OperationsInterface {
 		);
 		$result = $this->request( $api_key, 'GET', $path, array(), false );
 		$body   = self::body_of( $result );
-		$absent = ( isset( $spec['absent_status'] ) && self::status_of( $result ) === $spec['absent_status'] ) || ( isset( $spec['absent_path'], $spec['absent_value'] ) && Protocol::read( $body, Protocol::text( $spec['absent_path'] ) ) === $spec['absent_value'] );
+		$absent = ( isset( $spec['absent_status'] ) && self::status_of( $result ) === $spec['absent_status'] ) || ( isset( $spec['absent_path'], $spec['absent_value'] ) && Protocol::read( $body, MappingSchema::str( $spec['absent_path'] ) ) === $spec['absent_value'] );
 		if ( isset( $spec['absent_error_prefix'] ) ) {
-			$absent = $absent && 0 === strpos( self::error_of( $result ), Protocol::text( $spec['absent_error_prefix'] ) );
+			$absent = $absent && 0 === strpos( self::error_of( $result ), MappingSchema::str( $spec['absent_error_prefix'] ) );
 		}
 		if ( $absent ) {
 			return array(
@@ -122,8 +123,8 @@ class GenericOperations implements OperationsInterface {
 			);
 		}
 		if ( self::succeeded( $result ) ) {
-			$record = Protocol::read( $body, Protocol::text( $spec['root'] ?? '' ) );
-			if ( ! is_array( $record ) || 0 !== strcasecmp( $email, Protocol::text( Protocol::read( $record, Protocol::text( $spec['email'] ?? 'email' ) ) ) ) ) {
+			$record = Protocol::read( $body, MappingSchema::str( $spec['root'] ?? '' ) );
+			if ( ! is_array( $record ) || 0 !== strcasecmp( $email, MappingSchema::str( Protocol::read( $record, MappingSchema::str( $spec['email'] ?? 'email' ) ) ) ) ) {
 				return $this->failure_result( 'api_error', 'Provider returned an invalid contact lookup.' );
 			}
 			$result['data'] = array(
@@ -148,7 +149,7 @@ class GenericOperations implements OperationsInterface {
 
 		$output = array( 'api-validation' => $success ? 1 : 0 );
 		if ( ! $success && array() !== $this->descriptor->protocol() ) {
-			$output['_cmatic_error'] = sanitize_text_field( Protocol::text( Protocol::redact( self::error_of( $result ), $api_key ) ) );
+			$output['_cmatic_error'] = sanitize_text_field( MappingSchema::str( Protocol::redact( self::error_of( $result ), $api_key ) ) );
 		}
 		return $output;
 	}
@@ -243,7 +244,7 @@ class GenericOperations implements OperationsInterface {
 			$context = array(
 				'provider' => $this->descriptor->slug(),
 				'success'  => self::succeeded( $result ),
-				'reason'   => self::str( $result['reason'] ?? '' ),
+				'reason'   => MappingSchema::str( $result['reason'] ?? '' ),
 			);
 			if ( ! $passed ) {
 				$context['status'] = is_int( $result['status'] ?? null ) ? $result['status'] : 0;
@@ -252,7 +253,7 @@ class GenericOperations implements OperationsInterface {
 			$logger->log( $passed ? 'INFO' : 'ERROR', $this->descriptor->label() . ' subscription result.', $context );
 			Outcome::handle_provider_result( $result, $email, $status, $merge_vars, $form_id );
 		} catch ( \Throwable $exception ) {
-			Outcome::handle_provider_result( $this->failure_result( 'network_error', isset( $this->descriptor->protocol()['query_key'] ) ? Protocol::text( Protocol::redact( $exception->getMessage(), $api_key ) ) : $exception->getMessage() ), $email, $status, $merge_vars, $form_id );
+			Outcome::handle_provider_result( $this->failure_result( 'network_error', isset( $this->descriptor->protocol()['query_key'] ) ? MappingSchema::str( Protocol::redact( $exception->getMessage(), $api_key ) ) : $exception->getMessage() ), $email, $status, $merge_vars, $form_id );
 		}
 	}
 
@@ -271,7 +272,7 @@ class GenericOperations implements OperationsInterface {
 		$private  = isset( $protocol['query_key'] );
 		$spec     = isset( $protocol['subscribe'] ) && is_array( $protocol['subscribe'] ) ? $protocol['subscribe'] : array();
 		if ( $private ) {
-			$path .= ( false === strpos( $path, '?' ) ? '?' : '&' ) . rawurlencode( Protocol::text( $protocol['query_key'] ) ) . '=' . rawurlencode( $api_key );
+			$path .= ( false === strpos( $path, '?' ) ? '?' : '&' ) . rawurlencode( MappingSchema::str( $protocol['query_key'] ) ) . '=' . rawurlencode( $api_key );
 		}
 		$result = $this->transport->request(
 			$this->descriptor->slug(),
@@ -287,15 +288,15 @@ class GenericOperations implements OperationsInterface {
 		);
 		if ( self::succeeded( $result ) && isset( $protocol['envelope'] ) && is_array( $protocol['envelope'] ) ) {
 			$envelope = $protocol['envelope'];
-			if ( Protocol::read( self::body_of( $result ), Protocol::text( $envelope['code'] ?? '' ) ) !== ( $envelope['success'] ?? null ) ) {
+			if ( Protocol::read( self::body_of( $result ), MappingSchema::str( $envelope['code'] ?? '' ) ) !== ( $envelope['success'] ?? null ) ) {
 				$result['success'] = false;
 				$result['reason']  = 'api_error';
 				$result['data']    = array();
-				$result['error']   = Protocol::text( Protocol::read( self::body_of( $result ), Protocol::text( $envelope['error'] ?? '' ) ) );
+				$result['error']   = MappingSchema::str( Protocol::read( self::body_of( $result ), MappingSchema::str( $envelope['error'] ?? '' ) ) );
 				if ( '' === $result['error'] ) {
 					$result['error'] = 'Provider returned an invalid response envelope.';
 				}
-				$refused          = Protocol::text( Protocol::read( self::body_of( $result ), Protocol::text( $envelope['code'] ?? '' ) ) );
+				$refused          = MappingSchema::str( Protocol::read( self::body_of( $result ), MappingSchema::str( $envelope['code'] ?? '' ) ) );
 				$result['answer'] = sanitize_text_field( $result['error'] ) . ( '' !== $refused ? ' (code ' . sanitize_text_field( $refused ) . ')' : '' );
 			}
 		}
@@ -304,14 +305,14 @@ class GenericOperations implements OperationsInterface {
 
 	public function normalize_lists( array $body ): array {
 		if ( isset( $this->descriptor->protocol()['lists'] ) ) {
-			$body = array( Protocol::text( $this->descriptor->lists_spec()['root'] ?? 'items' ) => $body );
+			$body = array( MappingSchema::str( $this->descriptor->lists_spec()['root'] ?? 'items' ) => $body );
 		}
 		return Projection::lists( $this->descriptor->lists_spec(), $body );
 	}
 
 	public function normalize_fields( array $body ): array {
 		if ( isset( $this->descriptor->protocol()['fields'] ) ) {
-			$body = array( Protocol::text( $this->descriptor->fields_spec()['root'] ?? 'items' ) => $body );
+			$body = array( MappingSchema::str( $this->descriptor->fields_spec()['root'] ?? 'items' ) => $body );
 		}
 		return Projection::fields( $this->descriptor->fields_spec(), $body );
 	}
@@ -323,7 +324,7 @@ class GenericOperations implements OperationsInterface {
 	private function collection( string $api_key, array $spec, string $path ): array {
 		return Collection::fetch(
 			$spec,
-			Protocol::text( $spec['path'] ?? $path ),
+			MappingSchema::str( $spec['path'] ?? $path ),
 			function ( string $endpoint ) use ( $api_key ): array {
 				return $this->request( $api_key, 'GET', $endpoint );
 			}
@@ -382,7 +383,7 @@ class GenericOperations implements OperationsInterface {
 	 * @param array<string,mixed> $result
 	 */
 	protected static function error_of( array $result ): string {
-		return self::str( $result['error'] ?? '' );
+		return MappingSchema::str( $result['error'] ?? '' );
 	}
 
 	/**
@@ -390,20 +391,6 @@ class GenericOperations implements OperationsInterface {
 	 */
 	protected static function status_of( array $result ): int {
 		return isset( $result['status'] ) && is_numeric( $result['status'] ) ? (int) $result['status'] : 0;
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	protected static function str( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	protected static function int( $value ): int {
-		return is_numeric( $value ) ? (int) $value : 0;
 	}
 
 	private function record_validation( bool $success ): void {

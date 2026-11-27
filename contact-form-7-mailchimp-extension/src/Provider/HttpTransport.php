@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Cmatic\Lite\Provider;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing, Squiz.Commenting.VariableComment.Missing -- Typed signatures follow the existing Lite class convention.
@@ -67,11 +69,11 @@ final class HttpTransport {
 				if ( ! $private_url ) {
 					throw $exception;
 				}
-				return self::failure( 'network_error', Protocol::text( Protocol::redact( $exception->getMessage(), $api_key ) ) );
+				return self::failure( 'network_error', MappingSchema::str( Protocol::redact( $exception->getMessage(), $api_key ) ) );
 			}
 			if ( $response instanceof \WP_Error ) {
 				if ( ! $retryable || self::MAX_ATTEMPTS - 1 === $attempt ) {
-					return self::failure( 'network_error', $private_url ? Protocol::text( Protocol::redact( $response->get_error_message(), $api_key ) ) : $response->get_error_message() );
+					return self::failure( 'network_error', $private_url ? MappingSchema::str( Protocol::redact( $response->get_error_message(), $api_key ) ) : $response->get_error_message() );
 				}
 				$this->sleep( 250000 * ( 2 ** $attempt ) );
 				continue;

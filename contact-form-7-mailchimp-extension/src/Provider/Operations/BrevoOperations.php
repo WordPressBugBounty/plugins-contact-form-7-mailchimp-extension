@@ -10,17 +10,19 @@ declare(strict_types=1);
 
 namespace Cmatic\Lite\Provider\Operations;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing -- Typed signatures follow the existing Lite class convention.
 final class BrevoOperations extends GenericOperations {
 	public function validate_subscription_options( string $api_key, string $list_id, array $options ): array {
-		$mode = sanitize_key( self::str( $options['subscription_mode'] ?? 'single' ) );
+		$mode = sanitize_key( MappingSchema::str( $options['subscription_mode'] ?? 'single' ) );
 		if ( 'single' === $mode ) {
 			return parent::validate_subscription_options( $api_key, $list_id, $options );
 		}
-		$template_id = max( 0, self::int( $options['doi_template_id'] ?? 0 ) );
-		$redirect    = esc_url_raw( self::str( $options['doi_redirect_url'] ?? '' ) );
+		$template_id = max( 0, MappingSchema::num( $options['doi_template_id'] ?? 0 ) );
+		$redirect    = esc_url_raw( MappingSchema::str( $options['doi_redirect_url'] ?? '' ) );
 		if ( 'double' !== $mode || $template_id < 1 || (int) $list_id < 1 || 'https' !== wp_parse_url( $redirect, PHP_URL_SCHEME ) ) {
 			return array(
 				'success' => false,
@@ -49,7 +51,7 @@ final class BrevoOperations extends GenericOperations {
 			'error'   => '',
 			'data'    => array(
 				'template_id'   => $template_id,
-				'template_name' => sanitize_text_field( self::str( $body['name'] ?? '' ) ),
+				'template_name' => sanitize_text_field( MappingSchema::str( $body['name'] ?? '' ) ),
 			),
 		);
 	}
@@ -74,12 +76,12 @@ final class BrevoOperations extends GenericOperations {
 		if ( array() === $list_ids ) {
 			$list_ids = array( (int) $list_id );
 		}
-		$mode = sanitize_key( self::str( $options['subscription_mode'] ?? 'single' ) );
+		$mode = sanitize_key( MappingSchema::str( $options['subscription_mode'] ?? 'single' ) );
 		if ( 'pending' === $status ) {
-			$redirect = self::str( $options['doi_redirect_url'] ?? '' );
+			$redirect = MappingSchema::str( $options['doi_redirect_url'] ?? '' );
 			if (
 				'double' !== $mode
-				|| self::int( $options['doi_template_id'] ?? 0 ) < 1
+				|| MappingSchema::num( $options['doi_template_id'] ?? 0 ) < 1
 				|| 'https' !== wp_parse_url( $redirect, PHP_URL_SCHEME )
 			) {
 				return $this->failure_result( 'configuration_error', 'Brevo double opt-in configuration is invalid.' );
@@ -93,7 +95,7 @@ final class BrevoOperations extends GenericOperations {
 					'attributes'     => (object) $merge_vars,
 					'includeListIds' => $list_ids,
 					'redirectionUrl' => esc_url_raw( $redirect ),
-					'templateId'     => self::int( $options['doi_template_id'] ?? 0 ),
+					'templateId'     => MappingSchema::num( $options['doi_template_id'] ?? 0 ),
 				),
 				false
 			);

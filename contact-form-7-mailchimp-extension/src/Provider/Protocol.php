@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Cmatic\Lite\Provider;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing -- Typed signatures follow the existing Lite class convention.
@@ -157,11 +159,6 @@ final class Protocol {
 	}
 
 	/** @param mixed $value */
-	public static function text( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
-	}
-
-	/** @param mixed $value */
 	public static function page( $value ): ?int {
 		return ( is_string( $value ) || is_int( $value ) ) && 1 === preg_match( '/^(0|[1-9][0-9]{0,5})$/', (string) $value ) ? (int) $value : null;
 	}
@@ -177,7 +174,7 @@ final class Protocol {
 		if ( is_array( $value ) ) {
 			$clean = array();
 			foreach ( $value as $key => $item ) {
-				$clean[ is_string( $key ) ? self::text( self::redact( $key, $secret ) ) : $key ] = self::redact( $item, $secret );
+				$clean[ is_string( $key ) ? MappingSchema::str( self::redact( $key, $secret ) ) : $key ] = self::redact( $item, $secret );
 			}
 			return $clean;
 		}

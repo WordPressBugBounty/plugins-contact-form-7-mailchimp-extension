@@ -12,8 +12,7 @@ use Cmatic\Lite\Rest\Args;
 
 class Cmatic_Contact_Lookup {
 
-	protected static $namespace   = 'chimpmatic-lite/v1';
-	protected static $initialized = false;
+	protected static $namespace = 'chimpmatic-lite/v1';
 
 	public static function cmatic_is_pro_active() {
 		return apply_filters( 'cmatic_contact_lookup_is_pro', false );
@@ -72,16 +71,7 @@ class Cmatic_Contact_Lookup {
 		return $fltred;
 	}
 
-	public static function init() {
-		if ( self::$initialized ) {
-			return;
-		}
-
-		add_action( 'rest_api_init', array( static::class, 'cmatic_register_routes' ) );
-		self::$initialized = true;
-	}
-
-	public static function cmatic_register_routes() {
+	public static function register_routes() {
 		register_rest_route(
 			self::$namespace,
 			'/contact/lookup',

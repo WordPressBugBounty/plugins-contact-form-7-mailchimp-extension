@@ -69,10 +69,4 @@ final class Cmatic_Utils {
 	}
 
 	private function __construct() {}
-
-	private function __clone() {}
-
-	public function __wakeup() {
-		throw new \Exception( 'Cannot unserialize singleton' );
-	}
 }

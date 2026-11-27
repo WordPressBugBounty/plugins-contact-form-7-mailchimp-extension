@@ -11,17 +11,6 @@ defined( 'ABSPATH' ) || exit;
 class Cmatic_Data_Container {
 	const ELEMENT_ID = 'cmatic_data';
 
-	public static function render( int $form_id, string $apivalid = '0', array $extra = array() ): void {
-		$attrs_html = self::build_data_attrs( $form_id, $apivalid, $extra );
-
-		printf(
-			'<div id="%s"%s style="display:none;"></div>',
-			esc_attr( self::ELEMENT_ID ),
-			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built exclusively from escaped data attributes.
-			$attrs_html
-		);
-	}
-
 	public static function render_open( int $form_id, string $apivalid = '0', array $extra = array() ): void {
 		$attrs_html = self::build_data_attrs( $form_id, $apivalid, $extra );
 

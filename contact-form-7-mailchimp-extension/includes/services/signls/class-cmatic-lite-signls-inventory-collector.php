@@ -53,18 +53,6 @@ final class Cmatic_Lite_Signls_Inventory_Collector {
 		);
 	}
 
-	public function theme_facts(): array {
-		$theme  = wp_get_theme();
-		$parent = $theme->parent();
-		return array(
-			'theme'          => (string) $theme->get( 'Name' ),
-			'theme_version'  => (string) $theme->get( 'Version' ),
-			'theme_author'   => wp_strip_all_tags( (string) $theme->get( 'Author' ) ),
-			'parent_theme'   => $parent ? (string) $parent->get( 'Name' ) : '',
-			'is_child_theme' => (bool) $parent,
-		);
-	}
-
 	private function inventory_rows( array $plugins, array $mu_plugins, array $active, array $network_active ): array {
 		ksort( $plugins, SORT_STRING );
 		ksort( $mu_plugins, SORT_STRING );

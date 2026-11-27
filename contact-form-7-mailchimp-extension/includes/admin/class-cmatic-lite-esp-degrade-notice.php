@@ -11,12 +11,6 @@ declare(strict_types=1);
 defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Lite_Esp_Degrade_Notice {
-	public static function init(): void {
-		\Cmatic\Lite\Admin\Notices::boot();
-	}
-
-	public static function render(): void {}
-
 	/** @return list<array<string,mixed>> */
 	public static function entries(): array {
 		$entries = array();

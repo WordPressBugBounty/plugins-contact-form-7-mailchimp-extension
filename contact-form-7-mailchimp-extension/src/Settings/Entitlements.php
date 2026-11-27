@@ -51,17 +51,6 @@ final class Entitlements {
 		return array_keys( $paid );
 	}
 
-	/**
-	 * @return array<string,bool>
-	 */
-	public static function mailerlite_entitlements( int $form_id ): array {
-		$result = array();
-		foreach ( array( 'mailerlite_routing', 'mailerlite_status', 'mailerlite_resubscribe', 'mailerlite_consent_metadata' ) as $feature ) {
-			$result[ $feature ] = self::feature_enabled( $feature, 'mailerlite', $form_id );
-		}
-		return $result;
-	}
-
 	public static function field_limit( string $provider = '', int $form_id = 0 ): int {
 		$limit = (int) apply_filters(
 			'cmatic_lite_esp_field_limit',

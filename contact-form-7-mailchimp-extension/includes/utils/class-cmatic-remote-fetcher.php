@@ -62,10 +62,6 @@ class CMatic_Remote_Fetcher {
 		);
 	}
 
-	public function clear_cache() {
-		return delete_transient( $this->config['cache_key'] );
-	}
-
 	private function fetch_fresh_data() {
 		if ( empty( $this->config['url'] ) ) {
 			return false;
@@ -272,10 +268,5 @@ class CMatic_Remote_Fetcher {
 		}
 
 		delete_option( $this->config['retry_count_key'] );
-	}
-
-	public function clear_all() {
-		$this->clear_cache();
-		$this->clear_retry_schedule();
 	}
 }

@@ -18,7 +18,6 @@ final class CredentialVault {
 	public const OAUTH    = "\x02";
 
 	public const PROVIDER_PREFIX = 'cmatic_provider_auth_';
-	public const OAUTH_PREFIX    = 'cmatic_auth_';
 
 	private const CIPHER        = 'aes-256-cbc';
 	private const MAC_SIZE      = 32;
@@ -36,10 +35,6 @@ final class CredentialVault {
 
 	public static function provider_option( int $form_id, string $provider ): string {
 		return self::PROVIDER_PREFIX . $form_id . '_' . sanitize_key( $provider );
-	}
-
-	public static function oauth_option( int $form_id ): string {
-		return self::OAUTH_PREFIX . $form_id;
 	}
 
 	public function store( int $form_id, string $provider, string $api_key ): bool {

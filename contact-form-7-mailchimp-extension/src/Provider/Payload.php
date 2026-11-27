@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace Cmatic\Lite\Provider;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing -- Typed signatures follow the existing Lite class convention.
@@ -21,15 +23,15 @@ final class Payload {
 	 */
 	public static function build( array $spec, string $list_id, string $email, array $fields ): array {
 		$body = array();
-		Protocol::put( $body, Protocol::text( $spec['email'] ), $email );
+		Protocol::put( $body, MappingSchema::str( $spec['email'] ), $email );
 		if ( ! empty( $spec['list'] ) ) {
-			Protocol::put( $body, Protocol::text( $spec['list'] ), $list_id );
+			Protocol::put( $body, MappingSchema::str( $spec['list'] ), $list_id );
 		}
 		foreach ( isset( $spec['defaults'] ) && is_array( $spec['defaults'] ) ? $spec['defaults'] : array() as $path => $value ) {
 			Protocol::put( $body, (string) $path, $value );
 		}
 		if ( ! empty( $spec['name'] ) && isset( $fields['NAME'] ) && is_scalar( $fields['NAME'] ) ) {
-			Protocol::put( $body, Protocol::text( $spec['name'] ), (string) $fields['NAME'] );
+			Protocol::put( $body, MappingSchema::str( $spec['name'] ), (string) $fields['NAME'] );
 		}
 		$custom = array();
 		foreach ( $fields as $key => $value ) {
@@ -47,20 +49,20 @@ final class Payload {
 				$custom[] = (string) $key . '=' . implode( ', ', $strings );
 			} elseif ( 'arrays' === $spec['format'] ) {
 				$custom[] = array(
-					Protocol::text( $spec['field_key'] )   => (string) $key,
-					Protocol::text( $spec['field_value'] ) => $strings,
+					MappingSchema::str( $spec['field_key'] )   => (string) $key,
+					MappingSchema::str( $spec['field_value'] ) => $strings,
 				);
 			} else {
 				foreach ( $strings as $part ) {
 					$custom[] = array(
-						Protocol::text( $spec['field_key'] )   => (string) $key,
-						Protocol::text( $spec['field_value'] ) => $part,
+						MappingSchema::str( $spec['field_key'] )   => (string) $key,
+						MappingSchema::str( $spec['field_value'] ) => $part,
 					);
 				}
 			}
 		}
 		if ( array() !== $custom ) {
-			Protocol::put( $body, Protocol::text( $spec['fields'] ), 'map' === $spec['format'] ? (object) $custom : $custom );
+			Protocol::put( $body, MappingSchema::str( $spec['fields'] ), 'map' === $spec['format'] ? (object) $custom : $custom );
 		}
 		return $body;
 	}
@@ -74,7 +76,7 @@ final class Payload {
 		$status = $result['status'] ?? 0;
 		$body   = isset( $result['body'] ) && is_array( $result['body'] ) ? $result['body'] : array();
 		foreach ( isset( $spec['duplicates'] ) && is_array( $spec['duplicates'] ) ? $spec['duplicates'] : array() as $duplicate ) {
-			if ( is_array( $duplicate ) && $status === ( $duplicate['status'] ?? null ) && ( ! isset( $duplicate['error_path'] ) || Protocol::read( $body, Protocol::text( $duplicate['error_path'] ) ) === ( $duplicate['value'] ?? null ) ) ) {
+			if ( is_array( $duplicate ) && $status === ( $duplicate['status'] ?? null ) && ( ! isset( $duplicate['error_path'] ) || Protocol::read( $body, MappingSchema::str( $duplicate['error_path'] ) ) === ( $duplicate['value'] ?? null ) ) ) {
 				$result['reason'] = 'already_subscribed';
 				return $result;
 			}
@@ -82,14 +84,14 @@ final class Payload {
 		if ( empty( $result['success'] ) ) {
 			return $result;
 		}
-		if ( ( isset( $spec['codes'] ) && is_array( $spec['codes'] ) && ! in_array( $status, $spec['codes'], true ) ) || ( isset( $spec['ack_email'] ) && 0 !== strcasecmp( $email, Protocol::text( Protocol::read( $body, Protocol::text( $spec['ack_email'] ) ) ) ) ) ) {
+		if ( ( isset( $spec['codes'] ) && is_array( $spec['codes'] ) && ! in_array( $status, $spec['codes'], true ) ) || ( isset( $spec['ack_email'] ) && 0 !== strcasecmp( $email, MappingSchema::str( Protocol::read( $body, MappingSchema::str( $spec['ack_email'] ) ) ) ) ) ) {
 			return HttpTransport::failure( 'api_error', 'Provider did not acknowledge the submitted contact.' );
 		}
 		if ( ! empty( $spec['queued'] ) ) {
 			$result['data'] = array( 'status' => 'queued' );
 		}
 		if ( isset( $spec['status_path'], $spec['status_map'] ) && is_array( $spec['status_map'] ) ) {
-			$remote = Protocol::text( Protocol::read( $body, Protocol::text( $spec['status_path'] ) ) );
+			$remote = MappingSchema::str( Protocol::read( $body, MappingSchema::str( $spec['status_path'] ) ) );
 			$status = $spec['status_map'][ $remote ] ?? null;
 			if ( ! is_string( $status ) || ! in_array( $status, array( 'subscribed', 'pending' ), true ) ) {
 				return HttpTransport::failure( 'api_error', 'Provider did not acknowledge an accepted subscription status.' );

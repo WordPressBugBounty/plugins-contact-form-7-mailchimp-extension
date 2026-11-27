@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Cmatic\Lite\Provider;
 
 use Cmatic\Lite\Provider\Operations\OperationsInterface;
+use Cmatic\Lite\Settings\MappingSchema;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -273,20 +274,20 @@ final class Descriptor {
 	 * @param array<mixed> $body
 	 */
 	public function next_lists_path( array $body, string $current_path ): string {
-		$type = self::str( $this->pagination['type'] ?? 'none' );
+		$type = MappingSchema::str( $this->pagination['type'] ?? 'none' );
 		if ( 'offset' === $type ) {
 			$query = wp_parse_url( $current_path, PHP_URL_QUERY );
 			parse_str( is_string( $query ) ? $query : '', $parameters );
-			$offset    = self::int( $parameters['offset'] ?? 0 );
-			$items_key = self::str( $this->pagination['items_key'] ?? 'items' );
-			$count_key = self::str( $this->pagination['count_key'] ?? 'count' );
+			$offset    = Projection::int( $parameters['offset'] ?? 0 );
+			$items_key = MappingSchema::str( $this->pagination['items_key'] ?? 'items' );
+			$count_key = MappingSchema::str( $this->pagination['count_key'] ?? 'count' );
 			$received  = isset( $body[ $items_key ] ) && is_array( $body[ $items_key ] ) ? count( $body[ $items_key ] ) : 0;
-			$total     = self::int( $body[ $count_key ] ?? 0 );
+			$total     = Projection::int( $body[ $count_key ] ?? 0 );
 			$next      = $offset + $received;
 			if ( 0 === $received || $next >= $total ) {
 				return '';
 			}
-			return str_replace( '{offset}', (string) $next, self::str( $this->pagination['path'] ?? '' ) );
+			return str_replace( '{offset}', (string) $next, MappingSchema::str( $this->pagination['path'] ?? '' ) );
 		}
 		if ( 'next_link' === $type ) {
 			$links = isset( $body['links'] ) && is_array( $body['links'] ) ? $body['links'] : array();
@@ -298,13 +299,13 @@ final class Descriptor {
 			if ( ! is_array( $parts ) ) {
 				return '';
 			}
-			$host  = self::str( $parts['host'] ?? '' );
-			$path  = self::str( $parts['path'] ?? '' );
-			$query = self::str( $parts['query'] ?? '' );
-			if ( $host !== self::str( $this->pagination['host'] ?? '' ) || $path !== self::str( $this->pagination['path'] ?? '' ) || '' === $query ) {
+			$host  = MappingSchema::str( $parts['host'] ?? '' );
+			$path  = MappingSchema::str( $parts['path'] ?? '' );
+			$query = MappingSchema::str( $parts['query'] ?? '' );
+			if ( $host !== MappingSchema::str( $this->pagination['host'] ?? '' ) || $path !== MappingSchema::str( $this->pagination['path'] ?? '' ) || '' === $query ) {
 				return '';
 			}
-			return str_replace( '{query}', $query, self::str( $this->pagination['rebase'] ?? '' ) );
+			return str_replace( '{query}', $query, MappingSchema::str( $this->pagination['rebase'] ?? '' ) );
 		}
 		return '';
 	}
@@ -424,16 +425,16 @@ final class Descriptor {
 			}
 		}
 		if ( 'offset' === $type ) {
-			$path = self::str( $pagination['path'] );
+			$path = MappingSchema::str( $pagination['path'] );
 			if ( 1 !== substr_count( $path, '{offset}' ) ) {
 				throw new \InvalidArgumentException( esc_html( $slug . ': pagination path must carry {offset} once' ) );
 			}
 			self::assert_path( $slug, 'pagination path', $path, array( '{offset}' ) );
 		}
 		if ( 'next_link' === $type ) {
-			$host   = self::str( $pagination['host'] );
-			$path   = self::str( $pagination['path'] );
-			$rebase = self::str( $pagination['rebase'] );
+			$host   = MappingSchema::str( $pagination['host'] );
+			$path   = MappingSchema::str( $pagination['path'] );
+			$rebase = MappingSchema::str( $pagination['rebase'] );
 			if ( ! in_array( $host, Catalog::hosts(), true ) || false !== strpos( $host, '{' ) ) {
 				throw new \InvalidArgumentException( esc_html( $slug . ': pagination host must be a declared host' ) );
 			}
@@ -443,22 +444,5 @@ final class Descriptor {
 			}
 			self::assert_path( $slug, 'pagination rebase', $rebase, array( '{query}' ) );
 		}
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	private static function str( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	private static function int( $value ): int {
-		if ( is_array( $value ) ) {
-			return array() === $value ? 0 : 1;
-		}
-		return is_scalar( $value ) ? (int) $value : 0;
 	}
 }

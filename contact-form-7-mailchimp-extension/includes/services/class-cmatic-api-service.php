@@ -10,20 +10,8 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Lite_Api_Service implements Cmatic_Api_Client_Interface {
 
-	public static function mask_api_key( string $key ): string {
-		return \Cmatic\Lite\Provider\Operations\MailchimpOperations::mask_api_key( $key );
-	}
-
-	public static function generate_headers( string $token ): array {
-		return self::operations()->generate_headers( $token );
-	}
-
 	public static function get( string $token, string $url ): array {
 		return self::operations()->get( $token, $url );
-	}
-
-	public static function put( string $token, string $url, string $body ): array {
-		return self::operations()->put( $token, $url, $body );
 	}
 
 	public static function validate_key( string $input, bool $log_enabled = false ): array {

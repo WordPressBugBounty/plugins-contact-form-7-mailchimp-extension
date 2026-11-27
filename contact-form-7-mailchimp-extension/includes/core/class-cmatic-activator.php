@@ -75,7 +75,7 @@ class Cmatic_Activator {
 	}
 
 	private function record_activation(): bool {
-		$activations = $this->append_timestamp( 'lifecycle.activations', time() );
+		$activations = self::append_timestamp( $this->options, 'lifecycle.activations', time() );
 
 		$this->options->set( 'lifecycle.is_reactivation', $activations['reported_total'] > 1 );
 		return true;
@@ -92,7 +92,7 @@ class Cmatic_Activator {
 			return false;
 		}
 
-		$this->append_timestamp( 'lifecycle.upgrades', time() );
+		self::append_timestamp( $this->options, 'lifecycle.upgrades', time() );
 		$history   = $this->options->get( 'lifecycle.version_history', array() );
 		$history   = is_array( $history ) ? $history : array();
 		$history[] = array(
@@ -106,8 +106,8 @@ class Cmatic_Activator {
 		return true;
 	}
 
-	private function append_timestamp( string $key, int $timestamp ): array {
-		$source   = $this->options->get( $key, array() );
+	public static function append_timestamp( Cmatic_Options_Repository $options, string $key, int $timestamp ): array {
+		$source   = $options->get( $key, array() );
 		$items    = is_array( $source ) && isset( $source['items'] ) && is_array( $source['items'] ) ? $source['items'] : ( is_array( $source ) ? $source : array() );
 		$reported = is_array( $source ) && isset( $source['reported_total'] ) && is_scalar( $source['reported_total'] ) ? (int) $source['reported_total'] : count( $items );
 		$total    = max( count( $items ), $reported );
@@ -130,7 +130,7 @@ class Cmatic_Activator {
 			'reported_total' => $total,
 			'truncated'      => $total > count( $items ),
 		);
-		$this->options->set( $key, $value );
+		$options->set( $key, $value );
 		return $value;
 	}
 

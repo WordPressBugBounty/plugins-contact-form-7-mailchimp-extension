@@ -231,13 +231,6 @@ select.cmatic-input-field {
 	padding-right: 40px;
 }
 
-.cmatic-char-counter {
-	margin-top: 4px;
-	font-size: 12px;
-	color: var(--cmatic-text-light);
-	text-align: right;
-}
-
 .cmatic-error-message {
 	display: none;
 	margin-top: 16px;

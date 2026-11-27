@@ -9,12 +9,11 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'Cmatic_Test_Submission_Modal' ) ) {
-	class Cmatic_Test_Submission_Modal extends Cmatic_Modal {
-		private $contact_form = null;
+	class Cmatic_Test_Submission_Modal {
+		private const MODAL_ID = 'cmatic-test-modal';
 
-		public function __construct() {
-			parent::__construct( 'cmatic-test-modal' );
-		}
+		private $contact_form = null;
+		private $initialized  = false;
 
 		public function init() {
 			if ( $this->initialized ) {
@@ -41,22 +40,41 @@ if ( ! class_exists( 'Cmatic_Test_Submission_Modal' ) ) {
 				return;
 			}
 
-			parent::render_modal();
+			$this->render_modal();
 		}
 
-		protected function get_title() {
-			return __( 'Test Current Form Submission', 'contact-form-7-mailchimp-extension' );
-		}
-
-		protected function render_header_actions() {
+		private function render_modal() {
+			$body = $this->get_body();
 			?>
-			<button type="button" class="cmatic-modal__submit button button-primary">
-				<?php esc_html_e( 'Submit', 'contact-form-7-mailchimp-extension' ); ?>
-			</button>
+			<div id="<?php echo esc_attr( self::MODAL_ID ); ?>"
+				class="cmatic-modal "
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="<?php echo esc_attr( self::MODAL_ID ); ?>-title"
+			>
+				<div class="cmatic-modal__overlay"></div>
+				<div class="cmatic-modal__dialog">
+					<div class="cmatic-modal__header">
+						<h2 id="<?php echo esc_attr( self::MODAL_ID ); ?>-title"><?php esc_html_e( 'Test Current Form Submission', 'contact-form-7-mailchimp-extension' ); ?></h2>
+						<button type="button" class="cmatic-modal__submit button button-primary">
+							<?php esc_html_e( 'Submit', 'contact-form-7-mailchimp-extension' ); ?>
+						</button>
+						<button type="button" class="cmatic-modal__close" aria-label="<?php esc_attr_e( 'Close dialog', 'contact-form-7-mailchimp-extension' ); ?>">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="cmatic-modal__body">
+						<?php
+						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						echo $body;
+						?>
+					</div>
+				</div>
+			</div>
 			<?php
 		}
 
-		protected function get_body() {
+		private function get_body() {
 			if ( ! $this->contact_form ) {
 				return '<p>' . esc_html__( 'No form available.', 'contact-form-7-mailchimp-extension' ) . '</p>';
 			}
@@ -78,18 +96,6 @@ if ( ! class_exists( 'Cmatic_Test_Submission_Modal' ) ) {
 			</div>
 			<?php
 			return ob_get_clean();
-		}
-
-		protected function get_strings() {
-			return array_merge(
-				parent::get_strings(),
-				array(
-					'submit'     => __( 'Submit', 'contact-form-7-mailchimp-extension' ),
-					'submitting' => __( 'Submitting...', 'contact-form-7-mailchimp-extension' ),
-					'success'    => __( 'Success!', 'contact-form-7-mailchimp-extension' ),
-					'error'      => __( 'Error', 'contact-form-7-mailchimp-extension' ),
-				)
-			);
 		}
 	}
 }

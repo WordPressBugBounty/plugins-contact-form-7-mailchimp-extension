@@ -104,9 +104,5 @@ final class Cmatic_Submission_Handler {
 		Router::route( $contact_form, $settings );
 	}
 
-	public static function replace_tags( string $subject, array $posted_data ): string {
-		return FieldValues::replace_tags( $subject, $posted_data );
-	}
-
 	private function __construct() {}
 }

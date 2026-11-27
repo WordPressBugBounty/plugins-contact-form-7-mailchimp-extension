@@ -47,7 +47,7 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 		foreach ( $forms as $form_id => $form ) {
 			$config        = isset( $configurations[ $form_id ]['settings'] ) ? $configurations[ $form_id ]['settings'] : array();
 			$provider      = Cmatic_Lite_Esp_Registry::get_selected( $config );
-			$settings      = $this->provider_settings( $config, $provider );
+			$settings      = \Cmatic\Lite\Settings\FormSettings::section_of( $config, $provider );
 			$authenticated = $this->has_authentication( $form_id, $provider, $config );
 			$lists         = $this->cached_lists( $settings );
 			$selected      = $this->selected_list( $settings );
@@ -267,7 +267,7 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 		foreach ( $configurations as $configuration ) {
 			$config   = isset( $configuration['settings'] ) && is_array( $configuration['settings'] ) ? $configuration['settings'] : array();
 			$provider = Cmatic_Lite_Esp_Registry::get_selected( $config );
-			$settings = $this->provider_settings( $config, $provider );
+			$settings = \Cmatic\Lite\Settings\FormSettings::section_of( $config, $provider );
 			$this->merge_audiences( $rows, $provider, isset( $settings['lisdata'] ) && is_array( $settings['lisdata'] ) ? $settings['lisdata'] : array(), $this->selected_list( $settings ) );
 		}
 		ksort( $rows, SORT_STRING );
@@ -418,10 +418,6 @@ final class Cmatic_Lite_Signls_Forms_Collector {
 			}
 		}
 		return false;
-	}
-
-	private function provider_settings( array $config, string $provider ): array {
-		return 'mailchimp' === $provider ? $config : ( isset( $config['providers'][ $provider ] ) && is_array( $config['providers'][ $provider ] ) ? $config['providers'][ $provider ] : array() );
 	}
 
 	private function selected_list( array $settings ): string {

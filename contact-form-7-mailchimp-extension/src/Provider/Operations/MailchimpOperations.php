@@ -198,22 +198,6 @@ final class MailchimpOperations implements OperationsInterface {
 		);
 	}
 
-	public function perform_subscription( string $api_key, string $list_id, string $email, string $status, array $merge_vars, array $options ): array {
-		unset( $options );
-		$response = $this->put( $api_key, $this->member_url( $api_key, $list_id, $email ), (string) wp_json_encode( self::build_payload( $email, $status, $merge_vars ) ) );
-		if ( false === $response[0] ) {
-			return HttpTransport::failure( 'network_error', $response[1] instanceof \WP_Error ? $response[1]->get_error_message() : '' );
-		}
-		$decoded = is_array( $response[0] ) ? $response[0] : array();
-		return array(
-			'success' => true,
-			'data'    => $decoded,
-			'body'    => $decoded,
-			'error'   => '',
-			'reason'  => '',
-		);
-	}
-
 	public function subscribe( string $api_key, string $list_id, string $email, string $status, array $merge_vars, int $form_id, array $options, \Cmatic_File_Logger $logger ): void {
 		unset( $options );
 		try {
@@ -245,26 +229,6 @@ final class MailchimpOperations implements OperationsInterface {
 	public function lookup( string $api_key, string $email ): array {
 		unset( $api_key, $email );
 		return HttpTransport::failure( 'configuration_error', 'This provider does not support subscriber lookup.' );
-	}
-
-	public function request( string $api_key, string $method, string $path, array $body = array(), bool $retryable = true ): array {
-		return $this->transport->request(
-			$this->descriptor->slug(),
-			$api_key,
-			$method,
-			$this->base_url( $api_key ) . '/' . ltrim( $path, '/' ),
-			$this->descriptor->headers( sanitize_text_field( $api_key ) ),
-			$body,
-			$retryable
-		);
-	}
-
-	public function normalize_lists( array $body ): array {
-		return isset( $body['lists'] ) && is_array( $body['lists'] ) ? $body['lists'] : array();
-	}
-
-	public function normalize_fields( array $body ): array {
-		return isset( $body['merge_fields'] ) && is_array( $body['merge_fields'] ) ? $body['merge_fields'] : array();
 	}
 
 	private function base_url( string $api_key ): string {

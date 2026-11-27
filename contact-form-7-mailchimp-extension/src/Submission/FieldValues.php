@@ -143,9 +143,9 @@ final class FieldValues {
 			if ( in_array( $field_key, $active_slots, true ) && ( ! empty( $cf7_mch[ $field_key ] ) || ( $zero_values && '0' === ( $cf7_mch[ $field_key ] ?? null ) ) ) && ! empty( $merge_tag ) ) {
 				$value = 'multiple-choice' === $field_type
 					? self::sanitize_multiple_choice(
-						self::replace_tag_values( self::scalar_string( $cf7_mch[ $field_key ] ), $posted_data )
+						self::replace_tag_values( MappingSchema::str( $cf7_mch[ $field_key ] ), $posted_data )
 					)
-					: self::replace_tags( self::scalar_string( $cf7_mch[ $field_key ] ), $posted_data );
+					: self::replace_tags( MappingSchema::str( $cf7_mch[ $field_key ] ), $posted_data );
 				if ( ! empty( $value ) || ( $zero_values && '0' === $value ) ) {
 					$merge_vars[ $merge_tag ] = self::sanitize_value( $value );
 				}
@@ -185,11 +185,11 @@ final class FieldValues {
 			if ( ! in_array( \Cmatic\Lite\Settings\MappingSchema::slot( (int) $offset ), \Cmatic\Lite\Settings\MappingSchema::active_slots( $settings, $field_limit ), true ) ) {
 				continue;
 			}
-			if ( ! is_array( $definition ) || 'boolean' !== sanitize_key( self::scalar_string( $definition['type'] ?? '' ) ) ) {
+			if ( ! is_array( $definition ) || 'boolean' !== sanitize_key( MappingSchema::str( $definition['type'] ?? '' ) ) ) {
 				continue;
 			}
-			$remote_tag = sanitize_text_field( self::scalar_string( $definition['tag'] ?? '' ) );
-			$mapping    = self::scalar_string( $settings[ 'field' . ( $offset + 3 ) ] ?? '' );
+			$remote_tag = sanitize_text_field( MappingSchema::str( $definition['tag'] ?? '' ) );
+			$mapping    = MappingSchema::str( $settings[ 'field' . ( $offset + 3 ) ] ?? '' );
 			if ( '' === $remote_tag || 1 !== preg_match( '/^\[([A-Za-z0-9_-]+)\]$/', $mapping, $matches ) ) {
 				continue;
 			}
@@ -207,15 +207,15 @@ final class FieldValues {
 	 */
 	public static function booleans( array $fields, array $definitions ): array {
 		foreach ( $definitions as $definition ) {
-			if ( ! is_array( $definition ) || 'boolean' !== sanitize_key( self::scalar_string( $definition['type'] ?? '' ) ) ) {
+			if ( ! is_array( $definition ) || 'boolean' !== sanitize_key( MappingSchema::str( $definition['type'] ?? '' ) ) ) {
 				continue;
 			}
-			$tag = self::scalar_string( $definition['tag'] ?? '' );
+			$tag = MappingSchema::str( $definition['tag'] ?? '' );
 			if ( '' === $tag || ! array_key_exists( $tag, $fields ) ) {
 				continue;
 			}
 			$raw            = $fields[ $tag ];
-			$text           = strtolower( trim( is_array( $raw ) ? implode( '', self::scalar_strings( $raw ) ) : self::scalar_string( $raw ) ) );
+			$text           = strtolower( trim( is_array( $raw ) ? implode( '', self::scalar_strings( $raw ) ) : MappingSchema::str( $raw ) ) );
 			$fields[ $tag ] = is_bool( $raw ) ? $raw : ! in_array( $text, array( '', '0', 'false', 'no', 'off' ), true );
 		}
 
@@ -232,17 +232,17 @@ final class FieldValues {
 		$errors = array();
 		foreach ( $definitions as $definition ) {
 			if ( is_array( $definition ) && isset( $definition['tag'] ) && is_scalar( $definition['tag'] ) ) {
-				$types[ (string) $definition['tag'] ] = sanitize_key( self::scalar_string( $definition['type'] ?? 'text' ) );
+				$types[ (string) $definition['tag'] ] = sanitize_key( MappingSchema::str( $definition['type'] ?? 'text' ) );
 			}
 		}
 
 		foreach ( $fields as $key => $raw ) {
 			$type = $types[ (string) $key ] ?? 'text';
 			if ( 'boolean' === $type ) {
-				$result[ (string) $key ] = is_bool( $raw ) ? $raw : '' !== trim( is_array( $raw ) ? implode( '', self::scalar_strings( $raw ) ) : self::scalar_string( $raw ) );
+				$result[ (string) $key ] = is_bool( $raw ) ? $raw : '' !== trim( is_array( $raw ) ? implode( '', self::scalar_strings( $raw ) ) : MappingSchema::str( $raw ) );
 				continue;
 			}
-			$value = is_array( $raw ) ? implode( ', ', self::scalar_strings( $raw ) ) : self::scalar_string( $raw );
+			$value = is_array( $raw ) ? implode( ', ', self::scalar_strings( $raw ) ) : MappingSchema::str( $raw );
 			$valid = true;
 			if ( 'date' === $type ) {
 				$date  = \DateTimeImmutable::createFromFormat( '!Y-m-d', $value );
@@ -317,10 +317,6 @@ final class FieldValues {
 				return ! empty( $value ) || 0 === $value || '0' === $value;
 			}
 		);
-	}
-
-	private static function scalar_string( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
 	}
 
 	private static function scalar_strings( array $values ): array {

@@ -50,8 +50,8 @@ final class DestinationResolver {
 			if ( ! is_array( $rule ) ) {
 				return self::failure( 'routing_stale_rule' );
 			}
-			$field = self::scalar_string( $rule['field'] ?? '' );
-			$value = self::scalar_string( $rule['value'] ?? '' );
+			$field = \Cmatic\Lite\Settings\MappingSchema::str( $rule['field'] ?? '' );
+			$value = \Cmatic\Lite\Settings\MappingSchema::str( $rule['value'] ?? '' );
 			if ( ! isset( $choices[ $field ] ) || ! in_array( $value, $choices[ $field ], true ) ) {
 				return self::failure( 'routing_stale_rule' );
 			}
@@ -59,12 +59,12 @@ final class DestinationResolver {
 			$submitted = isset( $posted_data[ $field ] ) ? (array) $posted_data[ $field ] : array();
 			$submitted = self::unique_strings( $submitted );
 			if ( in_array( $value, $submitted, true ) ) {
-				$group_id = self::scalar_string( $rule['group_id'] ?? '' );
+				$group_id = \Cmatic\Lite\Settings\MappingSchema::str( $rule['group_id'] ?? '' );
 				if ( '' === $group_id ) {
 					return self::failure( 'routing_stale_rule' );
 				}
 				$groups[]  = $group_id;
-				$matched[] = self::scalar_string( $rule['id'] ?? '' );
+				$matched[] = \Cmatic\Lite\Settings\MappingSchema::str( $rule['id'] ?? '' );
 			}
 		}
 
@@ -105,10 +105,6 @@ final class DestinationResolver {
 		return array_values( array_unique( $result ) );
 	}
 
-	private static function scalar_string( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
-	}
-
 	private static function failure( string $reason ): array {
 		return array(
 			'success'       => false,
@@ -125,10 +121,10 @@ final class DestinationResolver {
 				continue;
 			}
 			$rules[] = array(
-				'id'       => sanitize_text_field( self::scalar_string( $rule['id'] ?? '' ) ),
-				'field'    => sanitize_key( self::scalar_string( $rule['field'] ?? '' ) ),
-				'value'    => sanitize_text_field( self::scalar_string( $rule['value'] ?? '' ) ),
-				'group_id' => sanitize_text_field( self::scalar_string( $rule['group_id'] ?? '' ) ),
+				'id'       => sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $rule['id'] ?? '' ) ),
+				'field'    => sanitize_key( \Cmatic\Lite\Settings\MappingSchema::str( $rule['field'] ?? '' ) ),
+				'value'    => sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $rule['value'] ?? '' ) ),
+				'group_id' => sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $rule['group_id'] ?? '' ) ),
 			);
 		}
 		return $rules;
@@ -151,7 +147,7 @@ final class DestinationResolver {
 		}
 		$groups = array( $primary );
 		foreach ( $additional as $group_id ) {
-			$group_id = sanitize_text_field( self::scalar_string( $group_id ) );
+			$group_id = sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $group_id ) );
 			if ( '' !== $group_id && $primary !== $group_id && self::list_exists( $settings, $group_id ) ) {
 				$groups[] = $group_id;
 			}
@@ -179,10 +175,10 @@ final class DestinationResolver {
 			if ( ! is_array( $rule ) ) {
 				return null;
 			}
-			$id       = sanitize_text_field( self::scalar_string( $rule['id'] ?? '' ) );
-			$field    = sanitize_key( self::scalar_string( $rule['field'] ?? '' ) );
-			$value    = sanitize_text_field( self::scalar_string( $rule['value'] ?? '' ) );
-			$group_id = sanitize_text_field( self::scalar_string( $rule['group_id'] ?? '' ) );
+			$id       = sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $rule['id'] ?? '' ) );
+			$field    = sanitize_key( \Cmatic\Lite\Settings\MappingSchema::str( $rule['field'] ?? '' ) );
+			$value    = sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $rule['value'] ?? '' ) );
+			$group_id = sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $rule['group_id'] ?? '' ) );
 			if ( 1 !== preg_match( '/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5a-f0-9][a-f0-9]{3}-[89ab0-9][a-f0-9]{3}-[a-f0-9]{12}$/i', $id ) || isset( $seen[ $id ] ) ) {
 				return null;
 			}
@@ -207,7 +203,7 @@ final class DestinationResolver {
 	private static function list_exists( array $settings, string $list_id ): bool {
 		$lists = isset( $settings['lisdata']['lists'] ) && is_array( $settings['lisdata']['lists'] ) ? $settings['lisdata']['lists'] : array();
 		foreach ( $lists as $list ) {
-			if ( is_array( $list ) && isset( $list['id'] ) && $list_id === self::scalar_string( $list['id'] ) ) {
+			if ( is_array( $list ) && isset( $list['id'] ) && $list_id === \Cmatic\Lite\Settings\MappingSchema::str( $list['id'] ) ) {
 				return true;
 			}
 		}

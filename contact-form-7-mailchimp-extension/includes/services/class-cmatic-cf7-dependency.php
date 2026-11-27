@@ -12,8 +12,6 @@ class Cmatic_CF7_Dependency {
 
 	const CF7_PLUGIN_FILE = 'contact-form-7/wp-contact-form-7.php';
 
-	const CF7_PLUGIN_DIR = 'contact-form-7';
-
 	public static function init() {
 		add_action( 'admin_init', array( __CLASS__, 'maybe_activate_cf7' ), 1 );
 	}

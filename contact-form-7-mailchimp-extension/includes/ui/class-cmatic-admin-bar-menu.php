@@ -256,9 +256,9 @@ final class Cmatic_Admin_Bar_Menu {
 		if ( class_exists( 'WPCF7_ContactForm' ) ) {
 			foreach ( (array) WPCF7_ContactForm::find( array( 'posts_per_page' => self::MAX_FORMS ) ) as $form ) {
 				if ( is_object( $form ) && method_exists( $form, 'id' ) && method_exists( $form, 'title' ) ) {
-					$id = \Cmatic\Lite\Submission\Stats::int( $form->id() );
+					$id = \Cmatic\Lite\Settings\MappingSchema::num( $form->id() );
 					if ( $id > 0 ) {
-						$title        = \Cmatic\Lite\Submission\Stats::str( $form->title() );
+						$title        = \Cmatic\Lite\Settings\MappingSchema::str( $form->title() );
 						$forms[ $id ] = '' !== $title ? $title : sprintf( /* translators: %d: form id */ __( 'Form %d', 'contact-form-7-mailchimp-extension' ), $id );
 					}
 				}
@@ -276,8 +276,8 @@ final class Cmatic_Admin_Bar_Menu {
 			return '<span class="cmatic-ab-pill cmatic-ab-idle">' . esc_html__( 'no syncs yet', 'contact-form-7-mailchimp-extension' ) . '</span>';
 		}
 		$parts  = array();
-		$ok     = \Cmatic\Lite\Submission\Stats::int( $entry['ok'] ?? 0 );
-		$failed = \Cmatic\Lite\Submission\Stats::int( $entry['failed'] ?? 0 );
+		$ok     = \Cmatic\Lite\Settings\MappingSchema::num( $entry['ok'] ?? 0 );
+		$failed = \Cmatic\Lite\Settings\MappingSchema::num( $entry['failed'] ?? 0 );
 		if ( $ok > 0 ) {
 			$parts[] = '<span class="cmatic-ab-ok">' . esc_html( number_format_i18n( $ok ) ) . '&nbsp;&#10003;</span>';
 		}
@@ -295,7 +295,7 @@ final class Cmatic_Admin_Bar_Menu {
 			return esc_attr__( 'No submissions have synced yet.', 'contact-form-7-mailchimp-extension' );
 		}
 		if ( \Cmatic\Lite\Submission\Stats::is_failing( $entry ) ) {
-			$error = \Cmatic\Lite\Submission\Stats::str( $entry['last_error'] ?? '' );
+			$error = \Cmatic\Lite\Settings\MappingSchema::str( $entry['last_error'] ?? '' );
 			$error = '' !== $error ? $error : __( 'unknown', 'contact-form-7-mailchimp-extension' );
 			/* translators: %s: the error the provider returned */
 			return esc_attr( sprintf( __( 'Last error: %s', 'contact-form-7-mailchimp-extension' ), $error ) );

@@ -15,7 +15,6 @@ use Cmatic\Lite\Settings\MappingSchema;
 final class Cmatic_Mailchimp_Panel_Store {
 
 	const EXCLUDED_TYPES = array( 'address', 'birthday', 'imageurl', 'zip' );
-	const SLOT_MAX       = MappingSchema::SLOT_MAX;
 
 	/**
 	 * @return array<string,mixed>
@@ -114,7 +113,7 @@ final class Cmatic_Mailchimp_Panel_Store {
 			'key_changed'        => $key_changed,
 			'selection_cleared'  => $cleared,
 			'auth_type'          => self::auth_type( $config ),
-			'lists'              => self::normalize_lists( $config ),
+			'lists'              => FormSettings::panel_lists( $config, 'mailchimp' ),
 		);
 	}
 
@@ -202,7 +201,7 @@ final class Cmatic_Mailchimp_Panel_Store {
 	public static function public_state( int $form_id, array $config, int $limit, array $form_tags ): array {
 		$limit       = PHP_INT_MAX;
 		$fields      = MappingSchema::normalize_fields( $config['merge_fields'] ?? array(), $limit );
-		$lists       = self::normalize_lists( $config );
+		$lists       = FormSettings::panel_lists( $config, 'mailchimp' );
 		$selected    = FormSettings::selected_list( $config );
 		$accept      = trim( MappingSchema::str( $config['accept'] ?? '' ) );
 		$mappings    = MappingSchema::mappings( $config, $limit );
@@ -256,17 +255,6 @@ final class Cmatic_Mailchimp_Panel_Store {
 	}
 
 	/**
-	 * @param array<string,mixed> $current
-	 * @param array<string,mixed> $posted
-	 * @param mixed               $contact_form
-	 * @return array<string,mixed>|null
-	 */
-	public static function save( array $current, array $posted, int $limit, $contact_form ): ?array {
-		$form_id = is_object( $contact_form ) && method_exists( $contact_form, 'id' ) ? (int) $contact_form->id() : 0;
-		return \Cmatic\Lite\Settings\SettingsValidator::provider_save( 'mailchimp', $current, $posted, $limit, $contact_form, $form_id );
-	}
-
-	/**
 	 * @param mixed $contact_form
 	 */
 	public static function is_consent_field( string $value, $contact_form ): bool {
@@ -285,39 +273,6 @@ final class Cmatic_Mailchimp_Panel_Store {
 		}
 
 		return false;
-	}
-
-	/**
-	 * @param array<string,mixed> $config
-	 * @return array<int,array<string,mixed>>
-	 */
-	public static function normalize_lists( array $config ): array {
-		$lists = array();
-		foreach ( FormSettings::lists( $config ) as $list ) {
-			if ( ! is_array( $list ) || ! isset( $list['id'], $list['name'] ) ) {
-				continue;
-			}
-			$stats   = isset( $list['stats'] ) && is_array( $list['stats'] ) ? $list['stats'] : array();
-			$lists[] = array(
-				'id'             => sanitize_text_field( MappingSchema::str( $list['id'] ) ),
-				'name'           => sanitize_text_field( MappingSchema::str( $list['name'] ) ),
-				'opt_in_process' => ! empty( $list['double_optin'] ) ? 'double_opt_in' : 'single_opt_in',
-				'stats'          => array(
-					'member_count'      => max( 0, MappingSchema::num( $stats['member_count'] ?? 0 ) ),
-					'merge_field_count' => max( 0, MappingSchema::num( $stats['merge_field_count'] ?? 0 ) ),
-				),
-			);
-		}
-
-		return $lists;
-	}
-
-	/**
-	 * @param mixed $fields
-	 * @return array<int,array<string,mixed>>
-	 */
-	public static function sanitize_fields( $fields, int $limit ): array {
-		return MappingSchema::normalize_fields( $fields, $limit );
 	}
 
 	/**

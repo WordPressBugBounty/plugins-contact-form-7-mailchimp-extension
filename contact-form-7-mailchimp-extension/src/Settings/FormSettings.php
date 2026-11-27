@@ -57,10 +57,18 @@ final class FormSettings {
 	 * @return array<string,mixed>
 	 */
 	public function section( string $slug ): array {
+		return self::section_of( $this->record, $slug );
+	}
+
+	/**
+	 * @param array<string,mixed> $record Saved form settings.
+	 * @return array<string,mixed>
+	 */
+	public static function section_of( array $record, string $slug ): array {
 		if ( 'mailchimp' === $slug ) {
-			return $this->record;
+			return $record;
 		}
-		$providers = isset( $this->record['providers'] ) && is_array( $this->record['providers'] ) ? $this->record['providers'] : array();
+		$providers = isset( $record['providers'] ) && is_array( $record['providers'] ) ? $record['providers'] : array();
 		return isset( $providers[ $slug ] ) && is_array( $providers[ $slug ] ) ? $providers[ $slug ] : array();
 	}
 
@@ -130,6 +138,32 @@ final class FormSettings {
 			return array();
 		}
 		return isset( $section['lisdata']['lists'] ) && is_array( $section['lisdata']['lists'] ) ? $section['lisdata']['lists'] : array();
+	}
+
+	/**
+	 * @param array<string,mixed> $section
+	 * @return array<int,array<string,mixed>>
+	 */
+	public static function panel_lists( array $section, string $slug ): array {
+		$lists = array();
+		foreach ( self::lists( $section ) as $list ) {
+			if ( ! is_array( $list ) || ! isset( $list['id'], $list['name'] ) ) {
+				continue;
+			}
+			$stats   = MappingSchema::arr( $list['stats'] ?? array() );
+			$lists[] = array(
+				'id'             => sanitize_text_field( MappingSchema::str( $list['id'] ) ),
+				'name'           => sanitize_text_field( MappingSchema::str( $list['name'] ) ),
+				'opt_in_process' => 'mailchimp' === $slug
+					? ( ! empty( $list['double_optin'] ) ? 'double_opt_in' : 'single_opt_in' )
+					: sanitize_key( MappingSchema::str( $list['opt_in_process'] ?? '' ) ),
+				'stats'          => array(
+					'member_count'      => max( 0, MappingSchema::num( $stats['member_count'] ?? 0 ) ),
+					'merge_field_count' => max( 0, MappingSchema::num( $stats['merge_field_count'] ?? 0 ) ),
+				),
+			);
+		}
+		return $lists;
 	}
 
 	/**

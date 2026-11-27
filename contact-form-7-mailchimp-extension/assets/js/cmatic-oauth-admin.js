@@ -144,71 +144,56 @@
         else btn.textContent = text;
     }
 
-    function setAuthChoicesBusy(apiKeyButton, busy) {
-        if (apiKeyButton) apiKeyButton.disabled = busy;
-    }
-
     function setOAuthStatus(statusEl, message, color) {
         if (!statusEl) return;
-        var card = statusEl.closest('.cmatic-oauth-connect');
-        var description = card ? card.querySelector('[data-cmatic-oauth-description]') : null;
         statusEl.textContent = message || '';
         statusEl.hidden = !message;
         statusEl.style.color = color || '';
-        if (description) description.hidden = Boolean(message);
     }
 
     function updateConnectButton(state, message) {
         var btn = document.querySelector('.cmatic-oauth-connect');
         var statusEl = document.querySelector('.cmatic-oauth-status');
-        var apiKeyLink = document.querySelector('.cmatic-show-api-key');
 
         if (!statusEl) {
             statusEl = document.createElement('span');
             statusEl.className = 'cmatic-oauth-status';
             statusEl.setAttribute('role', 'status');
             statusEl.setAttribute('aria-live', 'polite');
-            if (btn) {
-                var action = btn.querySelector('.cmatic-auth-choice__action');
-                btn.insertBefore(statusEl, action || null);
-            }
+			if ( btn ) {
+				btn.appendChild( statusEl );
+			}
         }
 
         switch (state) {
             case 'starting':
                 setButtonText(btn, 'Starting...');
                 if (btn) btn.disabled = true;
-                setAuthChoicesBusy(apiKeyLink, true);
                 setOAuthStatus(statusEl, 'Opening secure sign-in...', '#5d6878');
                 break;
             case 'waiting':
                 setButtonText(btn, 'Waiting...');
                 if (btn) btn.disabled = true;
-                setAuthChoicesBusy(apiKeyLink, true);
                 setOAuthStatus(statusEl, 'Complete sign-in in the popup.', '#5d6878');
                 break;
             case 'connecting':
                 setButtonText(btn, 'Connecting...');
                 if (btn) btn.disabled = true;
-                setAuthChoicesBusy(apiKeyLink, true);
                 setOAuthStatus(statusEl, 'Saving your connection...', '#5d6878');
                 break;
             case 'connected':
                 setButtonText(btn, 'Connected');
                 if (btn) btn.disabled = true;
-                setAuthChoicesBusy(apiKeyLink, true);
                 setOAuthStatus(statusEl, 'Mailchimp connected.', '#16835b');
                 break;
             case 'error':
                 setButtonText(btn, 'Continue with Mailchimp');
                 if (btn) btn.disabled = false;
-                setAuthChoicesBusy(apiKeyLink, false);
                 setOAuthStatus(statusEl, message || 'Could not connect. Try again.', '#b42318');
                 break;
             default:
                 setButtonText(btn, 'Continue with Mailchimp');
                 if (btn) btn.disabled = false;
-                setAuthChoicesBusy(apiKeyLink, false);
                 setOAuthStatus(statusEl, '', '');
         }
     }
@@ -235,82 +220,6 @@
                     if (popup) { try { popup.close(); } catch(e) {} }
                     updateConnectButton('error', err.message || 'Could not start OAuth');
                 });
-        }
-
-        if (e.target.classList.contains('cmatic-oauth-disconnect')) {
-            var btn = e.target;
-            var formId = btn.getAttribute('data-form-id');
-
-            var confirm = document.createElement('span');
-            confirm.className = 'cmatic-disconnect-confirm';
-            confirm.innerHTML =
-                '<span class="cmatic-disconnect-label">Disconnect?</span>' +
-                '<button type="button" class="cmatic-disconnect-yes">Yes, disconnect</button>' +
-                '<button type="button" class="cmatic-disconnect-cancel">Cancel</button>';
-
-            btn.parentNode.insertBefore(confirm, btn.nextSibling);
-            btn.style.display = 'none';
-        }
-
-        if (e.target.classList.contains('cmatic-disconnect-yes')) {
-            var wrapper = e.target.closest('.cmatic-disconnect-confirm');
-            var formId = parseInt(wrapper.parentNode.querySelector('.cmatic-oauth-disconnect').getAttribute('data-form-id'), 10) || 0;
-            var statusText = wrapper.parentNode.querySelector('.cmatic-oauth-status-text');
-            var description = wrapper.parentNode.querySelector('.description');
-
-            wrapper.remove();
-            if (statusText) {
-                statusText.innerHTML = 'Disconnecting...';
-                statusText.style.color = '#666';
-                statusText.style.fontWeight = '400';
-            }
-            if (description) {
-                description.style.display = 'none';
-            }
-
-            restPost('oauth/disconnect', { form_id: formId })
-                .then(function(data) {
-                    if (data.disconnected) {
-                        safeReload();
-                    }
-                });
-        }
-
-        if (e.target.classList.contains('cmatic-disconnect-cancel')) {
-            var wrapper = e.target.closest('.cmatic-disconnect-confirm');
-            var btn = wrapper.parentNode.querySelector('.cmatic-oauth-disconnect');
-            wrapper.remove();
-            if (btn) {
-                btn.style.display = '';
-            }
-        }
-
-        var apiKeyButton = e.target.closest('.cmatic-show-api-key');
-        if (apiKeyButton) {
-            e.preventDefault();
-            var apiPanel = document.getElementById('cmatic-manual-api-panel');
-            if (apiPanel) {
-                apiPanel.classList.remove('cmatic-hidden');
-                apiKeyButton.setAttribute('aria-expanded', 'true');
-                var options = apiKeyButton.closest('.cmatic-connect-options');
-                if (options) options.classList.add('cmatic-hidden');
-                var keyInput = document.getElementById('cmatic-api');
-                if (keyInput) keyInput.focus();
-            }
-        }
-
-        var backButton = e.target.closest('.cmatic-back-auth-options');
-        if (backButton) {
-            e.preventDefault();
-            var apiPanel = document.getElementById('cmatic-manual-api-panel');
-            var options = document.querySelector('.cmatic-connect-options');
-            var apiKeyButton = document.querySelector('.cmatic-show-api-key');
-            if (apiPanel) apiPanel.classList.add('cmatic-hidden');
-            if (options) options.classList.remove('cmatic-hidden');
-            if (apiKeyButton) {
-                apiKeyButton.setAttribute('aria-expanded', 'false');
-                apiKeyButton.focus();
-            }
         }
     });
 
@@ -344,11 +253,6 @@
         var listDropdown = document.getElementById('wpcf7-mailchimp-list');
         if (listDropdown && listDropdown.options.length > 1) {
             return;
-        }
-
-        var syncBtn = document.getElementById('chm_activalist');
-        if (syncBtn) {
-            syncBtn.click();
         }
 
         if (listDropdown) {

@@ -10,16 +10,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class Cmatic_Rest_OAuth {
 
-	protected static $namespace   = 'chimpmatic-lite/v1';
-	protected static $initialized = false;
-
-	public static function init() {
-		if ( self::$initialized ) {
-			return;
-		}
-		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
-		self::$initialized = true;
-	}
+	protected static $namespace = 'chimpmatic-lite/v1';
 
 	public static function register_routes() {
 		register_rest_route(
@@ -69,23 +60,6 @@ final class Cmatic_Rest_OAuth {
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
 					),
-					'form_id' => array(
-						'required'          => true,
-						'type'              => 'integer',
-						'sanitize_callback' => 'absint',
-					),
-				),
-			)
-		);
-
-		register_rest_route(
-			self::$namespace,
-			'/oauth/disconnect',
-			array(
-				'methods'             => 'POST',
-				'callback'            => array( self::class, 'disconnect_oauth' ),
-				'permission_callback' => array( self::class, 'check_admin_permissions' ),
-				'args'                => array(
 					'form_id' => array(
 						'required'          => true,
 						'type'              => 'integer',
@@ -361,18 +335,6 @@ final class Cmatic_Rest_OAuth {
 			)
 		);
 		return rest_ensure_response( array( 'connected' => true ) );
-	}
-
-	public static function disconnect_oauth( $request ) {
-		$form_id = $request->get_param( 'form_id' );
-		if ( ! $form_id ) {
-			return new WP_Error( 'missing_form_id', 'Form ID is required', array( 'status' => 400 ) );
-		}
-
-		$auth_manager = Cmatic_Lite_Container::get( 'auth.manager' );
-		$auth_manager->disconnect( $form_id );
-
-		return rest_ensure_response( array( 'disconnected' => true ) );
 	}
 
 	private static function debug_on() {

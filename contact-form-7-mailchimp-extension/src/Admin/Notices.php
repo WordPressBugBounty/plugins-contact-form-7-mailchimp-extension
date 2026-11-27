@@ -8,6 +8,8 @@
 
 namespace Cmatic\Lite\Admin;
 
+use Cmatic\Lite\Settings\MappingSchema;
+
 defined( 'ABSPATH' ) || exit;
 
 // phpcs:disable Squiz.Commenting.ClassComment.Missing, Squiz.Commenting.FunctionComment.Missing -- Typed signatures follow the existing Lite class convention.
@@ -89,7 +91,7 @@ final class Notices {
 				self::first_test_copy()['title'],
 				self::first_test_copy()['message'],
 				array( self::action( self::first_test_copy()['button'], self::form_url( $connected ) . '&cmatic-test=1', 'primary' ), self::action( __( 'Maybe later', 'contact-form-7-mailchimp-extension' ), '', 'link', 'snooze' ) ),
-				0 === $syncs && $connected > 0 && ! ( 'wpcf7' === self::get( 'page' ) && self::int( self::get( 'post' ) ) === $connected )
+				0 === $syncs && $connected > 0 && ! ( 'wpcf7' === self::get( 'page' ) && MappingSchema::num( self::get( 'post' ) ) === $connected )
 			),
 			self::entry(
 				'review',
@@ -162,7 +164,7 @@ final class Notices {
 		foreach ( self::entries() as $entry ) {
 			$id    = self::str( $entry['id'] );
 			$state = self::state( $id );
-			if ( ( $wide_only && empty( $entry['wide'] ) ) || ! $entry['when'] || ! empty( $state['dismissed'] ) || self::int( $state['until'] ?? 0 ) > time() || ( 'upgrade' === $id && self::int( $state['count'] ?? 0 ) >= 3 ) ) {
+			if ( ( $wide_only && empty( $entry['wide'] ) ) || ! $entry['when'] || ! empty( $state['dismissed'] ) || MappingSchema::num( $state['until'] ?? 0 ) > time() || ( 'upgrade' === $id && MappingSchema::num( $state['count'] ?? 0 ) >= 3 ) ) {
 				continue;
 			}
 			$group = self::str( $entry['group'] );
@@ -172,8 +174,8 @@ final class Notices {
 		}
 		foreach ( self::GROUPS as $group ) {
 			if ( isset( $best[ $group ] ) ) {
-				$last = self::arr( get_user_meta( get_current_user_id(), self::LAST, true ) );
-				if ( 'failing' !== $group && ( $last['id'] ?? '' ) !== $best[ $group ]['id'] && time() - self::int( $last['at'] ?? 0 ) < DAY_IN_SECONDS ) {
+				$last = MappingSchema::arr( get_user_meta( get_current_user_id(), self::LAST, true ) );
+				if ( 'failing' !== $group && ( $last['id'] ?? '' ) !== $best[ $group ]['id'] && time() - MappingSchema::num( $last['at'] ?? 0 ) < DAY_IN_SECONDS ) {
 					return null;
 				}
 				return $best[ $group ];
@@ -214,17 +216,17 @@ final class Notices {
 
 	private static function claim_upgrade(): bool {
 		$state = self::state( 'upgrade' );
-		if ( self::int( $state['count'] ?? 0 ) >= 3 || self::int( $state['until'] ?? 0 ) > time() ) {
+		if ( MappingSchema::num( $state['count'] ?? 0 ) >= 3 || MappingSchema::num( $state['until'] ?? 0 ) > time() ) {
 			return false;
 		}
-		$claim = self::META . 'upgrade_claim_' . get_current_user_id() . '_' . ( self::int( $state['count'] ?? 0 ) + 1 );
+		$claim = self::META . 'upgrade_claim_' . get_current_user_id() . '_' . ( MappingSchema::num( $state['count'] ?? 0 ) + 1 );
 		if ( ! add_option( $claim, time(), '', false ) ) {
 			return false;
 		}
 		return self::save(
 			'upgrade',
 			array(
-				'count' => self::int( $state['count'] ?? 0 ) + 1,
+				'count' => MappingSchema::num( $state['count'] ?? 0 ) + 1,
 				'until' => time() + self::SNOOZE,
 			),
 			$state
@@ -245,7 +247,7 @@ final class Notices {
 
 	/** @return array<string,mixed> */
 	private static function state( string $id ): array {
-		return self::arr( get_user_meta( get_current_user_id(), self::META . $id, true ) );
+		return MappingSchema::arr( get_user_meta( get_current_user_id(), self::META . $id, true ) );
 	}
 
 	public static function act( string $id, string $act ): bool {
@@ -272,8 +274,8 @@ final class Notices {
 		$state = 'dismiss' === $act ? array( 'dismissed' => true ) : array( 'until' => time() + ( 'snooze-day' === $act ? DAY_IN_SECONDS : self::SNOOZE ) );
 		if ( 'upgrade' === $id ) {
 			$state = array(
-				'count' => self::int( $old['count'] ?? 0 ),
-				'until' => max( time() + self::SNOOZE, self::int( $old['until'] ?? 0 ) ),
+				'count' => MappingSchema::num( $old['count'] ?? 0 ),
+				'until' => max( time() + self::SNOOZE, MappingSchema::num( $old['until'] ?? 0 ) ),
 			);
 		}
 		if ( $state !== $old && ! self::save( $id, $state, $old ) ) {
@@ -375,7 +377,7 @@ final class Notices {
 	}
 
 	public static function days_installed(): int {
-		$since = self::int( get_option( self::FIRST_SEEN, 0 ) );
+		$since = MappingSchema::num( get_option( self::FIRST_SEEN, 0 ) );
 		return $since > 0 ? (int) floor( ( time() - $since ) / DAY_IN_SECONDS ) : 0;
 	}
 
@@ -410,7 +412,7 @@ final class Notices {
 		return array_sum(
 			array_map(
 				static function ( array $stat ): int {
-					return self::int( $stat['ok'] ?? 0 );
+					return MappingSchema::num( $stat['ok'] ?? 0 );
 				},
 				\Cmatic\Lite\Submission\Stats::all()
 			)
@@ -515,11 +517,11 @@ final class Notices {
 			$out .= '<p class="cmatic-lite-notice__body">' . esc_html( $nudge ) . '</p>';
 		}
 		$lead    = 'welcome' === self::str( $entry['id'] ?? '' ) ? self::picker() : '';
-		$actions = self::arr( $entry['actions'] ?? null );
+		$actions = MappingSchema::arr( $entry['actions'] ?? null );
 		if ( array() !== $actions || '' !== $lead ) {
 			$out .= '<p class="cmatic-lite-notice__actions' . ( false !== strpos( $lead, '<select' ) ? ' cmatic-lite-notice-picker' : '' ) . '">' . $lead;
 			foreach ( $actions as $action ) {
-				$action = self::arr( $action );
+				$action = MappingSchema::arr( $action );
 				$label  = self::str( $action['label'] ?? '' );
 				$url    = self::str( $action['url'] ?? '' );
 				$act    = self::str( $action['act'] ?? '' );
@@ -561,7 +563,7 @@ final class Notices {
 		);
 		$forms = array();
 		foreach ( $ids as $id ) {
-			$id = self::int( $id );
+			$id = MappingSchema::num( $id );
 			// phpcs:ignore WordPress.WP.Capabilities.Unknown -- Contact Form 7 registers this meta capability.
 			if ( $id < 1 || ! current_user_can( 'wpcf7_edit_contact_form', $id ) ) {
 				continue;
@@ -588,7 +590,7 @@ final class Notices {
 			$label = sprintf( __( 'Connect %s', 'contact-form-7-mailchimp-extension' ), $forms[0]['title'] );
 			return '<a class="' . $primary . '" href="' . esc_url( $forms[0]['url'] ) . '">' . esc_html( $label ) . '</a>';
 		}
-		$current = 'wpcf7' === self::get( 'page' ) ? self::int( self::get( 'post' ) ) : 0;
+		$current = 'wpcf7' === self::get( 'page' ) ? MappingSchema::num( self::get( 'post' ) ) : 0;
 		$out     = '<label class="screen-reader-text" for="cmatic-lite-form-picker">' . esc_html__( 'Choose a form', 'contact-form-7-mailchimp-extension' ) . '</label><select id="cmatic-lite-form-picker" data-cmatic-lite-form-picker>';
 		foreach ( $forms as $form ) {
 			$out .= '<option value="' . esc_url( $form['url'] ) . '"' . ( $form['id'] === $current ? ' selected' : '' ) . '>' . esc_html( $form['title'] ) . '</option>';
@@ -656,23 +658,6 @@ final class Notices {
 	 */
 	private static function str( $value ): string {
 		return is_scalar( $value ) ? trim( (string) $value ) : '';
-	}
-
-
-	/**
-	 * @param mixed $value
-	 */
-	private static function int( $value ): int {
-		return is_numeric( $value ) ? (int) $value : 0;
-	}
-
-
-	/**
-	 * @param mixed $value
-	 * @return array<array-key, mixed>
-	 */
-	private static function arr( $value ): array {
-		return is_array( $value ) ? $value : array();
 	}
 
 

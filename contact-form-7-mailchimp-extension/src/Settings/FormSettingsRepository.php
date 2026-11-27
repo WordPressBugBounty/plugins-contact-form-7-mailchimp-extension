@@ -40,10 +40,6 @@ final class FormSettingsRepository {
 		self::store( $form_id, $record );
 	}
 
-	public static function delete( int $form_id ): bool {
-		return (bool) delete_option( FormSettings::option_name( $form_id ) );
-	}
-
 	/**
 	 * @param array<string,mixed> $changes
 	 * @param array<int,string>   $drop

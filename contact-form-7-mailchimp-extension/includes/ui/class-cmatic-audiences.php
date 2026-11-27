@@ -89,8 +89,4 @@ class Cmatic_Audiences {
 			<?php
 		endforeach;
 	}
-
-	public static function output( string $apivalid, ?array $listdata, array $cf7_mch ): void {
-		self::render( $apivalid, $listdata, $cf7_mch );
-	}
 }

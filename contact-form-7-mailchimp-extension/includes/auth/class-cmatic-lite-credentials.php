@@ -10,59 +10,34 @@ defined( 'ABSPATH' ) || exit;
 
 class Cmatic_Lite_Credentials {
 
+	const DC_PATTERN = '/^[a-z]{2}\d{1,3}$/';
+
 	private $api_key;
-	private $datacenter;
-	private $source;
 
-		const DC_PATTERN = '/^[a-z]{2}\d{1,3}$/';
-
-	private function __construct( $api_key, $datacenter, $source ) {
-		$this->api_key    = $api_key;
-		$this->datacenter = $datacenter;
-		$this->source     = $source;
+	private function __construct( string $api_key ) {
+		$this->api_key = $api_key;
 	}
 
 	public static function from_api_key( $api_key ) {
-		if ( empty( $api_key ) || substr_count( $api_key, '-' ) !== 1 ) {
-			return null;
-		}
-		$parts = explode( '-', $api_key );
-		if ( empty( $parts[0] ) || empty( $parts[1] ) ) {
-			return null;
-		}
-		if ( ! preg_match( self::DC_PATTERN, $parts[1] ) ) {
-			return null;
-		}
-		return new self( $api_key, $parts[1], 'api_key' );
+		return self::parse( $api_key );
 	}
 
 	public static function from_oauth( $api_key ) {
-		if ( empty( $api_key ) || substr_count( $api_key, '-' ) !== 1 ) {
+		return self::parse( $api_key );
+	}
+
+	private static function parse( $api_key ): ?self {
+		if ( ! is_string( $api_key ) || '' === $api_key || 1 !== substr_count( $api_key, '-' ) ) {
 			return null;
 		}
 		$parts = explode( '-', $api_key );
-		if ( empty( $parts[0] ) || empty( $parts[1] ) ) {
+		if ( '' === $parts[0] || ! preg_match( self::DC_PATTERN, $parts[1] ) ) {
 			return null;
 		}
-		if ( ! preg_match( self::DC_PATTERN, $parts[1] ) ) {
-			return null;
-		}
-		return new self( $api_key, $parts[1], 'oauth' );
+		return new self( $api_key );
 	}
 
 	public function get_api_key() {
 		return $this->api_key;
-	}
-
-	public function get_datacenter() {
-		return $this->datacenter;
-	}
-
-	public function get_source() {
-		return $this->source;
-	}
-
-	public function is_oauth() {
-		return 'oauth' === $this->source;
 	}
 }

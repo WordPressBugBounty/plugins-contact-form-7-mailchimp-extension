@@ -1032,38 +1032,59 @@
 			);
 		}
 
-		function compatibleType(providerType, formType) {
+		function compatibleType( providerType, formType ) {
+			const type = String( providerType || '' ).toLowerCase();
+			if ( type === formType ) {
+				return true;
+			}
+			if ( type.includes( 'phone' ) ) {
+				return formType === 'tel';
+			}
+			const text = [
+				'text',
+				'textarea',
+				'select',
+				'radio',
+				'checkbox',
+				'email',
+				'url',
+				'tel',
+				'number',
+				'range',
+				'date',
+				'hidden',
+			];
+			const number = [ 'number', 'range' ];
+			const link = [ 'url', 'text' ];
+			const single = [ 'select', 'radio' ];
+			const many = [ 'select', 'radio', 'checkbox' ];
 			const types = {
-				email: ['email'],
-				url: ['url'],
-				tel: ['tel'],
-				integer: ['number', 'range'],
-				decimal: ['number', 'range'],
-				phone: ['tel'],
-				date: ['date'],
-				number: ['number'],
-				text: [
-					'text',
-					'textarea',
-					'select',
-					'radio',
-					'checkbox',
-					'email',
-					'url',
-					'tel',
-					'number',
-					'range',
-					'date',
-					'hidden',
-				],
-				dropdown: [ 'select', 'radio' ],
-				radio: [ 'radio', 'select' ],
-				float: [ 'number', 'range' ],
-				boolean: ['acceptance'],
-				'multiple-choice': ['select', 'radio', 'checkbox']
+				email: [ 'email' ],
+				url: link,
+				imageurl: link,
+				website: link,
+				tel: [ 'tel' ],
+				text,
+				string: text,
+				address: text,
+				number,
+				integer: number,
+				decimal: number,
+				float: number,
+				zip: [ 'number', 'range', 'text' ],
+				date: [ 'date' ],
+				datetime: [ 'date' ],
+				birthday: [ 'date' ],
+				boolean: [ 'acceptance' ],
+				dropdown: single,
+				radio: single,
+				category: single,
+				choice_single: single,
+				'multiple-choice': many,
+				checkboxes: many,
+				choice_multiple: many,
 			};
-			const type = String(providerType || '').toLowerCase();
-			return type === formType || (types[type] || []).includes(formType);
+			return ! types[ type ] || types[ type ].includes( formType );
 		}
 
 		function mappingWarning(field, select) {

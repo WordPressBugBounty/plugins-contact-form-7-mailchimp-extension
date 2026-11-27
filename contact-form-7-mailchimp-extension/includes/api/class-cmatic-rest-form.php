@@ -22,10 +22,6 @@ final class Cmatic_Rest_Form {
 	 */
 	protected static $cmatic_namespace = 'cmatic';
 
-	/**
-	 * @var bool Whether initialized.
-	 */
-	protected static $initialized = false;
 
 	/**
 	 * @var array Field pattern configuration.
@@ -72,14 +68,6 @@ final class Cmatic_Rest_Form {
 			'direct'   => true,
 		),
 	);
-
-	public static function init() {
-		if ( self::$initialized ) {
-			return;
-		}
-		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
-		self::$initialized = true;
-	}
 
 	public static function register_routes() {
 		register_rest_route(

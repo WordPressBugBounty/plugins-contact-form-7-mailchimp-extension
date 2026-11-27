@@ -61,7 +61,7 @@ final class KlaviyoOperations extends GenericOperations {
 		}
 		$profile_body = self::body_of( $profile );
 		$profile_data = isset( $profile_body['data'] ) && is_array( $profile_body['data'] ) ? $profile_body['data'] : array();
-		$profile_id   = self::str( $profile_data['id'] ?? '' );
+		$profile_id   = \Cmatic\Lite\Settings\MappingSchema::str( $profile_data['id'] ?? '' );
 		if ( '' === $profile_id ) {
 			return $this->failure_result( 'api_error', 'Klaviyo profile upsert returned no profile ID.' );
 		}

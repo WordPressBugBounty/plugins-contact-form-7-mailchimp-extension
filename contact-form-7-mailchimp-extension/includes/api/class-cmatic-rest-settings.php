@@ -17,10 +17,6 @@ final class Cmatic_Rest_Settings {
 	 */
 	protected static $namespace = 'chimpmatic-lite/v1';
 
-	/**
-	 * @var bool Whether initialized.
-	 */
-	protected static $initialized = false;
 
 	/**
 	 * @var array Allowed GLOBAL settings configuration (toggles in Advanced Settings panel).
@@ -63,14 +59,6 @@ final class Cmatic_Rest_Settings {
 		'purge_on_uninstall' => 'Remove data on uninstall',
 		'sender_context'     => 'Sender context in emails',
 	);
-
-	public static function init() {
-		if ( self::$initialized ) {
-			return;
-		}
-		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
-		self::$initialized = true;
-	}
 
 	public static function register_routes() {
 		register_rest_route(

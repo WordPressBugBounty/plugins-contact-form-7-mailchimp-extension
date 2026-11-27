@@ -66,8 +66,6 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 				true
 			);
 
-			$form_settings = self::get_form_settings();
-
 			wp_localize_script(
 				'chimpmatic-lite-js',
 				'chimpmaticLite',
@@ -75,13 +73,8 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 					'restUrl'         => esc_url_raw( rest_url( 'chimpmatic-lite/v1/' ) ),
 					'restNonce'       => wp_create_nonce( 'wp_rest' ),
 					'licenseResetUrl' => esc_url_raw( rest_url( 'chimpmatic-lite/v1/settings/reset' ) ),
-					'nonce'           => wp_create_nonce( 'wp_rest' ),
-					'formId'          => $form_settings['form_id'],
-					'mergeFields'     => $form_settings['merge_fields'],
-					'loggingEnabled'  => current_user_can( 'wpcf7_manage_integration' ) && $form_settings['logging_enabled'],
+					'loggingEnabled'  => current_user_can( 'wpcf7_manage_integration' ) && self::form_logging_enabled(),
 					'debugUntil'      => Cmatic_Debug_Log::until(),
-					'liteFieldsLimit' => $form_settings['liteFieldsLimit'],
-					'lists'           => $form_settings['lists'],
 					'i18n'            => self::get_i18n_strings(),
 				)
 			);
@@ -408,43 +401,13 @@ if ( ! class_exists( 'Cmatic_Asset_Loader' ) ) {
 			return $classes;
 		}
 
-		private static function get_form_settings(): array {
-			$form_id         = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only asset context; authorization is enforced by WordPress admin.
-			$merge_fields    = array();
-			$logging_enabled = false;
-			$lists           = array();
-
-			if ( $form_id > 0 ) {
-				$option_name = 'cf7_mch_' . $form_id;
-				$cf7_mch     = get_option( $option_name, array() );
-
-				if ( isset( $cf7_mch['merge_fields'] ) && is_array( $cf7_mch['merge_fields'] ) ) {
-					$merge_fields = $cf7_mch['merge_fields'];
-				}
-
-				$logging_enabled = ! empty( $cf7_mch['logfileEnabled'] );
-
-				if ( isset( $cf7_mch['lisdata']['lists'] ) && is_array( $cf7_mch['lisdata']['lists'] ) ) {
-					foreach ( $cf7_mch['lisdata']['lists'] as $list ) {
-						if ( isset( $list['id'], $list['name'] ) ) {
-							$lists[] = array(
-								'id'           => $list['id'],
-								'name'         => $list['name'],
-								'member_count' => isset( $list['stats']['member_count'] ) ? (int) $list['stats']['member_count'] : 0,
-								'field_count'  => isset( $list['stats']['merge_field_count'] ) ? (int) $list['stats']['merge_field_count'] : 0,
-							);
-						}
-					}
-				}
+		private static function form_logging_enabled(): bool {
+			$form_id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only asset context; authorization is enforced by WordPress admin.
+			if ( $form_id < 1 ) {
+				return false;
 			}
-
-			return array(
-				'form_id'         => $form_id,
-				'merge_fields'    => $merge_fields,
-				'logging_enabled' => $logging_enabled,
-				'liteFieldsLimit' => CMATIC_LITE_FIELDS,
-				'lists'           => $lists,
-			);
+			$cf7_mch = get_option( 'cf7_mch_' . $form_id, array() );
+			return is_array( $cf7_mch ) && ! empty( $cf7_mch['logfileEnabled'] );
 		}
 
 		private static function get_i18n_strings(): array {

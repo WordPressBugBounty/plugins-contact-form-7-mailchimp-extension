@@ -70,20 +70,4 @@ final class Provider implements \Cmatic_Lite_Esp_Provider_Interface, \Cmatic_Lit
 	public function lookup( string $api_key, string $email ): array {
 		return $this->operations->lookup( $api_key, $email );
 	}
-
-	protected function request( string $api_key, string $method, string $path, array $body = array(), bool $retryable = true ): array {
-		return $this->operations->request( $api_key, $method, $path, $body, $retryable );
-	}
-
-	protected function normalize_lists( array $body ): array {
-		return $this->operations->normalize_lists( $body );
-	}
-
-	protected function normalize_fields( array $body ): array {
-		return $this->operations->normalize_fields( $body );
-	}
-
-	protected function perform_subscription( string $api_key, string $list_id, string $email, string $status, array $merge_vars, array $options ): array {
-		return $this->operations->perform_subscription( $api_key, $list_id, $email, $status, $merge_vars, $options );
-	}
 }

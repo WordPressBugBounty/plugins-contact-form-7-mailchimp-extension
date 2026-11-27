@@ -17,18 +17,6 @@ final class Cmatic_Rest_Lists {
 	 */
 	protected static $namespace = 'chimpmatic-lite/v1';
 
-	/**
-	 * @var bool Whether initialized.
-	 */
-	protected static $initialized = false;
-
-	public static function init() {
-		if ( self::$initialized ) {
-			return;
-		}
-		add_action( 'rest_api_init', array( self::class, 'register_routes' ) );
-		self::$initialized = true;
-	}
 
 	public static function register_routes() {
 

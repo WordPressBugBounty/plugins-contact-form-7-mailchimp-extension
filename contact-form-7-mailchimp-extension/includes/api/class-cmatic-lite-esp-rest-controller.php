@@ -19,10 +19,6 @@ use Cmatic\Lite\Settings\MappingSchema;
 final class Cmatic_Lite_Esp_Rest_Controller {
 	private const REST_NAMESPACE = 'chimpmatic-lite/v1';
 
-	public static function init(): void {
-		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
-	}
-
 	public static function register_routes(): void {
 		foreach ( array( 'connect', 'fields', 'disconnect' ) as $action ) {
 			register_rest_route(
@@ -436,8 +432,8 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		foreach ( (array) ( $data['groups'] ?? array() ) as $group ) {
 			if ( is_array( $group ) ) {
 				$groups[] = array(
-					'id'   => sanitize_text_field( self::scalar_string( $group['id'] ?? '' ) ),
-					'name' => sanitize_text_field( self::scalar_string( $group['name'] ?? '' ) ),
+					'id'   => sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $group['id'] ?? '' ) ),
+					'name' => sanitize_text_field( \Cmatic\Lite\Settings\MappingSchema::str( $group['name'] ?? '' ) ),
 				);
 			}
 		}
@@ -450,7 +446,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		$response = rest_ensure_response(
 			array(
 				'found'  => ! empty( $result['found'] ),
-				'status' => sanitize_key( self::scalar_string( $data['status'] ?? '' ) ),
+				'status' => sanitize_key( \Cmatic\Lite\Settings\MappingSchema::str( $data['status'] ?? '' ) ),
 				'groups' => $groups,
 				'fields' => $sanitized_fields,
 			)
@@ -527,7 +523,7 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 			return false;
 		}
 		foreach ( $expected as $key => $value ) {
-			if ( ! array_key_exists( $key, $payload ) || self::scalar_string( $payload[ $key ] ) !== self::scalar_string( $value ) ) {
+			if ( ! array_key_exists( $key, $payload ) || \Cmatic\Lite\Settings\MappingSchema::str( $payload[ $key ] ) !== \Cmatic\Lite\Settings\MappingSchema::str( $value ) ) {
 				return false;
 			}
 		}
@@ -584,10 +580,6 @@ final class Cmatic_Lite_Esp_Rest_Controller {
 		}
 		delete_option( $name );
 		return add_option( $name, $expires, '', false );
-	}
-
-	private static function scalar_string( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
 	}
 
 

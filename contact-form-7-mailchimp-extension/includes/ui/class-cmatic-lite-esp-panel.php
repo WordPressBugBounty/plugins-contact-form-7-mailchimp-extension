@@ -285,9 +285,9 @@ final class Cmatic_Lite_Esp_Panel {
 								<select id="cmatic-provider-consent-field" name="wpcf7-cmatic-provider[consent_field]">
 									<option value=""><?php esc_html_e( 'Choose a checkbox or acceptance field', 'contact-form-7-mailchimp-extension' ); ?></option>
 									<?php foreach ( $form_tags as $tag ) : ?>
-										<?php if ( is_array( $tag ) && in_array( self::scalar_string( $tag['basetype'] ?? '' ), array( 'acceptance', 'checkbox' ), true ) && ! empty( $tag['name'] ) ) : ?>
-											<?php $tag_value = '[' . self::scalar_string( $tag['name'] ) . ']'; ?>
-											<option value="<?php echo esc_attr( $tag_value ); ?>" data-basetype="<?php echo esc_attr( self::scalar_string( $tag['basetype'] ) ); ?>"><?php echo esc_html( $tag_value . ' - ' . self::scalar_string( $tag['basetype'] ) ); ?></option>
+										<?php if ( is_array( $tag ) && in_array( \Cmatic\Lite\Settings\MappingSchema::str( $tag['basetype'] ?? '' ), array( 'acceptance', 'checkbox' ), true ) && ! empty( $tag['name'] ) ) : ?>
+											<?php $tag_value = '[' . \Cmatic\Lite\Settings\MappingSchema::str( $tag['name'] ) . ']'; ?>
+											<option value="<?php echo esc_attr( $tag_value ); ?>" data-basetype="<?php echo esc_attr( \Cmatic\Lite\Settings\MappingSchema::str( $tag['basetype'] ) ); ?>"><?php echo esc_html( $tag_value . ' - ' . \Cmatic\Lite\Settings\MappingSchema::str( $tag['basetype'] ) ); ?></option>
 										<?php endif; ?>
 									<?php endforeach; ?>
 								</select>
@@ -421,7 +421,7 @@ final class Cmatic_Lite_Esp_Panel {
 			$field_limit = PHP_INT_MAX;
 			$credential  = Cmatic_Lite_Esp_Credentials::get( $form_id, $slug );
 			$has_key     = '' !== $credential;
-			$lists       = self::normalize_lists( $settings );
+			$lists       = FormSettings::panel_lists( $settings, $slug );
 			$selected    = FormSettings::selected_list( $settings );
 			$definition  = Cmatic_Lite_Esp_Manifest::get( $slug );
 			$features    = \Cmatic\Lite\Settings\MappingSchema::arr( $definition['features'] ?? array() );
@@ -459,7 +459,7 @@ final class Cmatic_Lite_Esp_Panel {
 				'routing_entitled'           => \Cmatic\Lite\Settings\Entitlements::feature_enabled( \Cmatic\Lite\Settings\Entitlements::routing_feature( $slug ), $slug, $form_id ),
 				'base_groups'                => $base_groups,
 				'additional_groups'          => array_values( array_diff( $base_groups, array( $selected ) ) ),
-				'routing_rules'              => self::normalize_routing_rules( $settings ),
+				'routing_rules'              => \Cmatic\Lite\Submission\DestinationResolver::normalize_rules( $settings ),
 				'status_supported'           => ! empty( $features['status_modes'] ),
 				'status_entitled'            => \Cmatic\Lite\Settings\Entitlements::feature_enabled( 'mailerlite_status', $slug, $form_id ),
 				'status_mode'                => self::normalize_status_mode( $settings ),
@@ -492,43 +492,10 @@ final class Cmatic_Lite_Esp_Panel {
 
 	/**
 	 * @param array<array-key, mixed> $settings
-	 * @return array<array-key, mixed>
-	 */
-	private static function normalize_routing_rules( array $settings ): array {
-		return \Cmatic\Lite\Submission\DestinationResolver::normalize_rules( $settings );
-	}
-
-	/**
-	 * @param array<array-key, mixed> $settings
 	 */
 	private static function normalize_status_mode( array $settings ): string {
 		$mode = \Cmatic\Lite\Settings\MappingSchema::str( $settings['status_mode'] ?? 'legacy_provider_managed' );
 		return in_array( $mode, array( 'legacy_provider_managed', 'account', 'active', 'unconfirmed' ), true ) ? $mode : 'legacy_provider_managed';
-	}
-
-	/**
-	 * @param array<array-key, mixed> $settings
-	 * @return array<array-key, mixed>
-	 */
-	private static function normalize_lists( array $settings ): array {
-		$source = FormSettings::lists( $settings );
-		$lists  = array();
-		foreach ( $source as $list ) {
-			if ( ! is_array( $list ) || ! isset( $list['id'], $list['name'] ) ) {
-				continue;
-			}
-			$stats   = isset( $list['stats'] ) && is_array( $list['stats'] ) ? $list['stats'] : array();
-			$lists[] = array(
-				'id'             => sanitize_text_field( (string) $list['id'] ),
-				'name'           => sanitize_text_field( (string) $list['name'] ),
-				'opt_in_process' => sanitize_key( (string) ( $list['opt_in_process'] ?? '' ) ),
-				'stats'          => array(
-					'member_count'      => max( 0, MappingSchema::int( $stats['member_count'] ?? 0 ) ),
-					'merge_field_count' => max( 0, MappingSchema::int( $stats['merge_field_count'] ?? 0 ) ),
-				),
-			);
-		}
-		return $lists;
 	}
 
 	/**
@@ -612,10 +579,10 @@ final class Cmatic_Lite_Esp_Panel {
 			$slot       = 'field' . ( $offset + 3 );
 			$field      = \Cmatic\Lite\Settings\MappingSchema::arr( $state['fields'] ?? array() )[ $offset ] ?? null;
 			$has_field  = is_array( $field );
-			$remote_tag = $has_field ? self::scalar_string( $field['tag'] ?? '' ) : '';
+			$remote_tag = $has_field ? \Cmatic\Lite\Settings\MappingSchema::str( $field['tag'] ?? '' ) : '';
 			$is_email   = 'EMAIL' === strtoupper( $remote_tag );
-			$is_boolean = $has_field && 'boolean' === sanitize_key( self::scalar_string( $field['type'] ?? '' ) );
-			$mapping    = self::scalar_string( \Cmatic\Lite\Settings\MappingSchema::arr( $state['mappings'] ?? array() )[ $slot ] ?? '' );
+			$is_boolean = $has_field && 'boolean' === sanitize_key( \Cmatic\Lite\Settings\MappingSchema::str( $field['type'] ?? '' ) );
+			$mapping    = \Cmatic\Lite\Settings\MappingSchema::str( \Cmatic\Lite\Settings\MappingSchema::arr( $state['mappings'] ?? array() )[ $slot ] ?? '' );
 			if ( '' === $mapping && $is_email && empty( $state['has_saved_mappings'] ) ) {
 				$mapping = self::first_email_tag( $form_tags );
 			}
@@ -628,8 +595,8 @@ final class Cmatic_Lite_Esp_Panel {
 				<?php echo $has_field ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>
 			>
 				<label for="cmatic-provider-<?php echo esc_attr( $slot ); ?>">
-					<span data-field-label><?php echo esc_html( $has_field ? self::scalar_string( $field['name'] ?? '' ) : $slot ); ?></span>
-					<span class="mce-type" data-field-type><?php echo esc_html( $has_field ? self::scalar_string( $field['type'] ?? '' ) : '' ); ?></span>
+					<span data-field-label><?php echo esc_html( $has_field ? \Cmatic\Lite\Settings\MappingSchema::str( $field['name'] ?? '' ) : $slot ); ?></span>
+					<span class="mce-type" data-field-type><?php echo esc_html( $has_field ? \Cmatic\Lite\Settings\MappingSchema::str( $field['type'] ?? '' ) : '' ); ?></span>
 					<span class="mce-required" data-required-label <?php echo $is_email ? '' : 'hidden'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant HTML attribute. ?>>
 						<?php esc_html_e( 'Required', 'contact-form-7-mailchimp-extension' ); ?>
 					</span>
@@ -647,8 +614,8 @@ final class Cmatic_Lite_Esp_Panel {
 						if ( ! is_array( $tag ) || empty( $tag['name'] ) ) {
 							continue;
 						}
-						$tag_value = '[' . self::scalar_string( $tag['name'] ) . ']';
-						$basetype  = sanitize_key( self::scalar_string( $tag['basetype'] ?? '' ) );
+						$tag_value = '[' . \Cmatic\Lite\Settings\MappingSchema::str( $tag['name'] ) . ']';
+						$basetype  = sanitize_key( \Cmatic\Lite\Settings\MappingSchema::str( $tag['basetype'] ?? '' ) );
 						$disabled  = ( $is_email && 'email' !== $basetype ) || ( $is_boolean && 'acceptance' !== $basetype );
 						?>
 						<option
@@ -683,7 +650,7 @@ final class Cmatic_Lite_Esp_Panel {
 					'<input type="hidden" name="wpcf7-cmatic-provider[merge_fields][%1$d][%2$s]" data-provider-field="%2$s" data-provider-field-index="%1$d" value="%3$s">',
 					(int) $offset,
 					esc_attr( $property ),
-					esc_attr( self::scalar_string( $field[ $property ] ?? '' ) )
+					esc_attr( \Cmatic\Lite\Settings\MappingSchema::str( $field[ $property ] ?? '' ) )
 				);
 			}
 		}
@@ -704,7 +671,7 @@ final class Cmatic_Lite_Esp_Panel {
 				&& ! empty( $tag['name'] )
 				&& 'email' === ( $tag['basetype'] ?? '' )
 			) {
-				return '[' . self::scalar_string( $tag['name'] ) . ']';
+				return '[' . \Cmatic\Lite\Settings\MappingSchema::str( $tag['name'] ) . ']';
 			}
 		}
 		return '';
@@ -717,13 +684,6 @@ final class Cmatic_Lite_Esp_Panel {
 		return $state['connected']
 			&& '' !== \Cmatic\Lite\Settings\MappingSchema::str( $state['selected_list'] )
 			&& ! empty( $state['fields'] );
-	}
-
-	/**
-	 * @param mixed $value
-	 */
-	private static function scalar_string( $value ): string {
-		return is_scalar( $value ) ? (string) $value : '';
 	}
 
 	private function __construct() {}

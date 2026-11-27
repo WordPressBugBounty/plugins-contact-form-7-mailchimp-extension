@@ -84,15 +84,6 @@ class Cmatic_Plugin_Links {
 		);
 	}
 
-	public static function get_docs_link() {
-		return sprintf(
-			'<a href="%s" target="_blank" title="%s">%s</a>',
-			esc_url( Cmatic_Pursuit::docs( 'help', 'plugins_page' ) ),
-			esc_attr__( 'Contact Form 7 Extension Documentation', 'contact-form-7-mailchimp-extension' ),
-			esc_html__( 'Docs', 'contact-form-7-mailchimp-extension' )
-		);
-	}
-
 	public static function filter_action_links( array $links ) {
 		$settings_link = self::get_settings_link();
 
