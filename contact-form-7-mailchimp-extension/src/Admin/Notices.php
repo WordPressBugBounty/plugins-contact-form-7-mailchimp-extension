@@ -38,7 +38,7 @@ final class Notices {
 		if ( class_exists( '\\Cmatic\\Pro\\Kernel\\Engine', false ) && \Cmatic\Pro\Kernel\Engine::ready() ) {
 			return 'new';
 		}
-		return self::plugin_state( 'chimpmatic/chimpmatic.php' )['active'] ? 'old' : 'free';
+		return defined( 'CMATIC_VERSION' ) && self::plugin_state( 'chimpmatic/chimpmatic.php' )['active'] ? 'old' : 'free';
 	}
 
 	private static function allowed(): bool {
